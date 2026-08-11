@@ -1,0 +1,754 @@
+import React, { useState } from 'react';
+import { SamplingParameters, PresetScenario } from '../types/sampling';
+import { PRESET_SCENARIOS } from '../utils/tokenData';
+import { CosmicGuide, ActiveParamType } from './CosmicGuide';
+import { ActiveInteractionNotice } from './TheNavigator';
+import {
+  Flame,
+  CircleDot,
+  Shield,
+  Magnet,
+  Sparkles,
+  Bot,
+  Compass,
+  ShieldCheck,
+  ChevronDown,
+  ChevronUp,
+  Sliders,
+  Plus,
+  X,
+  FileText,
+  Anchor,
+  Rocket,
+  Loader2,
+  UserCheck,
+  Code2,
+} from 'lucide-react';
+
+interface MissionControlProps {
+  params: SamplingParameters;
+  setParams: React.Dispatch<React.SetStateAction<SamplingParameters>>;
+  prompt: string;
+  setPrompt: (p: string) => void;
+  systemPrompt: string;
+  setSystemPrompt: (sp: string) => void;
+  jsonSchema: string;
+  setJsonSchema: (js: string) => void;
+  jsonSchemaEnabled: boolean;
+  setJsonSchemaEnabled: (e: boolean) => void;
+  ragContext: string;
+  setRagContext: (rc: string) => void;
+  ragEnabled: boolean;
+  setRagEnabled: (e: boolean) => void;
+  onApplyPreset: (preset: PresetScenario) => void;
+  onLaunchPrompt: () => void;
+  onInteractFeature?: (notice: ActiveInteractionNotice) => void;
+  isFetchingLogits?: boolean;
+}
+
+export const MissionControl: React.FC<MissionControlProps> = ({
+  params,
+  setParams,
+  prompt,
+  setPrompt,
+  systemPrompt,
+  setSystemPrompt,
+  jsonSchema,
+  setJsonSchema,
+  jsonSchemaEnabled,
+  setJsonSchemaEnabled,
+  ragContext,
+  setRagContext,
+  ragEnabled,
+  setRagEnabled,
+  onApplyPreset,
+  onLaunchPrompt,
+  onInteractFeature,
+  isFetchingLogits = false,
+}) => {
+  const [isSystemExpanded, setIsSystemExpanded] = useState<boolean>(Boolean(systemPrompt.trim()));
+  const [isSchemaExpanded, setIsSchemaExpanded] = useState<boolean>(jsonSchemaEnabled);
+  const [isRagExpanded, setIsRagExpanded] = useState<boolean>(ragEnabled);
+  const [newBiasWord, setNewBiasWord] = useState('');
+  const [newBiasVal, setNewBiasVal] = useState<number>(-100);
+  const [newStopSeq, setNewStopSeq] = useState('');
+
+  const [activeParam, setActiveParam] = useState<ActiveParamType>('temperature');
+
+  const notifyInteraction = (notice: Omit<ActiveInteractionNotice, 'timestamp'>) => {
+    if (onInteractFeature) {
+      onInteractFeature({
+        ...notice,
+        timestamp: Date.now(),
+      });
+    }
+  };
+
+  const updateParam = <K extends keyof SamplingParameters>(key: K, value: SamplingParameters[K]) => {
+    setParams(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleAddBias = () => {
+    if (!newBiasWord.trim()) return;
+    const word = newBiasWord.trim();
+    setParams(prev => ({
+      ...prev,
+      logitBiases: {
+        ...prev.logitBiases,
+        [word]: newBiasVal,
+      },
+    }));
+
+    notifyInteraction({
+      feature: `Logit Bias ('${word}': ${newBiasVal})`,
+      whatItIs: `Direct numerical modifier applied to token '${word}' before Softmax normalization.`,
+      whyItIs: `Allows strict black-listing (-100) or heavy boosting (+10.0) of target vocabulary terms.`,
+      impact: newBiasVal <= -50 ? `Implodes token '${word}' into a red Black Hole icon on the outer fringe (0% chance).` : `Pulls token '${word}' toward the center supergiant star.`,
+      guidance: `Use -100 to ban unwanted buzzwords ("delve", "testament").`,
+    });
+
+    setNewBiasWord('');
+  };
+
+  const handleRemoveBias = (word: string) => {
+    setParams(prev => {
+      const next = { ...prev.logitBiases };
+      delete next[word];
+      return { ...prev, logitBiases: next };
+    });
+  };
+
+  const handleAddStopSeq = () => {
+    if (!newStopSeq.trim()) return;
+    const seq = newStopSeq.trim();
+    if (!params.stopSequences.includes(seq)) {
+      updateParam('stopSequences', [...params.stopSequences, seq]);
+    }
+    notifyInteraction({
+      feature: `Emergency Stop Sequence ("${seq}")`,
+      whatItIs: `Text pattern string that instantly halts generation when encountered.`,
+      whyItIs: `Prevents endless runaway text generation loops.`,
+      impact: `Truncates response output immediately when candidate matches "${seq}".`,
+      guidance: `Add \\n\\n or END to stop multi-paragraph answers cleanly.`,
+    });
+    setNewStopSeq('');
+  };
+
+  const handleRemoveStopSeq = (seq: string) => {
+    updateParam(
+      'stopSequences',
+      params.stopSequences.filter(s => s !== seq)
+    );
+  };
+
+  const getPresetIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Bot':
+        return <Bot className="h-4 w-4 text-cyan-400" />;
+      case 'Sparkles':
+        return <Sparkles className="h-4 w-4 text-purple-400" />;
+      case 'Compass':
+        return <Compass className="h-4 w-4 text-sky-400" />;
+      case 'ShieldCheck':
+        return <ShieldCheck className="h-4 w-4 text-emerald-400" />;
+      default:
+        return <Sliders className="h-4 w-4 text-cyan-400" />;
+    }
+  };
+
+  return (
+    <div className="glass-panel flex flex-col h-full rounded-2xl overflow-hidden border border-cyan-500/20 shadow-2xl">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/60 px-5 py-4">
+        <div className="flex items-center space-x-2">
+          <Sliders className="h-5 w-5 text-cyan-400" />
+          <h2 className="text-base font-bold text-slate-100">Mission Control</h2>
+        </div>
+        <span className="rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-cyan-300 border border-cyan-500/20">
+          60 FPS Real-time Math
+        </span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-5 space-y-6">
+        {/* Preset Scenarios ("Vibe Buttons") */}
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5 mb-2.5">
+            <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+            <span>Preset Scenarios ("Vibe Buttons")</span>
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {PRESET_SCENARIOS.map(preset => (
+              <button
+                key={preset.id}
+                onClick={() => {
+                  onApplyPreset(preset);
+                  notifyInteraction({
+                    feature: `Preset: ${preset.name}`,
+                    whatItIs: `Pre-configured hyperparameter setup calibrated for ${preset.name}.`,
+                    whyItIs: `Demonstrates ideal settings for specific AI tasks (e.g. strict coding vs creative writing).`,
+                    impact: `Re-allocates Temperature to ${preset.params.temperature}, Top-K to ${preset.params.topK}, and toggles RAG.`,
+                    guidance: `Click presets to instantly jump between robotic factual accuracy and wild storytelling!`,
+                  });
+                }}
+                aria-label={`Apply ${preset.name} preset: ${preset.subtitle}`}
+                className="glass-panel-interactive flex flex-col items-start p-3 rounded-xl text-left border border-slate-800 hover:border-cyan-500/40 group"
+              >
+                <div className="flex items-center space-x-2 w-full mb-1">
+                  {getPresetIcon(preset.icon)}
+                  <span className="text-xs font-bold text-slate-200 group-hover:text-cyan-300 truncate">
+                    {preset.name}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono">{preset.subtitle}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Feature 1: System Override (Persona) Accordion */}
+        <div className="rounded-xl border border-purple-500/20 bg-purple-950/20 overflow-hidden">
+          <button
+            onClick={() => setIsSystemExpanded(!isSystemExpanded)}
+            aria-label="Toggle System Override Persona instructions"
+            aria-expanded={isSystemExpanded}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-purple-900/20 transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <UserCheck className={`h-4 w-4 ${systemPrompt.trim() ? 'text-purple-400 animate-pulse' : 'text-slate-500'}`} />
+              <span className="font-semibold text-slate-100">System Override (Persona)</span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  systemPrompt.trim() ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30' : 'bg-slate-800 text-slate-400'
+                }`}
+              >
+                {systemPrompt.trim() ? 'ACTIVE' : 'DEFAULT'}
+              </span>
+            </div>
+            {isSystemExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+          </button>
+
+          {isSystemExpanded && (
+            <div className="p-3 border-t border-purple-500/15 space-y-2 bg-slate-950/40">
+              <p className="text-[11px] text-purple-200/80 leading-relaxed">
+                Paste proprietary system instructions (e.g. <em>"You are a senior PostgreSQL DBA. Reply only with valid SQL."</em>). Shifts baseline probability before sampling.
+              </p>
+              <textarea
+                aria-label="System prompt persona instructions"
+                value={systemPrompt}
+                onChange={e => {
+                  setSystemPrompt(e.target.value);
+                  notifyInteraction({
+                    feature: 'System Persona Override',
+                    whatItIs: 'Top-level behavioral directive injected into model chat template.',
+                    whyItIs: 'Establishes domain persona expertise before processing user prompts.',
+                    impact: 'Shifts baseline raw logit distribution across entire vocabulary.',
+                    guidance: 'Use for domain task specialization (e.g. SQL DBA, Legal clause parser).',
+                  });
+                }}
+                rows={2}
+                className="w-full rounded-lg bg-slate-900 border border-purple-500/20 px-2.5 py-1.5 text-xs text-purple-100 placeholder-slate-600 focus:border-purple-400 focus:outline-none font-mono"
+                placeholder="You are a senior PostgreSQL DBA. Reply only with valid SQL queries..."
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Custom Prompt Input & Launch Console */}
+        <div className="space-y-3">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="prompt-input" className="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
+                <FileText className="h-3.5 w-3.5 text-cyan-400" />
+                <span>Flight Console (Custom Prompt)</span>
+              </label>
+              <span className="text-[10px] text-slate-400 font-mono">Custom Input</span>
+            </div>
+            <textarea
+              id="prompt-input"
+              aria-label="Enter custom prompt for LLM sampling"
+              value={prompt}
+              onChange={e => setPrompt(e.target.value)}
+              rows={2}
+              className="w-full rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 resize-none font-mono"
+              placeholder="Try typing: 'The best way to cook a steak is...' or 'What is the capital of France?'"
+            />
+          </div>
+
+          {/* RAG Fact Injector Collapsible Box */}
+          <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/20 overflow-hidden">
+            <button
+              onClick={() => {
+                const nextState = !ragEnabled;
+                setRagEnabled(nextState);
+                setIsRagExpanded(nextState);
+                notifyInteraction({
+                  feature: `RAG Grounding (${nextState ? 'ON' : 'OFF'})`,
+                  whatItIs: 'Retrieval-Augmented Generation context tethering.',
+                  whyItIs: 'Forces the LLM to base its predictions on user-provided factual documents.',
+                  impact: nextState ? 'Pulls grounded document terms to the center supergiant star via cyan laser beams.' : 'Un-tethers predictions, allowing parametric memory generation.',
+                  guidance: 'Turn ON when accuracy is non-negotiable.',
+                });
+              }}
+              aria-label={ragEnabled ? 'Turn RAG Fact Anchor OFF' : 'Turn RAG Fact Anchor ON'}
+              aria-expanded={isRagExpanded}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-cyan-900/20 transition-colors"
+            >
+              <div className="flex items-center space-x-2">
+                <Anchor className={`h-4 w-4 ${ragEnabled ? 'text-cyan-400 animate-pulse' : 'text-slate-500'}`} />
+                <span className="font-semibold text-slate-100">RAG Grounding (Inject Facts)</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    ragEnabled ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30' : 'bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  {ragEnabled ? 'ON • Tethered' : 'OFF'}
+                </span>
+              </div>
+              {isRagExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </button>
+
+            {isRagExpanded && (
+              <div className="p-3 border-t border-cyan-500/15 space-y-2 bg-slate-950/40">
+                <div className="flex items-center space-x-1.5 text-[11px] text-cyan-200/90 font-medium">
+                  <Anchor className="h-3.5 w-3.5 text-cyan-400" />
+                  <span>Paste retrieved factual context to anchor AI probabilities in cyan</span>
+                </div>
+                <textarea
+                  aria-label="Retrieved factual context for RAG grounding"
+                  value={ragContext}
+                  onChange={e => setRagContext(e.target.value)}
+                  rows={2}
+                  className="w-full rounded-lg bg-slate-900 border border-cyan-500/20 px-2.5 py-1.5 text-xs text-cyan-100 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
+                  placeholder="Example: Employees must be in the office Tuesday through Thursday. Monday and Friday are remote."
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Feature 4: Structured Output "Orbital Track" JSON Schema Accordion */}
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 overflow-hidden">
+            <button
+              onClick={() => {
+                const nextState = !jsonSchemaEnabled;
+                setJsonSchemaEnabled(nextState);
+                setIsSchemaExpanded(nextState);
+                notifyInteraction({
+                  feature: `Structured Output JSON Schema (${nextState ? 'ACTIVE' : 'OFF'})`,
+                  whatItIs: 'Rigid JSON grammar rule enforcer.',
+                  whyItIs: 'Guarantees the AI returns valid JSON data structures instead of plain conversational prose.',
+                  impact: nextState ? 'Non-conforming tokens drop to 0% probability and turn red, proving format compliance.' : 'Restores normal dictionary token vocabulary.',
+                  guidance: 'Activate when building automated API data extraction pipelines.',
+                });
+              }}
+              aria-label={jsonSchemaEnabled ? 'Turn Structured Output JSON Schema OFF' : 'Turn Structured Output JSON Schema ON'}
+              aria-expanded={isSchemaExpanded}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-emerald-900/20 transition-colors"
+            >
+              <div className="flex items-center space-x-2">
+                <Code2 className={`h-4 w-4 ${jsonSchemaEnabled ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`} />
+                <span className="font-semibold text-slate-100">Structured Output (JSON Schema)</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    jsonSchemaEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  {jsonSchemaEnabled ? 'ACTIVE' : 'OFF'}
+                </span>
+              </div>
+              {isSchemaExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            </button>
+
+            {isSchemaExpanded && (
+              <div className="p-3 border-t border-emerald-500/15 space-y-2 bg-slate-950/40">
+                <p className="text-[11px] text-emerald-200/80 leading-relaxed">
+                  Enforces JSON Grammar rules. Invalid grammar tokens drop to hard 0.0% probability.
+                </p>
+                <textarea
+                  aria-label="JSON Schema for structured output enforcement"
+                  value={jsonSchema}
+                  onChange={e => setJsonSchema(e.target.value)}
+                  rows={2}
+                  className="w-full rounded-lg bg-slate-900 border border-emerald-500/20 px-2.5 py-1.5 text-xs text-emerald-100 placeholder-slate-600 focus:border-emerald-400 focus:outline-none font-mono"
+                  placeholder='{ "type": "object", "properties": { "result": { "type": "string" } } }'
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Launch Constellation Button */}
+          <button
+            onClick={onLaunchPrompt}
+            disabled={isFetchingLogits || !prompt.trim()}
+            aria-label="Launch prompt evaluation and fetch token candidates"
+            className="w-full flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-purple-600 py-2.5 text-xs font-bold text-slate-950 shadow-neon-cyan hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {isFetchingLogits ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
+                <span>Evaluating Vocabulary Universe...</span>
+              </>
+            ) : (
+              <>
+                <Rocket className="h-4 w-4 fill-slate-950" />
+                <span>Launch Constellation (Evaluate Prompt)</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Real-Time Cosmic Guide Explanatory Panel */}
+        <CosmicGuide params={params} activeParam={activeParam} />
+
+        {/* Sampling Sliders (60 FPS Interactive) */}
+        <div className="space-y-4 pt-2 border-t border-slate-800">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+            <Flame className="h-3.5 w-3.5 text-amber-400" />
+            <span>Sampling Parameters</span>
+          </h3>
+
+          {/* Temperature Slider */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <label htmlFor="temp-slider" className="font-medium text-slate-200 flex items-center space-x-1">
+                <span>The Cosmic Heat</span>
+                <span className="text-slate-400 font-mono text-[11px]">(Temperature T)</span>
+              </label>
+              <span className="font-mono font-bold text-amber-400">{params.temperature.toFixed(2)}</span>
+            </div>
+            <input
+              id="temp-slider"
+              aria-label="Adjust Temperature T slider from 0.01 to 2.0"
+              type="range"
+              min="0.01"
+              max="2.0"
+              step="0.01"
+              value={params.temperature}
+              onFocus={() => {
+                setActiveParam('temperature');
+                notifyInteraction({
+                  feature: `Cosmic Heat (Temperature T = ${params.temperature.toFixed(2)})`,
+                  whatItIs: 'Softmax exponent scaling divisor for candidate logits.',
+                  whyItIs: 'Controls the balance between deterministic focus and creative randomness.',
+                  impact: params.temperature > 1.2 ? 'Outer asteroid stars glow brighter and flatten probability distribution.' : 'Sharpens top supergiant star probability toward 100%.',
+                  guidance: 'Keep <0.3 for factual QA/code; set >1.0 for creative writing.',
+                });
+              }}
+              onChange={e => {
+                const val = parseFloat(e.target.value);
+                setActiveParam('temperature');
+                updateParam('temperature', val);
+                notifyInteraction({
+                  feature: `Temperature T (${val.toFixed(2)})`,
+                  whatItIs: 'Softmax exponent scaling divisor.',
+                  whyItIs: 'Controls output entropy and candidate randomness.',
+                  impact: val > 1.2 ? 'Causes low-probability outer tokens to glow brighter.' : 'Focuses probability heavily on the top star.',
+                  guidance: val > 1.2 ? 'High entropy mode active.' : 'Factual focus mode active.',
+                });
+              }}
+              className="w-full"
+            />
+            <p className="text-[11px] text-slate-400">
+              Low (0.1) concentrated focus; High (1.5) cosmic entropy & creative variance.
+            </p>
+          </div>
+
+          {/* Top-K Slider */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <label htmlFor="topk-slider" className="font-medium text-slate-200 flex items-center space-x-1">
+                <span>The Orbital Ring</span>
+                <span className="text-slate-400 font-mono text-[11px]">(Top-K)</span>
+              </label>
+              <span className="font-mono font-bold text-cyan-400">{params.topK}</span>
+            </div>
+            <input
+              id="topk-slider"
+              aria-label="Adjust Top-K slider from 1 to 50"
+              type="range"
+              min="1"
+              max="50"
+              step="1"
+              value={params.topK}
+              onFocus={() => {
+                setActiveParam('topK');
+                notifyInteraction({
+                  feature: `Orbital Ring (Top-K = ${params.topK})`,
+                  whatItIs: 'Strict top K rank vocabulary candidate filter.',
+                  whyItIs: 'Eliminates absurd long-tail tokens regardless of temperature.',
+                  impact: `Keeps top ${params.topK} candidate stars active; grays out outer tokens.`,
+                  guidance: 'Set Top-K to 40 for standard conversational LLM sampling.',
+                });
+              }}
+              onChange={e => {
+                const val = parseInt(e.target.value, 10);
+                setActiveParam('topK');
+                updateParam('topK', val);
+                notifyInteraction({
+                  feature: `Top-K Filter (${val})`,
+                  whatItIs: 'Rank cutoff threshold.',
+                  whyItIs: 'Hard-clips tokens beyond rank K.',
+                  impact: `Only top ${val} candidates remain eligible for sampling.`,
+                  guidance: `Top ${val} candidates active.`,
+                });
+              }}
+              className="w-full"
+            />
+            <p className="text-[11px] text-slate-400">
+              Keep top K candidate tokens. Outer tokens beyond rank K fade to gray.
+            </p>
+          </div>
+
+          {/* Top-P Slider */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <label htmlFor="topp-slider" className="font-medium text-slate-200 flex items-center space-x-1">
+                <span>The Energy Shield</span>
+                <span className="text-slate-400 font-mono text-[11px]">(Top-P / Nucleus)</span>
+              </label>
+              <span className="font-mono font-bold text-purple-400">{(params.topP * 100).toFixed(0)}%</span>
+            </div>
+            <input
+              id="topp-slider"
+              aria-label="Adjust Top-P Nucleus threshold slider from 5% to 100%"
+              type="range"
+              min="0.05"
+              max="1.0"
+              step="0.05"
+              value={params.topP}
+              onFocus={() => setActiveParam('topP')}
+              onChange={e => {
+                const val = parseFloat(e.target.value);
+                setActiveParam('topP');
+                updateParam('topP', val);
+                notifyInteraction({
+                  feature: `Energy Shield (Top-P = ${(val * 100).toFixed(0)}%)`,
+                  whatItIs: 'Cumulative probability nucleus cutoff threshold.',
+                  whyItIs: 'Dynamically resizes candidate pool based on confidence distribution.',
+                  impact: `Drapes dynamic purple energy shield ring at cumulative ${(val * 100).toFixed(0)}%.`,
+                  guidance: 'Set Top-P to 0.90 for balanced natural responses.',
+                });
+              }}
+              className="w-full"
+            />
+            <p className="text-[11px] text-slate-400">
+              Cumulative probability cutoff envelope. Dynamically shrinks and expands.
+            </p>
+          </div>
+
+          {/* Min-P Slider */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <label htmlFor="minp-slider" className="font-medium text-slate-200 flex items-center space-x-1">
+                <span>The Gravity Well</span>
+                <span className="text-slate-400 font-mono text-[11px]">(Min-P)</span>
+              </label>
+              <span className="font-mono font-bold text-pink-400">{(params.minP * 100).toFixed(1)}%</span>
+            </div>
+            <input
+              id="minp-slider"
+              aria-label="Adjust Min-P threshold slider from 1% to 50%"
+              type="range"
+              min="0.01"
+              max="0.5"
+              step="0.01"
+              value={params.minP}
+              onFocus={() => setActiveParam('minP')}
+              onChange={e => {
+                const val = parseFloat(e.target.value);
+                setActiveParam('minP');
+                updateParam('minP', val);
+                notifyInteraction({
+                  feature: `Gravity Well (Min-P = ${(val * 100).toFixed(1)}%)`,
+                  whatItIs: 'Relative probability cutoff scaled to top star chance.',
+                  whyItIs: 'Superior to Top-P at high temperatures because it scales dynamically.',
+                  impact: `Filters candidates below ${(val * 100).toFixed(1)}% of top star probability.`,
+                  guidance: 'Set Min-P to 0.05 (5%) for clean sampling at T>1.0.',
+                });
+              }}
+              className="w-full"
+            />
+            <p className="text-[11px] text-slate-400">
+              Filters tokens relative to top star chance (min_p × max_probability).
+            </p>
+          </div>
+        </div>
+
+        {/* Penalties & Guardrails */}
+        <div className="space-y-4 pt-2 border-t border-slate-800">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+            <Shield className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Penalties & Guardrails</span>
+          </h3>
+
+          {/* Frequency Penalty */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <label htmlFor="freq-penalty-slider" className="font-medium text-slate-200">Exhaustion Meter (Frequency Penalty)</label>
+              <span className="font-mono font-bold text-emerald-400">{params.frequencyPenalty.toFixed(2)}</span>
+            </div>
+            <input
+              id="freq-penalty-slider"
+              aria-label="Adjust Frequency Penalty (Exhaustion Meter) slider from 0 to 1.5"
+              type="range"
+              min="0.0"
+              max="1.5"
+              step="0.05"
+              value={params.frequencyPenalty}
+              onFocus={() => setActiveParam('frequencyPenalty')}
+              onChange={e => {
+                const val = parseFloat(e.target.value);
+                setActiveParam('frequencyPenalty');
+                updateParam('frequencyPenalty', val);
+                notifyInteraction({
+                  feature: `Exhaustion Meter (Frequency Penalty = ${val.toFixed(2)})`,
+                  whatItIs: 'Repetition penalty proportional to exact token frequency count.',
+                  whyItIs: 'Breaks stubborn repetitive phrases and word loops.',
+                  impact: 'Words used repeatedly in context history dim in opacity.',
+                  guidance: 'Increase >0.5 to stop the model from repeating words.',
+                });
+              }}
+              className="w-full"
+            />
+          </div>
+
+          {/* Presence Penalty */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <label htmlFor="presence-penalty-slider" className="font-medium text-slate-200">Horizon Booster (Presence Penalty)</label>
+              <span className="font-mono font-bold text-sky-400">{params.presencePenalty.toFixed(2)}</span>
+            </div>
+            <input
+              id="presence-penalty-slider"
+              aria-label="Adjust Presence Penalty (Horizon Booster) slider from 0 to 1.5"
+              type="range"
+              min="0.0"
+              max="1.5"
+              step="0.05"
+              value={params.presencePenalty}
+              onFocus={() => setActiveParam('presencePenalty')}
+              onChange={e => {
+                const val = parseFloat(e.target.value);
+                setActiveParam('presencePenalty');
+                updateParam('presencePenalty', val);
+                notifyInteraction({
+                  feature: `Horizon Booster (Presence Penalty = ${val.toFixed(2)})`,
+                  whatItIs: 'Flat penalty applied once to any token present in context.',
+                  whyItIs: 'Encourages the model to introduce fresh new topics.',
+                  impact: 'Broadens vocabulary scope across outer orbital rings.',
+                  guidance: 'Increase >0.5 to encourage diverse topic exploration.',
+                });
+              }}
+              className="w-full"
+            />
+          </div>
+
+          {/* Logit Bias / Black Hole Magnet */}
+          <div className="space-y-2">
+            <label htmlFor="bias-word-input" className="text-xs font-medium text-slate-200 flex items-center justify-between">
+              <span className="flex items-center space-x-1">
+                <Magnet className="h-3.5 w-3.5 text-pink-400" />
+                <span>Magnet / Black Hole (Logit Bias)</span>
+              </span>
+            </label>
+
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {Object.entries(params.logitBiases).map(([word, bias]) => (
+                <span
+                  key={word}
+                  className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-mono border ${
+                    bias < 0
+                      ? 'bg-rose-950/60 text-rose-300 border-rose-800'
+                      : 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
+                  }`}
+                >
+                  <span>'{word}':</span>
+                  <span className="font-bold">{bias > 0 ? `+${bias}` : bias}</span>
+                  <button
+                    onClick={() => handleRemoveBias(word)}
+                    aria-label={`Remove logit bias for ${word}`}
+                    className="hover:text-white ml-1"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                id="bias-word-input"
+                type="text"
+                placeholder="Target word (e.g. delve)"
+                aria-label="Word to apply logit bias to"
+                value={newBiasWord}
+                onChange={e => setNewBiasWord(e.target.value)}
+                className="flex-1 rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1 text-xs text-slate-200 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
+              />
+              <select
+                aria-label="Select logit bias value"
+                value={newBiasVal}
+                onChange={e => setNewBiasVal(parseFloat(e.target.value))}
+                className="rounded-lg bg-slate-900 border border-slate-800 px-2 py-1 text-xs text-slate-200 font-mono focus:outline-none"
+              >
+                <option value={-100}>-100 (Black Hole / Ban)</option>
+                <option value={-5}>-5.0 (Discourage)</option>
+                <option value={5}>+5.0 (Boost)</option>
+                <option value={10}>+10.0 (Magnet)</option>
+              </select>
+              <button
+                onClick={handleAddBias}
+                aria-label="Add logit bias word"
+                className="rounded-lg bg-cyan-500/20 p-1.5 text-cyan-300 border border-cyan-400/40 hover:bg-cyan-500/30"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Stop Sequences Tag Input */}
+          <div className="space-y-2">
+            <label htmlFor="stop-seq-input" className="text-xs font-medium text-slate-200 flex items-center space-x-1">
+              <CircleDot className="h-3.5 w-3.5 text-amber-400" />
+              <span>Emergency Brake (Stop Sequences)</span>
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {params.stopSequences.map(seq => (
+                <span
+                  key={seq}
+                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-mono bg-slate-800 text-amber-300 border border-slate-700"
+                >
+                  <span>"{seq}"</span>
+                  <button
+                    onClick={() => handleRemoveStopSeq(seq)}
+                    aria-label={`Remove stop sequence ${seq}`}
+                    className="hover:text-white ml-1"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                id="stop-seq-input"
+                type="text"
+                placeholder="e.g. \n or END"
+                aria-label="Stop sequence string to add"
+                value={newStopSeq}
+                onChange={e => setNewStopSeq(e.target.value)}
+                className="flex-1 rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1 text-xs text-slate-200 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
+              />
+              <button
+                onClick={handleAddStopSeq}
+                aria-label="Add stop sequence"
+                className="rounded-lg bg-amber-500/20 p-1.5 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
