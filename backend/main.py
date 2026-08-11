@@ -66,6 +66,19 @@ if os.path.exists(MODEL_PATH):
 
 @app.get("/")
 def read_root():
+    # Serve React SPA if frontend dist is available (production Cloud Run)
+    static_index = Path(__file__).parent / "static" / "index.html"
+    if static_index.exists():
+        return FileResponse(str(static_index))
+    # Otherwise return API status JSON (local backend-only development)
+    return {
+        "status": "online",
+        "app": "The Token Cosmos API",
+        "engine": "llama-cpp" if LLAMA_MODEL else "synthetic-cosmos-engine",
+    }
+
+@app.get("/api/health")
+def api_health():
     return {
         "status": "online",
         "app": "The Token Cosmos API",
