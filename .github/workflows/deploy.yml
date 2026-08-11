@@ -28,17 +28,17 @@ jobs:
       - name: Configure Docker for GCP Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
-      - name: Build Docker Container Image
+      - name: Build Unified Docker Container Image (Frontend + Backend)
         run: |
           docker build \
             -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cosmos-repo/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-            -f backend/Dockerfile backend/
+            -f Dockerfile .
 
       - name: Push Container Image to GCP Artifact Registry
         run: |
           docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cosmos-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
-      - name: Deploy Service to Google Cloud Run with --cpu-boost
+      - name: Deploy Service to Google Cloud Run (Scale-to-Zero)
         run: |
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cosmos-repo/${{ env.SERVICE_NAME }}:${{ github.sha }} \

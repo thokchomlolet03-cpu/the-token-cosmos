@@ -3,8 +3,11 @@ import time
 import math
 import random
 from typing import List, Optional
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 app = FastAPI(
@@ -188,6 +191,25 @@ def get_logits(req: LogitRequest):
         processing_time_ms=elapsed_ms,
     )
 
+# Mount frontend static dist directory for unified Cloud Run deployment
+# This allows serving both API and React SPA from a single container ($0.00 idle)
+STATIC_DIR = Path(__file__).parent / "static"
+
+if STATIC_DIR.exists() and (STATIC_DIR / "index.html").exists():
+    # Serve static assets (JS, CSS, images) from /assets/
+    app.mount("/assets", StaticFiles(directory=str(STATIC_DIR / "assets")), name="static-assets")
+
+    # SPA catch-all: serve index.html for all non-API routes
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # Check if the requested file exists in static directory
+        file_path = STATIC_DIR / full_path
+        if full_path and file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
+        # Otherwise serve index.html for SPA client-side routing
+        return FileResponse(str(STATIC_DIR / "index.html"))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

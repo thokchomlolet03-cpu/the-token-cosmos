@@ -1,0 +1,23 @@
+# Dependencies (rebuilt in container)
+frontend/node_modules/
+frontend/dist/
+
+# Python artifacts
+backend/__pycache__/
+backend/*.pyc
+backend/venv/
+backend/.venv/
+
+# GGUF model files (too large for container build)
+backend/models/
+
+# OS / IDE
+.git/
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Docs & workflows (not needed in container)
+README.md
+.github/
