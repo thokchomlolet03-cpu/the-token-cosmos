@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ProcessedTokenCandidate, SamplingParameters } from '../types/sampling';
-import { StarfieldCanvas } from './StarfieldCanvas';
+import { TokenCosmosGraph } from './TokenCosmosGraph';
 import { Swords, Flame, Sparkles } from 'lucide-react';
 
 interface SplitViewCosmosProps {
@@ -17,6 +17,7 @@ interface SplitViewCosmosProps {
   onSelectToken?: (token: ProcessedTokenCandidate) => void;
   onUpdateRightTemp?: (temp: number) => void;
   isByoeMode?: boolean;
+  leftIsThinking?: boolean;
 }
 
 export const SplitViewCosmos: React.FC<SplitViewCosmosProps> = ({
@@ -33,6 +34,7 @@ export const SplitViewCosmos: React.FC<SplitViewCosmosProps> = ({
   onSelectToken,
   onUpdateRightTemp,
   isByoeMode = false,
+  leftIsThinking = false,
 }) => {
   // Compute divergence metric between Universe A and Universe B top candidate distributions
   const divergenceMetric = useMemo(() => {
@@ -97,19 +99,20 @@ export const SplitViewCosmos: React.FC<SplitViewCosmosProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-[440px]">
         {/* Left Universe (Primary Config) */}
         <div className="relative w-full h-full border border-cyan-500/30 rounded-2xl overflow-hidden shadow-neon-cyan">
-          <StarfieldCanvas
+          <TokenCosmosGraph
             candidates={leftCandidates}
             params={leftParams}
             ragEnabled={leftRagEnabled}
             onSelectToken={onSelectToken}
             title={leftTitle}
             subtitle={leftSubtitle}
+            isThinking={leftIsThinking}
           />
         </div>
 
         {/* Right Universe (A/B Secondary Config) */}
         <div className="relative w-full h-full border border-purple-500/30 rounded-2xl overflow-hidden shadow-lg">
-          <StarfieldCanvas
+          <TokenCosmosGraph
             candidates={rightCandidates}
             params={rightParams}
             ragEnabled={rightRagEnabled}

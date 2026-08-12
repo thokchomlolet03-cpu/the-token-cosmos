@@ -1,26 +1,29 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Header } from './components/Header';
 import { MissionControl } from './components/MissionControl';
-import { StarfieldCanvas } from './components/StarfieldCanvas';
+import { TokenCosmosGraph } from './components/TokenCosmosGraph';
 import { SplitViewCosmos } from './components/SplitViewCosmos';
-import { FlightPathTimeline } from './components/FlightPathTimeline';
 import { EducationalBlog } from './components/EducationalBlog';
 import { TheNavigator, ActiveInteractionNotice } from './components/TheNavigator';
 import { EngineSettingsModal, ProviderType } from './components/EngineSettingsModal';
 import { HeroBanner } from './components/HeroBanner';
-import { TelemetryBar } from './components/TelemetryBar';
 import { CodeExportModal } from './components/CodeExportModal';
+import { ModelLoadingOverlay } from './components/ModelLoadingOverlay';
 import { SamplingParameters, ProcessedTokenCandidate, FlightStep, RawTokenCandidate, PresetScenario } from './types/sampling';
 import { PRESET_SCENARIOS, SAMPLE_RAW_LOGITS_MAP } from './utils/tokenData';
 import { calculateTokenProbabilities, normalizeOpenAILogprobs } from './utils/samplingMath';
 import { useUrlState } from './utils/useUrlState';
+import { useInferenceEngine } from './engine/useInferenceEngine';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'visualizer' | 'blog'>('visualizer');
+  const [activeTab, setActiveTab] = useState<'learn' | 'experiment' | 'export'>('experiment');
   const [splitView, setSplitView] = useState<boolean>(false);
 
-  // Code Export Modal State
-  const [isCodeExportOpen, setIsCodeExportOpen] = useState<boolean>(false);
+  // ─── WebGPU Inference Engine (v4.0) ─────────────────────────────
+  const inferenceEngine = useInferenceEngine();
+  const [useSampleData, setUseSampleData] = useState<boolean>(false);
+
+  // isCodeExportOpen is removed, replaced by activeTab === 'export'
 
   // Proactive Interaction Notice state for The Navigator AI explanations
   const [activeNotice, setActiveNotice] = useState<ActiveInteractionNotice | null>(null);
@@ -50,6 +53,7 @@ export const App: React.FC = () => {
     presencePenalty: 0.1,
     stopSequences: [],
     logitBiases: {},
+    maxThinkingTokens: 2048,
   });
 
   // Secondary A/B Duel Sampling Parameters (Universe B)
@@ -87,13 +91,44 @@ export const App: React.FC = () => {
     setRagEnabled,
   });
 
-  // Raw logits state
+  // Raw logits state (fed by WebGPU engine or hardcoded fallback)
   const [baselineRawLogits, setBaselineRawLogits] = useState<RawTokenCandidate[]>(
     SAMPLE_RAW_LOGITS_MAP['capital-france'].baseline
   );
   const [ragRawLogits, setRagRawLogits] = useState<RawTokenCandidate[]>(
     SAMPLE_RAW_LOGITS_MAP['capital-france'].rag
   );
+
+  // ─── Bridge: WebGPU logits → existing RawTokenCandidate pipeline ──
+  useEffect(() => {
+    if (inferenceEngine.latestLogits && inferenceEngine.isModelLoaded) {
+      // Extract RAG keywords for grounding detection
+      const ragTokens = new Set<string>();
+      if (ragEnabled && ragContext.trim()) {
+        ragContext.split(/\s+/).filter(w => w.length > 3).forEach(w => ragTokens.add(w.toLowerCase()));
+      }
+
+      const candidates = inferenceEngine.logitsToRawCandidates(
+        inferenceEngine.latestLogits,
+        ragTokens,
+      );
+
+      if (candidates.length > 0) {
+        setBaselineRawLogits(candidates);
+        setRagRawLogits(candidates);
+      }
+    }
+  }, [inferenceEngine.latestLogits, inferenceEngine.isModelLoaded, ragEnabled, ragContext, inferenceEngine.logitsToRawCandidates]);
+
+  // Handle model selection from the loading overlay
+  const handleSelectModel = (modelId: string) => {
+    if (modelId === '__SAMPLE_DATA__') {
+      setUseSampleData(true);
+      return;
+    }
+    setUseSampleData(false);
+    inferenceEngine.loadModel(modelId);
+  };
 
   // Flight Path steps history
   const [steps, setSteps] = useState<FlightStep[]>([]);
@@ -188,10 +223,31 @@ export const App: React.FC = () => {
     return { baseline, rag };
   };
 
-  // Launch Prompt Evaluation Endpoint (BYOE direct client-side fetch or Cloud Run backend)
+  // Launch Prompt Evaluation Endpoint
+  // Priority: WebGPU local model → BYOE API → Cloud backend → Synthetic fallback
   const handleLaunchPrompt = async () => {
     setIsFetchingLogits(true);
     try {
+      // Route 1: WebGPU local model (full vocab logits or stream)
+      if (inferenceEngine.isModelLoaded) {
+        const fullPrompt = ragEnabled && ragContext.trim()
+          ? `Context: ${ragContext}\n\nQuestion: ${prompt}`
+          : prompt;
+        
+        const isReasoning = inferenceEngine.availableModels.find(m => m.id === inferenceEngine.state.modelId)?.isReasoning;
+        
+        if (isReasoning) {
+            // For reasoning models, we want to watch the stream to see the thinking phase
+            // We pass the thinking budget. The total tokens can be budget + some fixed output buffer
+            inferenceEngine.generateSteps(fullPrompt, (params.maxThinkingTokens || 2048) + 1024, params.maxThinkingTokens);
+        } else {
+            // Standard models just evaluate a single pass
+            inferenceEngine.getLogits(fullPrompt);
+        }
+        
+        setIsFetchingLogits(false);
+        return;
+      }
       if (provider !== 'default' && (customApiKey || provider === 'custom')) {
         const endpointUrl = customUrl
           ? `${customUrl.replace(/\/$/, '')}/chat/completions`
@@ -402,21 +458,34 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#1c1c21] text-gray-100 font-sans selection:bg-pink-500/30 selection:text-white select-text">
-      {/* Header Bar */}
-      <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+    <div className="flex flex-col min-h-screen bg-[#050714] text-gray-100 font-sans selection:bg-pink-500/30 selection:text-white select-text">
+      {/* WebGPU Model Loading Overlay (Also acts as WebGPU Guardrail) */}
+      {(!useSampleData || !inferenceEngine.isWebGPUAvailable) && (
+        <ModelLoadingOverlay
+          state={inferenceEngine.state}
+          isWebGPUAvailable={inferenceEngine.isWebGPUAvailable}
+          availableModels={inferenceEngine.availableModels}
+          onSelectModel={handleSelectModel}
+        />
+      )}
+
+      {/* Bypass App Initialization if WebGPU is missing */}
+      {inferenceEngine.isWebGPUAvailable && (
+        <>
+          {/* Header Bar */}
+          <Header
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
         splitView={splitView}
         setSplitView={setSplitView}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onCopySetupLink={copySetupLink}
-        onOpenCodeExport={() => setIsCodeExportOpen(true)}
+        // onOpenCodeExport is removed as it's handled by activeTab
       />
 
       {/* Main Workspace */}
       <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 sm:p-6 flex flex-col space-y-6">
-        {activeTab === 'visualizer' ? (
+        {activeTab === 'experiment' ? (
           <>
             {/* Split-Reality Educational Hero Banner */}
             <HeroBanner />
@@ -445,19 +514,12 @@ export const App: React.FC = () => {
                   onInteractFeature={notice => setActiveNotice(notice)}
                   isFetchingLogits={isFetchingLogits}
                   rawLogits={activeRawLogits}
+                  isReasoningModel={inferenceEngine.availableModels.find(m => m.id === inferenceEngine.state.modelId)?.isReasoning}
                 />
               </div>
 
-              {/* Panel B: Center Canvas (The Starfield Cosmos or A/B Duel) */}
-              <div className="lg:col-span-8 xl:col-span-8 h-full flex flex-col space-y-3 min-h-[500px]">
-                {/* Real-Time Telemetry Health Bar */}
-                <TelemetryBar
-                  candidates={processedCandidates}
-                  params={params}
-                  ragEnabled={ragEnabled}
-                  historyLength={historyTokens.length}
-                />
-
+              {/* Panel B: Center Canvas (The Token Cosmos Galaxy or A/B Duel) */}
+              <div className="lg:col-span-8 xl:col-span-8 h-full flex flex-col min-h-[500px]">
                 <div className="flex-1 min-h-[460px]">
                   {splitView ? (
                     <SplitViewCosmos
@@ -482,42 +544,60 @@ export const App: React.FC = () => {
                       onSelectToken={handleSelectToken}
                       onUpdateRightTemp={newTemp => setDuelParams(prev => ({ ...prev, temperature: newTemp }))}
                       isByoeMode={provider !== 'default'}
+                      leftIsThinking={inferenceEngine.latestSnapshot?.isThinking}
                     />
                   ) : (
-                    <StarfieldCanvas
+                    <TokenCosmosGraph
                       candidates={processedCandidates}
                       params={params}
                       ragEnabled={ragEnabled}
                       onSelectToken={handleSelectToken}
-                      title="The Responsive Token Cosmos"
+                      title="The Token Cosmos"
                       subtitle={
                         provider !== 'default'
-                          ? `Connected to BYOE Provider [${provider.toUpperCase()}] (${modelName})`
-                          : "50 Candidate Tokens Orbiting Vocabulary Center"
+                          ? `BYOE [${provider.toUpperCase()}] • ${modelName}`
+                          : 'Cosmograph GPU Force-Directed Galaxy'
                       }
+                      steps={steps}
+                      currentStepIndex={currentStepIndex}
+                      onSelectStep={idx => setCurrentStepIndex(idx)}
+                      onGenerateNextStep={handleGenerateNextStep}
+                      onResetTimeline={handleResetTimeline}
+                      isGenerating={isGenerating}
+                      allCandidatesByStep={stepCandidatesList}
+                      historyLength={historyTokens.length}
+                      modelId={inferenceEngine.state.modelId}
+                      latestLogits={inferenceEngine.latestLogits}
+                      isThinking={inferenceEngine.latestSnapshot?.isThinking}
                     />
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Panel C: Bottom Bar (Sentence Flight Path Constellation Timeline with Perplexity Heatmap) */}
-            {steps.length > 0 && (
-              <div className="w-full">
-                <FlightPathTimeline
-                  steps={steps}
-                  currentStepIndex={currentStepIndex}
-                  onSelectStep={idx => setCurrentStepIndex(idx)}
-                  onGenerateNextStep={handleGenerateNextStep}
-                  onResetTimeline={handleResetTimeline}
-                  isGenerating={isGenerating}
-                  allCandidatesByStep={stepCandidatesList}
+            {/* Timeline is now integrated inside TokenCosmosGraph */}
+          </>
+        ) : activeTab === 'learn' ? (
+          <EducationalBlog />
+        ) : (
+          <div className="flex-1 max-w-4xl mx-auto w-full pt-8">
+            <div className="bg-[#1c1c21] rounded-xl border border-white/10 p-6 shadow-2xl overflow-hidden relative min-h-[600px]">
+              <div className="absolute inset-0 overflow-y-auto p-2">
+                <CodeExportModal
+                  isOpen={true}
+                  onClose={() => setActiveTab('experiment')}
+                  params={params}
+                  prompt={prompt}
+                  systemPrompt={systemPrompt}
+                  ragContext={ragContext}
+                  ragEnabled={ragEnabled}
+                  modelName={modelName}
+                  provider={provider}
+                  isReasoningModel={inferenceEngine.availableModels.find(m => m.id === inferenceEngine.state.modelId)?.isReasoning}
                 />
               </div>
-            )}
-          </>
-        ) : (
-          <EducationalBlog />
+            </div>
+          </div>
         )}
       </main>
 
@@ -546,19 +626,8 @@ export const App: React.FC = () => {
         customApiKey={customApiKey}
         modelName={modelName}
       />
-
-      {/* Developer Code Export Hub Modal */}
-      <CodeExportModal
-        isOpen={isCodeExportOpen}
-        onClose={() => setIsCodeExportOpen(false)}
-        params={params}
-        prompt={prompt}
-        systemPrompt={systemPrompt}
-        ragContext={ragContext}
-        ragEnabled={ragEnabled}
-        modelName={modelName}
-        provider={provider}
-      />
+        </>
+      )}
     </div>
   );
 };

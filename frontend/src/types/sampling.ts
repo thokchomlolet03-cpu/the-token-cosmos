@@ -28,6 +28,7 @@ export interface SamplingParameters {
   presencePenalty: number; // 0.0 to 1.5
   stopSequences: string[];
   logitBiases: Record<string, number>; // token_str -> float bias (e.g. -100 or +5)
+  maxThinkingTokens?: number; // Budget for reasoning models
 }
 
 export interface PresetScenario {

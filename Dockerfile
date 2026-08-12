@@ -1,55 +1,32 @@
-# ============================================================
-# Multi-Stage Unified Dockerfile for Google Cloud Run
-# Serves React Frontend SPA + FastAPI Backend from ONE container
-# Scale-to-zero: $0.00 idle cost
-# Build context: project root (not backend/)
-# ============================================================
+# Stage 1: Build the React Application
+FROM node:20-alpine AS builder
 
-# Stage 1: Build React Frontend with Node.js
-FROM node:20-slim AS frontend-builder
+WORKDIR /app
 
-WORKDIR /frontend
+# Copy package files
+COPY frontend/package*.json ./frontend/
 
-# Copy frontend package files and install dependencies
-COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm ci --no-audit --no-fund 2>/dev/null || npm install --no-audit --no-fund
+# Install dependencies
+WORKDIR /app/frontend
+RUN npm ci
 
-# Copy frontend source and build production bundle
+# Copy the rest of the application code
 COPY frontend/ ./
+
+# Build the application
 RUN npm run build
 
-# Stage 2: Install Python Backend Dependencies
-FROM python:3.11-slim AS backend-builder
+# Stage 2: Serve the application with Nginx
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Copy built assets from builder stage
+COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+# Expose Cloud Run default port
+EXPOSE 8080
 
-# Stage 3: Final Minimal Execution Image
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Copy installed Python dependencies from builder
-COPY --from=backend-builder /install /usr/local
-
-# Copy backend application source
-COPY backend/main.py .
-
-# Copy built frontend dist into /app/static/ for FastAPI to serve
-COPY --from=frontend-builder /frontend/dist ./static/
-
-# Environment configuration for Cloud Run
-ENV PORT=8000
-ENV PYTHONUNBUFFERED=1
-
-EXPOSE 8000
-
-# Start Uvicorn server
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]

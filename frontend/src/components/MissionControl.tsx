@@ -47,6 +47,7 @@ interface MissionControlProps {
   onInteractFeature?: (notice: ActiveInteractionNotice) => void;
   isFetchingLogits?: boolean;
   rawLogits?: RawTokenCandidate[];
+  isReasoningModel?: boolean;
 }
 
 export const MissionControl: React.FC<MissionControlProps> = ({
@@ -69,6 +70,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   onInteractFeature,
   isFetchingLogits = false,
   rawLogits = [],
+  isReasoningModel = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'sampling' | 'friction'>('sampling');
   const [isSystemExpanded, setIsSystemExpanded] = useState<boolean>(Boolean(systemPrompt.trim()));
@@ -438,8 +440,47 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             <span>Sampling Parameters</span>
           </h3>
 
-          {/* Temperature Slider */}
-          <div className="space-y-1.5">
+          {isReasoningModel ? (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-4 shadow-lg shadow-purple-500/10">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Bot className="h-4 w-4 text-purple-400 animate-pulse" />
+                  <span className="text-xs font-bold text-purple-300 uppercase tracking-widest">Reasoning Active</span>
+                </div>
+                <p className="text-[10px] text-purple-200/70 mb-4 leading-relaxed">
+                  Standard decoding parameters (Temperature, Top-P) are disabled during reasoning. Adjust the Thinking Budget to control latent space exploration depth.
+                </p>
+
+                {/* Thinking Budget Slider */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <label htmlFor="thinking-budget" className="font-medium text-slate-200 flex items-center space-x-1">
+                      <span>Thinking Budget</span>
+                      <span className="text-slate-400 font-mono text-[11px]">(Max Tokens)</span>
+                    </label>
+                    <span className="font-mono font-bold text-purple-400">{params.maxThinkingTokens || 2048}</span>
+                  </div>
+                  <input
+                    id="thinking-budget"
+                    type="range"
+                    min="50"
+                    max="4096"
+                    step="50"
+                    value={params.maxThinkingTokens || 2048}
+                    onChange={e => setParams(prev => ({ ...prev, maxThinkingTokens: parseInt(e.target.value) }))}
+                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500 hover:accent-purple-400 transition-all"
+                  />
+                  <div className="flex justify-between text-[9px] font-mono text-slate-500 px-1 pt-1">
+                    <span>50 (Fractured)</span>
+                    <span>4096 (Deep Thought)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Temperature Slider */}
+              <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
               <label htmlFor="temp-slider" className="font-medium text-slate-200 flex items-center space-x-1">
                 <span>The Cosmic Heat</span>
@@ -620,6 +661,8 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               Filters tokens relative to top star chance (min_p × max_probability).
             </p>
           </div>
+            </>
+          )}
         </div>
 
         {/* Penalties & Guardrails */}
@@ -796,10 +839,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               </button>
             </div>
           </div>
+          </div>
         </div>
-      </div>
-    )}
+      )}
+    </div>
   </div>
-</div>
-);
+  );
 };

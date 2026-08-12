@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Sparkles, Github, Layers, BookOpen, Orbit, Settings, Share2, Check, Swords, Code2 } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'visualizer' | 'blog';
-  setActiveTab: (tab: 'visualizer' | 'blog') => void;
+  activeTab: 'learn' | 'experiment' | 'export';
+  setActiveTab: (tab: 'learn' | 'experiment' | 'export') => void;
   splitView: boolean;
   setSplitView: (val: boolean) => void;
   onOpenSettings: () => void;
@@ -53,20 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Floating Pill Action Controls & Navigation */}
         <div className="flex items-center space-x-2">
-          {/* Export Code Button (Pink Pill) */}
-          {onOpenCodeExport && (
-            <button
-              onClick={onOpenCodeExport}
-              aria-label="Export sampling setup into production code snippets"
-              className="bg-pink-500 text-white rounded-full px-3.5 py-1.5 text-xs font-medium hover:bg-pink-400 transition-colors shadow-sm flex items-center space-x-1.5"
-              title="Export Setup to Python / LangChain / cURL Code"
-            >
-              <Code2 className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">Export Code</span>
-            </button>
-          )}
-
-          {/* Share Setup Link (Stealth Secondary Pill) */}
+          {/* A/B Duel Mode Toggle (Only in EXPERIMENT mode) */}
           <button
             onClick={handleCopy}
             aria-label="Copy current parameter setup link to clipboard"
@@ -88,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           {/* A/B Duel Mode Toggle */}
-          {activeTab === 'visualizer' && (
+          {activeTab === 'experiment' && (
             <button
               onClick={() => setSplitView(!splitView)}
               aria-label={splitView ? 'Disable A/B Duel Mode' : 'Enable side-by-side A/B Duel Mode'}
@@ -107,32 +94,46 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Floating Pill Navigation Tabs */}
           <div className="flex rounded-full bg-[#232329] p-1 border border-white/10" role="tablist">
             <button
-              onClick={() => setActiveTab('visualizer')}
+              onClick={() => setActiveTab('learn')}
               role="tab"
-              aria-selected={activeTab === 'visualizer'}
-              aria-label="Switch to Interactive Cosmos Visualizer tab"
+              aria-selected={activeTab === 'learn'}
+              aria-label="Switch to LEARN mode"
               className={`flex items-center space-x-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-all ${
-                activeTab === 'visualizer'
-                  ? 'bg-pink-500 text-white font-semibold shadow-sm'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Cosmos UI</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('blog')}
-              role="tab"
-              aria-selected={activeTab === 'blog'}
-              aria-label="Switch to Guide & Cheat Sheet tab"
-              className={`flex items-center space-x-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-all ${
-                activeTab === 'blog'
+                activeTab === 'learn'
                   ? 'bg-pink-500 text-white font-semibold shadow-sm'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
-              <span>Guide & Cheat Sheet</span>
+              <span className="hidden sm:inline">LEARN</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('experiment')}
+              role="tab"
+              aria-selected={activeTab === 'experiment'}
+              aria-label="Switch to EXPERIMENT mode"
+              className={`flex items-center space-x-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-all ${
+                activeTab === 'experiment'
+                  ? 'bg-pink-500 text-white font-semibold shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">EXPERIMENT</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('export')}
+              role="tab"
+              aria-selected={activeTab === 'export'}
+              aria-label="Switch to EXPORT mode"
+              className={`flex items-center space-x-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-all ${
+                activeTab === 'export'
+                  ? 'bg-pink-500 text-white font-semibold shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Code2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">EXPORT</span>
             </button>
           </div>
 

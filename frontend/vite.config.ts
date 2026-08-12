@@ -10,6 +10,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Enable top-level await (required by @mlc-ai/web-llm)
+  build: {
+    target: 'esnext',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'esnext',
+    },
+  },
+  worker: {
+    format: 'es',
+  },
   server: {
     port: 3000,
     proxy: {
