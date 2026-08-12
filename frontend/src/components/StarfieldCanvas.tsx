@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { ProcessedTokenCandidate, SamplingParameters } from '../types/sampling';
-import { Anchor, Filter, ZoomIn, ZoomOut, RotateCcw, Move, Ban } from 'lucide-react';
+import { Anchor, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 interface StarfieldCanvasProps {
   candidates: ProcessedTokenCandidate[];
@@ -11,13 +11,24 @@ interface StarfieldCanvasProps {
   subtitle?: string;
 }
 
+interface PhysicsNode {
+  id: string;
+  candidate: ProcessedTokenCandidate;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  isCenter: boolean;
+}
+
 export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
   candidates,
   params,
   ragEnabled,
   onSelectToken,
   title = "The Token Cosmos",
-  subtitle = "Candidate Vocabulary Starfield",
+  subtitle = "Candidate Vocabulary Force Physics Field",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -38,8 +49,8 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
     screenY: number;
   } | null>(null);
 
+  const physicsNodesRef = useRef<Map<string, PhysicsNode>>(new Map());
   const animationFrameIdRef = useRef<number | null>(null);
-  const rotationAngleRef = useRef<number>(0);
 
   // Resize listener
   useEffect(() => {
@@ -139,7 +150,7 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
     } catch (_) {}
   };
 
-  // 60 FPS Render loop with Zoom & Pan Transformations
+  // 60 FPS Real-time Force Physics Simulation & Developer Matte Render Loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -147,6 +158,36 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
     if (!ctx) return;
 
     let isSubscribed = true;
+
+    // Sync candidate tokens with persistent physics nodes
+    const currentNodesMap = physicsNodesRef.current;
+    if (candidates && candidates.length > 0) {
+      candidates.forEach((c, index) => {
+        const id = `${c.token_id}_${c.token_str}_${index}`;
+        const isCenter = index === 0;
+
+        if (!currentNodesMap.has(id)) {
+          // Initialize new node position along initial radial layout
+          const angle = c.orbitAngle || Math.random() * Math.PI * 2;
+          const initialDist = isCenter ? 0 : Math.max(40, c.orbitRadius || 100);
+          currentNodesMap.set(id, {
+            id,
+            candidate: c,
+            x: Math.cos(angle) * initialDist,
+            y: Math.sin(angle) * initialDist,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5,
+            radius: isCenter ? 14 : Math.max(3, Math.sqrt(c.probability) * 12 + 2),
+            isCenter,
+          });
+        } else {
+          // Update candidate reference and radius
+          const existing = currentNodesMap.get(id)!;
+          existing.candidate = c;
+          existing.radius = isCenter ? 14 : Math.max(3, Math.sqrt(c.probability) * 12 + 2);
+        }
+      });
+    }
 
     const render = () => {
       if (!isSubscribed) return;
@@ -156,180 +197,173 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
       const centerX = width / 2;
       const centerY = height / 2;
 
-      // Slowly rotate outer asteroids
-      rotationAngleRef.current += 0.0015;
-      const globalRotation = rotationAngleRef.current;
+      // 1. Run Force Physics Integration (N-body Repulsion + Gravity Well)
+      const nodeList = Array.from(currentNodesMap.values());
+      const tempFactor = Math.max(0.1, params.temperature);
 
-      // Clear background space
+      // Physics Constants
+      const kGrav = 0.08 / tempFactor; // Gravity pull increases at lower temperatures
+      const kRep = 800 * (1 + params.frequencyPenalty); // Coulomb repulsion prevents label overlap
+
+      for (let i = 0; i < nodeList.length; i++) {
+        const nodeA = nodeList[i];
+        if (nodeA.isCenter) continue; // Center core is fixed at origin (0, 0)
+
+        let fx = 0;
+        let fy = 0;
+
+        // A. Hooke's Gravitational Pull toward Center Core (0, 0)
+        const targetRadius = Math.max(35, (1 - nodeA.candidate.probability) * 180);
+        const currentDist = Math.sqrt(nodeA.x * nodeA.x + nodeA.y * nodeA.y) || 1;
+        const radialDiff = currentDist - targetRadius;
+        const radialForce = -radialDiff * kGrav;
+
+        fx += (nodeA.x / currentDist) * radialForce;
+        fy += (nodeA.y / currentDist) * radialForce;
+
+        // B. Pairwise Coulomb Repulsion between sibling candidate nodes
+        for (let j = 0; j < nodeList.length; j++) {
+          if (i === j) continue;
+          const nodeB = nodeList[j];
+          const dx = nodeA.x - nodeB.x;
+          const dy = nodeA.y - nodeB.y;
+          const distSq = dx * dx + dy * dy + 10;
+          const dist = Math.sqrt(distSq);
+
+          if (dist < 140) {
+            const repForce = kRep / distSq;
+            fx += (dx / dist) * repForce;
+            fy += (dy / dist) * repForce;
+          }
+        }
+
+        // C. Apply acceleration & damped velocity integration (settling factor 0.85)
+        nodeA.vx = (nodeA.vx + fx * 0.016) * 0.85;
+        nodeA.vy = (nodeA.vy + fy * 0.016) * 0.85;
+
+        nodeA.x += nodeA.vx;
+        nodeA.y += nodeA.vy;
+      }
+
+      // 2. Render Developer Matte Canvas Frame
       ctx.clearRect(0, 0, width, height);
 
-      // Render static outer space dust
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-      for (let i = 0; i < 40; i++) {
-        const sx = (Math.sin(i * 99 + globalRotation * 0.05) * 0.5 + 0.5) * width;
-        const sy = (Math.cos(i * 33 + globalRotation * 0.05) * 0.5 + 0.5) * height;
+      // Render static background void dust
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      for (let i = 0; i < 30; i++) {
+        const sx = (Math.sin(i * 99) * 0.5 + 0.5) * width;
+        const sy = (Math.cos(i * 33) * 0.5 + 0.5) * height;
         ctx.fillRect(sx, sy, 1, 1);
       }
 
-      if (!candidates || candidates.length === 0) {
-        animationFrameIdRef.current = requestAnimationFrame(render);
-        return;
-      }
-
-      // Save context matrix before Applying Pan Offset and Zoom Scale
       ctx.save();
 
       // Transform Matrix: Origin at Center + Pan Offset, then Scale
       const transformedCenterX = centerX + offsetX;
       const transformedCenterY = centerY + offsetY;
 
-      // 1. Draw Top-K Orbital Ring (Scaled)
-      const topKCount = Math.min(params.topK, candidates.length);
-      const topKCandidate = candidates[topKCount - 1];
-      const topKRadius = (topKCandidate ? topKCandidate.orbitRadius + 20 : 200) * scale;
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(transformedCenterX, transformedCenterY, topKRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-      ctx.lineWidth = 1.5 * Math.sqrt(scale);
-      ctx.setLineDash([4 * scale, 4 * scale]);
-      ctx.stroke();
-      ctx.restore();
-
-      // 2. Draw Top-P Energy Shield Ring (Scaled)
-      const topPRadius = Math.min(180, topKRadius * params.topP + 30) * scale;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(transformedCenterX, transformedCenterY, topPRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(168, 85, 247, 0.45)';
-      ctx.lineWidth = 2 * Math.sqrt(scale);
-      ctx.shadowColor = 'rgba(168, 85, 247, 0.6)';
-      ctx.shadowBlur = 10 * scale;
-      ctx.stroke();
-      ctx.restore();
-
-      // 3. Draw Min-P Gravity Well Ring (Scaled)
-      const minPRadius = Math.max(30, 220 * (1 - params.minP)) * scale;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(transformedCenterX, transformedCenterY, minPRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(236, 72, 153, 0.25)';
-      ctx.lineWidth = 1 * Math.sqrt(scale);
-      ctx.stroke();
-      ctx.restore();
-
-      // Store screen positions for collision detection
       const screenPositions: { candidate: ProcessedTokenCandidate; screenX: number; screenY: number; screenSize: number }[] = [];
 
-      // 4. Render RAG Cyan Fact Anchor Beams
-      if (ragEnabled) {
-        candidates.forEach(c => {
-          if (c.is_rag_grounded) {
-            const angle = c.orbitAngle + (c.rank === 1 ? 0 : globalRotation);
-            const worldRadius = c.orbitRadius * scale;
-            const px = transformedCenterX + Math.cos(angle) * worldRadius;
-            const py = transformedCenterY + Math.sin(angle) * worldRadius;
+      // 3. Render Link Tethers (Ultra-faint gridlines & RAG Cyan Fact Beams)
+      nodeList.forEach(node => {
+        if (node.isCenter) return;
 
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(transformedCenterX, transformedCenterY);
-            ctx.lineTo(px, py);
-            ctx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
-            ctx.lineWidth = 2 * Math.sqrt(scale);
-            ctx.shadowColor = '#06b6d4';
-            ctx.shadowBlur = 12 * scale;
-            ctx.stroke();
-            ctx.restore();
-          }
-        });
-      }
+        const px = transformedCenterX + node.x * scale;
+        const py = transformedCenterY + node.y * scale;
 
-      // 5. Render Celestial Tokens
-      candidates.forEach((c, index) => {
-        const isCenter = index === 0;
-        const angle = c.orbitAngle + (isCenter ? 0 : globalRotation);
-        const worldRadius = c.orbitRadius * scale;
-        const px = transformedCenterX + Math.cos(angle) * worldRadius;
-        const py = transformedCenterY + Math.sin(angle) * worldRadius;
-        const screenSize = Math.max(2, c.size * Math.sqrt(scale));
+        const isHovered = hoveredCandidate?.candidate.token_id === node.candidate.token_id && hoveredCandidate?.candidate.token_str === node.candidate.token_str;
+        const isDimmed = hoveredCandidate !== null && !isHovered;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(transformedCenterX, transformedCenterY);
+        ctx.lineTo(px, py);
+
+        if (ragEnabled && node.candidate.is_rag_grounded) {
+          ctx.strokeStyle = isDimmed ? 'rgba(6, 182, 212, 0.15)' : 'rgba(6, 182, 212, 0.50)';
+          ctx.lineWidth = (isHovered ? 2.5 : 1.5) * Math.sqrt(scale);
+        } else {
+          ctx.strokeStyle = isDimmed ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)';
+          ctx.lineWidth = 1 * Math.sqrt(scale);
+        }
+
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      // 4. Render Physics Token Nodes
+      nodeList.forEach(node => {
+        const c = node.candidate;
+        const px = node.isCenter ? transformedCenterX : transformedCenterX + node.x * scale;
+        const py = node.isCenter ? transformedCenterY : transformedCenterY + node.y * scale;
+        const screenSize = Math.max(2, node.radius * Math.sqrt(scale));
 
         screenPositions.push({ candidate: c, screenX: px, screenY: py, screenSize });
 
-        // Calculate opacity / dimming for Frequency Penalty ("The Exhaustion Meter")
-        let alpha = 1.0;
-        if (c.isHistorical && params.frequencyPenalty > 0) {
-          const dimFactor = Math.min(0.85, (c.historicalCount || 1) * params.frequencyPenalty * 0.45);
-          alpha = Math.max(0.15, 1.0 - dimFactor);
-        }
+        // Subtractive Focus Dimming (Non-hovered nodes fade to 10% opacity)
+        const isHovered = hoveredCandidate?.candidate.token_id === c.token_id && hoveredCandidate?.candidate.token_str === c.token_str;
+        const isDimmed = hoveredCandidate !== null && !isHovered && !node.isCenter;
+        const alpha = isDimmed ? 0.10 : 1.0;
 
         ctx.save();
         ctx.globalAlpha = alpha;
 
-        // Black Hole / Banned token visual treatment (Refinement 4)
+        // Banned Token / Black Hole Treatment
         if (c.filterReason === 'Banned') {
           ctx.beginPath();
           ctx.arc(px, py, screenSize + 2, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-          ctx.strokeStyle = 'rgba(225, 29, 72, 0.6)';
+          ctx.fillStyle = '#111111';
+          ctx.strokeStyle = '#ef4444';
           ctx.lineWidth = 1.5;
           ctx.fill();
           ctx.stroke();
 
-          // Black Hole cross indicator
           ctx.font = `${Math.max(8, 10 * Math.sqrt(scale))}px JetBrains Mono`;
-          ctx.fillStyle = '#f43f5e';
+          ctx.fillStyle = '#ef4444';
           ctx.textAlign = 'center';
           ctx.fillText('❌', px, py + 3);
           ctx.restore();
           return;
         }
 
-        // Draw star orbital tether line to center if high probability
-        if (!c.isFiltered && c.probability > 0.05 && !isCenter) {
-          ctx.beginPath();
-          ctx.moveTo(transformedCenterX, transformedCenterY);
-          ctx.lineTo(px, py);
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-
-        // Draw glowing star body
+        // Draw Solid Matte Node Body
         ctx.beginPath();
         ctx.arc(px, py, screenSize, 0, Math.PI * 2);
 
-        if (!c.isFiltered) {
-          ctx.fillStyle = c.color;
-          ctx.shadowColor = c.color;
-          ctx.shadowBlur = (isCenter ? 25 : 12) * Math.sqrt(scale);
+        if (node.isCenter) {
+          ctx.fillStyle = '#ffffff'; // Solid white core
+        } else if (c.rank === 1) {
+          ctx.fillStyle = '#10b981'; // Flat matte emerald for winner
+        } else if (c.is_rag_grounded) {
+          ctx.fillStyle = '#06b6d4'; // Flat matte cyan for RAG fact
+        } else if (c.isFiltered) {
+          ctx.fillStyle = '#222222'; // Muted dark gray for out-of-bounds
         } else {
-          ctx.fillStyle = 'rgba(71, 85, 105, 0.4)';
-          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#555555'; // Medium gray for active candidates
         }
 
         ctx.fill();
 
-        // Supergiant outer ring flare
-        if (isCenter) {
+        // White border ring for active/hovered node
+        if (isHovered || node.isCenter) {
           ctx.beginPath();
-          ctx.arc(px, py, screenSize + 6 * Math.sqrt(scale), 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-          ctx.lineWidth = 2 * Math.sqrt(scale);
+          ctx.arc(px, py, screenSize + 3 * Math.sqrt(scale), 0, Math.PI * 2);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5 * Math.sqrt(scale);
           ctx.stroke();
         }
 
-        // Draw token text label if top 12 or RAG grounded or zoomed in
-        if (index < 12 || c.is_rag_grounded || scale > 1.8) {
-          const fontSize = Math.max(9, (isCenter ? 13 : 11) * Math.min(1.5, Math.sqrt(scale)));
-          ctx.font = isCenter ? `bold ${fontSize}px JetBrains Mono` : `${fontSize}px JetBrains Mono`;
-          ctx.fillStyle = c.isFiltered ? 'rgba(148, 163, 184, 0.4)' : '#f8fafc';
+        // Draw Token Text Labels
+        if (node.isCenter || c.rank <= 10 || c.is_rag_grounded || isHovered || scale > 1.8) {
+          const fontSize = Math.max(9, (node.isCenter ? 13 : 11) * Math.min(1.5, Math.sqrt(scale)));
+          ctx.font = node.isCenter ? `bold ${fontSize}px JetBrains Mono` : `${fontSize}px JetBrains Mono`;
+          ctx.fillStyle = c.isFiltered ? '#666666' : '#ffffff';
           ctx.textAlign = 'center';
           ctx.fillText(`"${c.token_str.trim()}"`, px, py + screenSize + 14 * Math.sqrt(scale));
 
-          if (!c.isFiltered && c.probability > 0.01) {
+          if (!node.isCenter && !c.isFiltered && c.probability > 0.01) {
             ctx.font = `${Math.max(8, 10 * Math.min(1.5, Math.sqrt(scale)))}px Inter`;
-            ctx.fillStyle = c.is_rag_grounded ? '#22d3ee' : '#94a3b8';
+            ctx.fillStyle = c.is_rag_grounded ? '#06b6d4' : '#9ca3af';
             ctx.fillText(`${(c.probability * 100).toFixed(1)}%`, px, py + screenSize + 26 * Math.sqrt(scale));
           }
         }
@@ -353,7 +387,7 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
         cancelAnimationFrame(animationFrameIdRef.current);
       }
     };
-  }, [candidates, params, ragEnabled, scale, offsetX, offsetY]);
+  }, [candidates, params, ragEnabled, scale, offsetX, offsetY, hoveredCandidate]);
 
   return (
     <div
@@ -373,15 +407,15 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
         {/* Legend */}
         <div className="flex items-center space-x-3 text-[11px] bg-[#0A0A0A]/90 px-3 py-1.5 rounded-lg border border-white/10 font-mono">
           <div className="flex items-center space-x-1">
-            <span className="h-2 w-2 rounded-full bg-amber-400" />
-            <span className="text-gray-300">Top Supergiant</span>
+            <span className="h-2 w-2 rounded-full bg-[#10b981]" />
+            <span className="text-gray-300">Winner Candidate</span>
           </div>
           <div className="flex items-center space-x-1">
-            <span className="h-2 w-2 rounded-full bg-cyan-400" />
+            <span className="h-2 w-2 rounded-full bg-[#06b6d4]" />
             <span className="text-gray-300">RAG Grounded</span>
           </div>
           <div className="flex items-center space-x-1">
-            <span className="h-2 w-2 rounded-full bg-rose-500" />
+            <span className="h-2 w-2 rounded-full bg-[#ef4444]" />
             <span className="text-gray-300">Black-Hole Banned</span>
           </div>
         </div>
@@ -410,14 +444,10 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
           <ZoomIn className="h-4 w-4" />
         </button>
 
-        <span className="text-xs font-mono font-medium text-white px-1 min-w-[42px] text-center">
-          {Math.round(scale * 100)}%
-        </span>
-
         <button
           onClick={zoomOut}
           aria-label="Zoom out starfield universe"
-          className="p-1.5 rounded-lg bg-slate-900 text-slate-300 hover:text-cyan-400 hover:bg-slate-800 transition-colors"
+          className="p-1.5 rounded-md bg-black text-gray-300 hover:text-white transition-colors"
           title="Zoom Out"
         >
           <ZoomOut className="h-4 w-4" />
@@ -425,80 +455,65 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
 
         <button
           onClick={resetView}
-          aria-label="Reset starfield zoom and pan coordinates"
-          className="flex items-center space-x-1 px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 text-xs font-mono transition-colors"
-          title="Reset Camera View"
+          aria-label="Reset viewport zoom and pan"
+          className="p-1.5 rounded-md bg-black text-gray-300 hover:text-white transition-colors"
+          title="Reset View (Scale 100%)"
         >
-          <RotateCcw className="h-3.5 w-3.5" />
-          <span>Reset</span>
+          <RotateCcw className="h-4 w-4" />
         </button>
+
+        <span className="text-xs font-mono font-medium text-white px-1 min-w-[42px] text-center">
+          {Math.round(scale * 100)}%
+        </span>
       </div>
 
-      {/* Navigation Hint Badge */}
-      <div className="absolute bottom-4 left-4 z-10 pointer-events-none hidden sm:flex items-center space-x-1.5 text-[10px] text-slate-400 bg-slate-950/70 px-2.5 py-1 rounded-lg border border-slate-800/80">
-        <Move className="h-3 w-3 text-cyan-400" />
-        <span>Scroll to Zoom • Drag to Pan • Double-click to Reset</span>
-      </div>
-
-      {/* Interactive Tooltip Card */}
+      {/* Hover Candidate Tooltip Overlay */}
       {hoveredCandidate && (
         <div
-          className="absolute z-30 pointer-events-none transition-all duration-75"
           style={{
-            left: `${Math.min(hoveredCandidate.screenX + 15, (containerRef.current?.clientWidth || 500) - 220)}px`,
-            top: `${Math.min(hoveredCandidate.screenY + 15, (containerRef.current?.clientHeight || 400) - 160)}px`,
+            position: 'absolute',
+            left: `${hoveredCandidate.screenX + 14}px`,
+            top: `${hoveredCandidate.screenY - 20}px`,
+            pointerEvents: 'none',
           }}
+          className="z-30 rounded-lg bg-[#0A0A0A] border border-white/15 px-3 py-2 text-xs font-mono shadow-2xl text-gray-100 backdrop-blur-md animate-in fade-in duration-100 min-w-[180px]"
         >
-          <div className="w-52 rounded-xl bg-slate-950/95 p-3 border border-cyan-500/30 shadow-neon-cyan backdrop-blur-md space-y-2">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-              <span className="font-mono text-sm font-bold text-cyan-300">
-                "{hoveredCandidate.candidate.token_str}"
-              </span>
-              <span className="text-[10px] font-mono text-slate-400">
-                Rank #{hoveredCandidate.candidate.rank}
+          <div className="flex items-center justify-between border-b border-white/10 pb-1 mb-1.5">
+            <span className="font-bold text-white text-sm">
+              "{hoveredCandidate.candidate.token_str.trim()}"
+            </span>
+            <span className="text-[10px] text-gray-400 font-mono">
+              Rank #{hoveredCandidate.candidate.rank}
+            </span>
+          </div>
+
+          <div className="space-y-1 text-[11px]">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Probability:</span>
+              <span className="font-bold text-white">
+                {(hoveredCandidate.candidate.probability * 100).toFixed(2)}%
               </span>
             </div>
 
-            <div className="space-y-1 text-xs font-mono">
-              <div className="flex justify-between text-slate-300">
-                <span className="text-slate-400">Raw Logit (z_i):</span>
-                <span className="font-bold text-amber-400">
-                  {hoveredCandidate.candidate.raw_logit.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between text-slate-300">
-                <span className="text-slate-400">Final Chance:</span>
-                <span className="font-bold text-cyan-400">
-                  {(hoveredCandidate.candidate.probability * 100).toFixed(2)}%
-                </span>
-              </div>
-
-              {hoveredCandidate.candidate.isHistorical && (
-                <div className="flex justify-between text-emerald-400 text-[11px]">
-                  <span>Seen in Context:</span>
-                  <span className="font-bold">{hoveredCandidate.candidate.historicalCount}x</span>
-                </div>
-              )}
-
-              {hoveredCandidate.candidate.is_rag_grounded && (
-                <div className="flex items-center space-x-1 text-[10px] text-cyan-300 bg-cyan-950/60 p-1 rounded border border-cyan-500/30">
-                  <Anchor className="h-3 w-3 text-cyan-400" />
-                  <span>RAG Fact Grounded</span>
-                </div>
-              )}
-
-              {hoveredCandidate.candidate.filterReason === 'Banned' ? (
-                <div className="flex items-center space-x-1 text-[10px] text-rose-300 bg-rose-950/60 p-1 rounded border border-rose-800/40">
-                  <Ban className="h-3 w-3 text-rose-400" />
-                  <span>Banned by Logit Bias (-100)</span>
-                </div>
-              ) : hoveredCandidate.candidate.isFiltered ? (
-                <div className="flex items-center space-x-1 text-[10px] text-slate-300 bg-slate-900 p-1 rounded border border-slate-800">
-                  <Filter className="h-3 w-3 text-slate-400" />
-                  <span>Filtered out by {hoveredCandidate.candidate.filterReason}</span>
-                </div>
-              ) : null}
+            <div className="flex justify-between">
+              <span className="text-gray-400">Adjusted Logit:</span>
+              <span className="text-gray-300 font-mono">
+                {hoveredCandidate.candidate.adjusted_logit.toFixed(3)}
+              </span>
             </div>
+
+            {hoveredCandidate.candidate.is_rag_grounded && (
+              <div className="mt-1 flex items-center space-x-1 text-[#06b6d4] font-medium">
+                <Anchor className="h-3 w-3" />
+                <span>RAG Fact Grounded</span>
+              </div>
+            )}
+
+            {hoveredCandidate.candidate.isFiltered && (
+              <div className="mt-1 text-rose-400 font-medium">
+                Filtered: {hoveredCandidate.candidate.filterReason}
+              </div>
+            )}
           </div>
         </div>
       )}
