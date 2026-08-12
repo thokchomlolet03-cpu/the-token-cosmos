@@ -42,6 +42,16 @@ export interface PresetScenario {
   ragContext: string;
 }
 
+// Perplexity & Confidence metadata per-token in the FlightPath
+export type ConfidenceLevel = 'high' | 'moderate' | 'low';
+
+export interface PerplexityData {
+  entropy: number;        // Shannon entropy in bits for the distribution at this step
+  confidence: ConfidenceLevel;
+  confidenceScore: number; // 0.0 (lowest) to 1.0 (highest confidence)
+  perplexityColor: string; // CSS color based on confidence level
+}
+
 export interface FlightStep {
   stepIndex: number;
   selectedToken: ProcessedTokenCandidate;
@@ -49,4 +59,42 @@ export interface FlightStep {
   rawLogits: RawTokenCandidate[];
   params: SamplingParameters;
   ragEnabled: boolean;
+  perplexity?: PerplexityData; // Computed lazily for heatmap
+}
+
+// A/B Duel Mode configuration
+export interface DuelConfig {
+  enabled: boolean;
+  mode: 'temperature' | 'byoe'; // temperature fallback vs BYOE engine comparison
+  secondaryTemp: number;         // Temperature for secondary pane (fallback mode)
+  label: {
+    left: string;
+    right: string;
+  };
+}
+
+// Friction Hunter Diagnostic Bridge
+export type FrictionSeverity = 'critical' | 'warning' | 'info';
+
+export interface FrictionPoint {
+  phraseIndex: number;
+  phrase: string;
+  logProbDrop: number;       // Magnitude of the log-probability drop
+  previousLogProb: number;
+  currentLogProb: number;
+  severity: FrictionSeverity;
+  reason: string;            // Suggested reason for the drop
+}
+
+export interface FrictionReport {
+  inputText: string;
+  totalJointLogProb: number;
+  averageLogProb: number;
+  phrases: Array<{
+    text: string;
+    logProb: number;
+    normalizedScore: number;  // 0.0 to 1.0
+  }>;
+  frictionPoints: FrictionPoint[];
+  analysisTimeMs: number;
 }

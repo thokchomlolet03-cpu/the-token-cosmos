@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { SamplingParameters, PresetScenario } from '../types/sampling';
+import { SamplingParameters, PresetScenario, RawTokenCandidate } from '../types/sampling';
 import { PRESET_SCENARIOS } from '../utils/tokenData';
 import { CosmicGuide, ActiveParamType } from './CosmicGuide';
 import { ActiveInteractionNotice } from './TheNavigator';
+import { FrictionAnalysis } from './FrictionAnalysis';
 import {
   Flame,
   CircleDot,
@@ -23,6 +24,7 @@ import {
   Loader2,
   UserCheck,
   Code2,
+  Search,
 } from 'lucide-react';
 
 interface MissionControlProps {
@@ -44,6 +46,7 @@ interface MissionControlProps {
   onLaunchPrompt: () => void;
   onInteractFeature?: (notice: ActiveInteractionNotice) => void;
   isFetchingLogits?: boolean;
+  rawLogits?: RawTokenCandidate[];
 }
 
 export const MissionControl: React.FC<MissionControlProps> = ({
@@ -65,7 +68,9 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   onLaunchPrompt,
   onInteractFeature,
   isFetchingLogits = false,
+  rawLogits = [],
 }) => {
+  const [activeTab, setActiveTab] = useState<'sampling' | 'friction'>('sampling');
   const [isSystemExpanded, setIsSystemExpanded] = useState<boolean>(Boolean(systemPrompt.trim()));
   const [isSchemaExpanded, setIsSchemaExpanded] = useState<boolean>(jsonSchemaEnabled);
   const [isRagExpanded, setIsRagExpanded] = useState<boolean>(ragEnabled);
@@ -158,20 +163,47 @@ export const MissionControl: React.FC<MissionControlProps> = ({
 
   return (
     <div className="glass-panel flex flex-col h-full rounded-2xl overflow-hidden border border-cyan-500/20 shadow-2xl">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/60 px-5 py-4">
+      {/* Header with Tab Switching */}
+      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/60 px-5 py-3">
         <div className="flex items-center space-x-2">
           <Sliders className="h-5 w-5 text-cyan-400" />
-          <h2 className="text-base font-bold text-slate-100">Mission Control</h2>
+          <h2 className="text-base font-bold text-slate-100 hidden sm:block">Mission Control</h2>
         </div>
-        <span className="rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-cyan-300 border border-cyan-500/20">
-          60 FPS Real-time Math
-        </span>
+
+        {/* Tab Selector */}
+        <div className="flex rounded-lg bg-slate-900 p-1 border border-slate-800">
+          <button
+            onClick={() => setActiveTab('sampling')}
+            className={`flex items-center space-x-1.5 rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
+              activeTab === 'sampling'
+                ? 'bg-cyan-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Sliders className="h-3.5 w-3.5" />
+            <span>Sampling</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('friction')}
+            className={`flex items-center space-x-1.5 rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
+              activeTab === 'friction'
+                ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span>Friction Analysis</span>
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
-        {/* Preset Scenarios ("Vibe Buttons") */}
-        <div>
+        {activeTab === 'friction' ? (
+          <FrictionAnalysis params={params} rawLogits={rawLogits} />
+        ) : (
+          <div className="space-y-6">
+            {/* Preset Scenarios ("Vibe Buttons") */}
+            <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5 mb-2.5">
             <Sparkles className="h-3.5 w-3.5 text-purple-400" />
             <span>Preset Scenarios ("Vibe Buttons")</span>
@@ -749,6 +781,8 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           </div>
         </div>
       </div>
-    </div>
-  );
+    )}
+  </div>
+</div>
+);
 };

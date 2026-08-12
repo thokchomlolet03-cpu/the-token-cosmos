@@ -34,7 +34,7 @@ export const App: React.FC = () => {
     return localStorage.getItem('token_cosmos_model_name') || 'Qwen2.5-0.5B';
   });
 
-  // Default Sampling Parameters
+  // Default Primary Sampling Parameters (Universe A)
   const [params, setParams] = useState<SamplingParameters>({
     temperature: 0.7,
     topK: 40,
@@ -42,6 +42,18 @@ export const App: React.FC = () => {
     minP: 0.02,
     frequencyPenalty: 0.1,
     presencePenalty: 0.1,
+    stopSequences: [],
+    logitBiases: {},
+  });
+
+  // Secondary A/B Duel Sampling Parameters (Universe B)
+  const [duelParams, setDuelParams] = useState<SamplingParameters>({
+    temperature: 1.5,
+    topK: 50,
+    topP: 0.95,
+    minP: 0.01,
+    frequencyPenalty: 0.0,
+    presencePenalty: 0.0,
     stopSequences: [],
     logitBiases: {},
   });
@@ -281,6 +293,7 @@ export const App: React.FC = () => {
 
   const activeRawLogits = ragEnabled ? ragRawLogits : baselineRawLogits;
 
+  // Primary processed candidates (Universe A)
   const processedCandidates = useMemo(() => {
     const raw = calculateTokenProbabilities(activeRawLogits, params, historyTokens);
 
@@ -299,6 +312,11 @@ export const App: React.FC = () => {
     return raw;
   }, [activeRawLogits, params, historyTokens, jsonSchemaEnabled, jsonSchema]);
 
+  // A/B Secondary processed candidates (Universe B)
+  const duelCandidates = useMemo(() => {
+    return calculateTokenProbabilities(activeRawLogits, duelParams, historyTokens);
+  }, [activeRawLogits, duelParams, historyTokens]);
+
   const baselineCandidates = useMemo(() => {
     return calculateTokenProbabilities(baselineRawLogits, params, historyTokens);
   }, [baselineRawLogits, params, historyTokens]);
@@ -306,6 +324,11 @@ export const App: React.FC = () => {
   const ragCandidates = useMemo(() => {
     return calculateTokenProbabilities(ragRawLogits, params, historyTokens);
   }, [ragRawLogits, params, historyTokens]);
+
+  // Compute all step candidates list for perplexity heatmap in FlightPathTimeline
+  const stepCandidatesList = useMemo(() => {
+    return steps.map(s => calculateTokenProbabilities(s.rawLogits, s.params));
+  }, [steps]);
 
   useEffect(() => {
     if (processedCandidates.length > 0) {
@@ -411,17 +434,35 @@ export const App: React.FC = () => {
                   onLaunchPrompt={handleLaunchPrompt}
                   onInteractFeature={notice => setActiveNotice(notice)}
                   isFetchingLogits={isFetchingLogits}
+                  rawLogits={activeRawLogits}
                 />
               </div>
 
-              {/* Panel B: Center Canvas (The Starfield Cosmos) */}
+              {/* Panel B: Center Canvas (The Starfield Cosmos or A/B Duel) */}
               <div className="lg:col-span-8 xl:col-span-8 h-full min-h-[500px]">
                 {splitView ? (
                   <SplitViewCosmos
-                    baselineCandidates={baselineCandidates}
-                    ragCandidates={ragCandidates}
-                    params={params}
+                    leftCandidates={processedCandidates}
+                    rightCandidates={duelCandidates}
+                    leftParams={params}
+                    rightParams={duelParams}
+                    leftTitle={
+                      provider !== 'default'
+                        ? `Universe A [${provider.toUpperCase()}] (${modelName})`
+                        : `Universe A (Temp = ${params.temperature.toFixed(2)})`
+                    }
+                    leftSubtitle={`Primary Sampling Config • Top-K ${params.topK}`}
+                    rightTitle={
+                      provider !== 'default'
+                        ? `Universe B [Cloud Run Qwen]`
+                        : `Universe B (Temp = ${duelParams.temperature.toFixed(2)})`
+                    }
+                    rightSubtitle={`Secondary A/B Config • Top-K ${duelParams.topK}`}
+                    leftRagEnabled={ragEnabled}
+                    rightRagEnabled={ragEnabled}
                     onSelectToken={handleSelectToken}
+                    onUpdateRightTemp={newTemp => setDuelParams(prev => ({ ...prev, temperature: newTemp }))}
+                    isByoeMode={provider !== 'default'}
                   />
                 ) : (
                   <StarfieldCanvas
@@ -440,7 +481,7 @@ export const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Panel C: Bottom Bar (Sentence Flight Path Constellation Timeline) */}
+            {/* Panel C: Bottom Bar (Sentence Flight Path Constellation Timeline with Perplexity Heatmap) */}
             {steps.length > 0 && (
               <div className="w-full">
                 <FlightPathTimeline
@@ -450,6 +491,7 @@ export const App: React.FC = () => {
                   onGenerateNextStep={handleGenerateNextStep}
                   onResetTimeline={handleResetTimeline}
                   isGenerating={isGenerating}
+                  allCandidatesByStep={stepCandidatesList}
                 />
               </div>
             )}

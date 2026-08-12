@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Github, Layers, BookOpen, Orbit, Settings, Share2, Check } from 'lucide-react';
+import { Sparkles, Github, Layers, BookOpen, Orbit, Settings, Share2, Check, Swords } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'visualizer' | 'blog';
@@ -74,20 +74,20 @@ export const Header: React.FC<HeaderProps> = ({
             <Settings className="h-4 w-4 text-purple-400" />
           </button>
 
-          {/* Split-View Toggle */}
+          {/* A/B Duel Mode Toggle */}
           {activeTab === 'visualizer' && (
             <button
               onClick={() => setSplitView(!splitView)}
-              aria-label={splitView ? 'Disable split view mode' : 'Enable side-by-side RAG split view mode'}
+              aria-label={splitView ? 'Disable A/B Duel Mode' : 'Enable side-by-side A/B Duel Mode'}
               className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                 splitView
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-neon-cyan'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40 shadow-lg'
                   : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700 hover:text-white'
               }`}
-              title="Compare Baseline AI vs. Grounded RAG AI side-by-side"
+              title="Compare Model / Parameter Configurations side-by-side"
             >
-              <Layers className="h-3.5 w-3.5 text-cyan-400" />
-              <span className="hidden md:inline">{splitView ? 'Split-View Active' : 'Compare RAG Split-View'}</span>
+              <Swords className="h-3.5 w-3.5 text-purple-400" />
+              <span className="hidden md:inline">{splitView ? 'A/B Duel Active' : 'A/B Duel Mode'}</span>
             </button>
           )}
 
@@ -125,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* GitHub link */}
           <a
-            href="https://github.com"
+            href="https://github.com/thokchomlolet03-cpu/the-token-cosmos"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="View source code repository on GitHub"
