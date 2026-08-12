@@ -7,6 +7,8 @@
 
 import {
   MLCEngine,
+  prebuiltAppConfig,
+  type AppConfig,
   type InitProgressReport,
   type LogitProcessor,
 } from '@mlc-ai/web-llm';
@@ -79,7 +81,21 @@ async function loadModel(modelId: string) {
 
     const logitProcessor = new CosmosLogitProcessor();
 
+    const CUSTOM_APP_CONFIG: AppConfig = {
+      model_list: [
+        ...prebuiltAppConfig.model_list,
+        {
+          model: "https://huggingface.co/mlc-ai/DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC",
+          model_id: "DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC",
+          model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/qwen2-1.5b-q4f16_1-ctx4k-webgpu.wasm",
+          vram_required_MB: 1100,
+          low_resource_required: true,
+        },
+      ],
+    };
+
     engine = new MLCEngine({
+      appConfig: CUSTOM_APP_CONFIG,
       initProgressCallback: (report: InitProgressReport) => {
         const progress = Math.round(report.progress * 100);
         const status = progress < 100 ? 'downloading' : 'loading';

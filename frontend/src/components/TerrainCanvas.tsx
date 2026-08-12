@@ -107,10 +107,11 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({ modelId, latestLog
     const dataSize = texSize * texSize;
     // RGFormat uses 2 floats per pixel: R = active prob, G = base prob
     const probabilityData = new Float32Array(dataSize * 2);
-    // Initialize with small base probability to make tokens visible but flat
+    // Initialize with visible base probability so terrain geography is
+    // visible as a dim ground-level landscape before the first logit pass.
     for(let i=0; i<probabilityData.length; i+=2) {
-        probabilityData[i] = 0.0001;   // R
-        probabilityData[i+1] = 0.0001; // G
+        probabilityData[i] = 0.005;   // R — active (visible ground level)
+        probabilityData[i+1] = 0.005; // G — base
     }
 
     const probabilityTexture = new THREE.DataTexture(

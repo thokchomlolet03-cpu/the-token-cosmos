@@ -556,7 +556,7 @@ export const App: React.FC = () => {
                       subtitle={
                         provider !== 'default'
                           ? `BYOE [${provider.toUpperCase()}] • ${modelName}`
-                          : 'Cosmograph GPU Force-Directed Galaxy'
+                          : '3D Topographic Terrain'
                       }
                       steps={steps}
                       currentStepIndex={currentStepIndex}

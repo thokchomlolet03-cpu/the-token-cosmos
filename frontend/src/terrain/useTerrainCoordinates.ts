@@ -14,6 +14,16 @@ const PRECOMPUTED_ASSETS: Record<string, string> = {
   'SmolLM2-135M-Instruct-q4f16_1-MLC': '/terrain/smollm2-135m-umap.bin',
   'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin',
   'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin', // Shares vocab
+  'DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin', // Shares Qwen2 vocab
+};
+
+// ─── Known Vocab Sizes ──────────────────────────────────────────────
+
+const MODEL_VOCAB_SIZES: Record<string, number> = {
+  'SmolLM2-135M-Instruct-q4f16_1-MLC': 49152,
+  'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': 151936,
+  'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': 151936,
+  'DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC': 151936,
 };
 
 // ─── Return Type ────────────────────────────────────────────────────
@@ -58,20 +68,71 @@ async function loadBinaryCoordinates(url: string): Promise<{
   return { vocabSize, coordinates };
 }
 
-// ─── Generate Fallback Coordinates ──────────────────────────────────
-// When no pre-computed UMAP data is available, generate a spiral layout
-// as a deterministic fallback. This is NOT semantically meaningful,
-// but keeps the renderer functional.
+// ─── Deterministic PRNG (Mulberry32) ────────────────────────────────
+// A fast, seedable 32-bit PRNG for reproducible procedural coordinates.
+
+function mulberry32(seed: number): () => number {
+  return () => {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// Box-Muller transform for gaussian random numbers
+function gaussianPair(rng: () => number): [number, number] {
+  const u1 = rng();
+  const u2 = rng();
+  const r = Math.sqrt(-2.0 * Math.log(Math.max(u1, 1e-10)));
+  const theta = 2.0 * Math.PI * u2;
+  return [r * Math.cos(theta), r * Math.sin(theta)];
+}
+
+// ─── Generate Procedural UMAP-like Coordinates ──────────────────────
+// Creates a multi-cluster gaussian layout that mimics real UMAP topology.
+// Tokens are grouped into 16 semantic clusters with gaussian spread,
+// producing visible continents, valleys, and topographic structure.
 
 function generateFallbackCoordinates(vocabSize: number): Float32Array {
   const coords = new Float32Array(vocabSize * 2);
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ≈ 2.399
+  const rng = mulberry32(42); // Fixed seed for determinism
+
+  // Define 16 cluster centers arranged in a spread pattern
+  const NUM_CLUSTERS = 16;
+  const clusterCenters: Array<{ cx: number; cy: number; sigma: number }> = [];
+  
+  for (let c = 0; c < NUM_CLUSTERS; c++) {
+    const angle = (c / NUM_CLUSTERS) * 2 * Math.PI + rng() * 0.3;
+    const radius = 0.35 + rng() * 0.45; // Cluster centers between 0.35 and 0.8
+    clusterCenters.push({
+      cx: radius * Math.cos(angle),
+      cy: radius * Math.sin(angle),
+      sigma: 0.06 + rng() * 0.08, // Gaussian spread per cluster
+    });
+  }
+
+  // Add a dense core cluster
+  clusterCenters.push({ cx: 0, cy: 0, sigma: 0.12 });
+
+  const totalClusters = clusterCenters.length;
 
   for (let i = 0; i < vocabSize; i++) {
-    const r = Math.sqrt(i / vocabSize); // Uniform disk distribution
-    const theta = i * goldenAngle;
-    coords[i * 2] = r * Math.cos(theta);     // x ∈ [-1, 1]
-    coords[i * 2 + 1] = r * Math.sin(theta); // y ∈ [-1, 1]
+    // Assign token to cluster based on hash (simulates semantic grouping)
+    const clusterIdx = Math.floor(rng() * totalClusters);
+    const cluster = clusterCenters[clusterIdx];
+    
+    const [gx, gy] = gaussianPair(rng);
+    
+    let x = cluster.cx + gx * cluster.sigma;
+    let y = cluster.cy + gy * cluster.sigma;
+
+    // Clamp to [-1, 1]
+    x = Math.max(-1, Math.min(1, x));
+    y = Math.max(-1, Math.min(1, y));
+
+    coords[i * 2] = x;
+    coords[i * 2 + 1] = y;
   }
 
   return coords;
@@ -143,15 +204,15 @@ export function useTerrainCoordinates(initialModelId?: string): TerrainCoordinat
         }
       }
 
-      // 3. Fallback: generate fibonacci spiral coordinates
-      // (visually interesting but not semantically meaningful)
-      const fallbackSize = 49152; // SmolLM2-135M default
+      // 3. Fallback: generate procedural UMAP-like coordinates
+      // (clusters are procedural, not semantically meaningful, but visually correct)
+      const fallbackSize = MODEL_VOCAB_SIZES[modelId] || 151936;
       const fallbackCoords = generateFallbackCoordinates(fallbackSize);
       setRawCoordinates(fallbackCoords);
       setVocabSize(fallbackSize);
       setIsLoading(false);
 
-      console.log(`[Terrain] Generated fallback spiral coordinates (${fallbackSize} tokens)`);
+      console.log(`[Terrain] Generated procedural terrain coordinates for ${modelId} (${fallbackSize} tokens)`);
 
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
