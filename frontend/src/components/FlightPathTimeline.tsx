@@ -117,15 +117,15 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="glass-panel-liquid w-full rounded-2xl p-4 shadow-2xl flex flex-col space-y-3 relative">
+    <div ref={containerRef} className="glass-panel-matte w-full rounded-xl p-4 flex flex-col space-y-3 relative">
       {/* Flight Control Bar */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="flex items-center justify-between border-b border-white/10 pb-3">
         <div className="flex items-center space-x-2">
-          <Orbit className="h-5 w-5 text-cyan-400 animate-spin-slow" />
+          <Orbit className="h-4 w-4 text-white" />
           <div>
-            <h3 className="text-sm font-bold text-slate-100">Sentence Flight Path Trajectory</h3>
-            <p className="text-xs text-slate-400">
-              Hover tokens for confidence details • Color = perplexity heatmap
+            <h3 className="text-sm font-bold text-white tracking-tight">Sentence Flight Path Trajectory</h3>
+            <p className="text-xs text-gray-400 font-mono">
+              Hover tokens for confidence details • Perplexity heatmap
             </p>
           </div>
         </div>

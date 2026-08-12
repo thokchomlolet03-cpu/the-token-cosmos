@@ -18,6 +18,7 @@ import {
   Zap,
   FileWarning,
   Gauge,
+  Play,
 } from 'lucide-react';
 
 interface FrictionAnalysisProps {
@@ -128,14 +129,12 @@ export const FrictionAnalysis: React.FC<FrictionAnalysisProps> = ({
     <div className="flex flex-col space-y-4 h-full">
       {/* Header */}
       <div className="flex items-center space-x-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-orange-500 to-red-600 p-0.5">
-          <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-950">
-            <Search className="h-3.5 w-3.5 text-orange-400" />
-          </div>
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 border border-white/20">
+          <Search className="h-3.5 w-3.5 text-white" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-slate-100">Friction Analysis</h3>
-          <p className="text-[10px] text-slate-400 font-mono">
+          <h3 className="text-sm font-bold text-white tracking-tight">Friction Analysis</h3>
+          <p className="text-[10px] text-gray-400 font-mono">
             Joint log-probability • Drop-off detection
           </p>
         </div>
@@ -148,18 +147,32 @@ export const FrictionAnalysis: React.FC<FrictionAnalysisProps> = ({
           onChange={e => { setInputText(e.target.value); setReport(null); }}
           placeholder="Paste a business process, code block, job description, or any complex text to analyze for logical friction points..."
           rows={6}
-          className="w-full rounded-xl bg-slate-950/80 border border-slate-800/80 px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400/50 resize-none font-mono leading-relaxed"
+          className="w-full rounded-lg bg-[#111111] border border-white/10 px-3 py-2 text-xs text-gray-100 placeholder:text-gray-600 focus:border-gray-500 focus:outline-none focus:ring-0 resize-none font-mono leading-relaxed"
         />
         <div className="absolute bottom-2 right-2 flex items-center space-x-1.5">
           <button
             onClick={handleLoadSample}
-            className="rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[10px] text-slate-400 hover:text-orange-300 hover:border-orange-500/30 transition-colors"
+            className="btn-secondary-matte px-2.5 py-1 text-[11px]"
           >
-            Load Sample
+            Load Contract Sample
           </button>
-          <span className="text-[10px] font-mono text-slate-500">
-            {inputText.length} chars
-          </span>
+          <button
+            onClick={handleAnalyze}
+            disabled={isAnalyzing || !inputText.trim()}
+            className="btn-primary-matte px-3 py-1 text-xs flex items-center space-x-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isAnalyzing ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Scanning...</span>
+              </>
+            ) : (
+              <>
+                <Play className="h-3.5 w-3.5 fill-current" />
+                <span>Analyze Friction</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 

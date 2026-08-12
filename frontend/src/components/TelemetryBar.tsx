@@ -75,7 +75,7 @@ export const TelemetryBar: React.FC<TelemetryBarProps> = ({
   const riskBadge = getRiskColor(metrics.hallucinationRisk);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl glass-panel-liquid border-white/10 px-4 py-2 text-[11px] font-mono shadow-lg">
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl glass-panel-matte px-4 py-2 text-[11px] font-mono">
       {/* Telemetry Indicator Group 1: Hallucination Risk */}
       <div className="flex items-center space-x-2">
         <Flame className={`h-3.5 w-3.5 ${riskBadge.text}`} />

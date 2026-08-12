@@ -19,9 +19,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = () => {
   };
 
   return (
-    <div className="w-full rounded-2xl glass-panel-liquid border-white/10 shadow-2xl overflow-hidden transition-all duration-300">
+    <div className="w-full rounded-xl glass-panel-matte overflow-hidden transition-all duration-300">
       {/* Banner Top Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 bg-slate-950/70 border-b border-cyan-500/10">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-[#0A0A0A] border-b border-white/10">
         <div className="flex items-center space-x-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-cyan-500 to-purple-600 p-0.5 shadow-neon-cyan">
             <div className="flex h-full w-full items-center justify-center rounded-md bg-slate-950">

@@ -162,22 +162,22 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   };
 
   return (
-    <div className="glass-panel-liquid flex flex-col h-full rounded-2xl overflow-hidden shadow-2xl">
+    <div className="glass-panel-matte flex flex-col h-full rounded-xl overflow-hidden">
       {/* Header with Tab Switching */}
-      <div className="flex items-center justify-between border-b border-white/10 bg-slate-950/60 px-5 py-3">
+      <div className="flex items-center justify-between border-b border-white/10 bg-[#0A0A0A] px-5 py-3">
         <div className="flex items-center space-x-2">
-          <Sliders className="h-5 w-5 text-cyan-400" />
-          <h2 className="text-base font-bold text-slate-100 hidden sm:block">Mission Control</h2>
+          <Sliders className="h-4 w-4 text-white" />
+          <h2 className="text-sm font-bold text-white tracking-tight hidden sm:block">Mission Control</h2>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex rounded-lg bg-slate-900 p-1 border border-slate-800">
+        <div className="flex rounded-lg bg-black p-1 border border-white/10">
           <button
             onClick={() => setActiveTab('sampling')}
-            className={`flex items-center space-x-1.5 rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
+            className={`flex items-center space-x-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
               activeTab === 'sampling'
-                ? 'bg-cyan-500 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-white text-black font-semibold'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             <Sliders className="h-3.5 w-3.5" />
@@ -185,10 +185,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('friction')}
-            className={`flex items-center space-x-1.5 rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
+            className={`flex items-center space-x-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
               activeTab === 'friction'
-                ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-white text-black font-semibold'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             <Search className="h-3.5 w-3.5" />
@@ -204,9 +204,9 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           <div className="space-y-6">
             {/* Preset Scenarios ("Vibe Buttons") */}
             <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5 mb-2.5">
-            <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-            <span>Preset Scenarios ("Vibe Buttons")</span>
+          <label className="text-[11px] font-mono uppercase tracking-wider text-gray-400 flex items-center space-x-1.5 mb-2.5">
+            <Sparkles className="h-3.5 w-3.5 text-gray-300" />
+            <span>Preset Scenarios</span>
           </label>
           <div className="grid grid-cols-2 gap-2">
             {PRESET_SCENARIOS.map(preset => (
@@ -223,15 +223,15 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                   });
                 }}
                 aria-label={`Apply ${preset.name} preset: ${preset.subtitle}`}
-                className="glass-panel-interactive flex flex-col items-start p-3 rounded-xl text-left border border-slate-800 hover:border-cyan-500/40 group"
+                className="glass-panel-interactive-matte flex flex-col items-start p-3 rounded-lg text-left border border-white/10 hover:border-white/20 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group"
               >
                 <div className="flex items-center space-x-2 w-full mb-1">
                   {getPresetIcon(preset.icon)}
-                  <span className="text-xs font-bold text-slate-200 group-hover:text-cyan-300 truncate">
+                  <span className="text-xs font-semibold text-gray-200 group-hover:text-white transition-colors duration-200 truncate">
                     {preset.name}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-400 font-mono">{preset.subtitle}</span>
+                <span className="text-[10px] text-gray-400 font-mono">{preset.subtitle}</span>
               </button>
             ))}
           </div>

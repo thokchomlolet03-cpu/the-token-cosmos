@@ -29,38 +29,36 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full glass-panel-liquid border-b border-white/10">
+    <header className="sticky top-0 z-40 w-full bg-[#0A0A0A]/95 border-b border-white/10 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Brand logo & title */}
         <div className="flex items-center space-x-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 p-0.5 shadow-neon-cyan">
-            <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-slate-950">
-              <Orbit className="h-5 w-5 animate-pulse text-cyan-400" />
-            </div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 border border-white/20">
+            <Orbit className="h-4 w-4 text-white" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h1 className="bg-gradient-to-r from-cyan-400 via-sky-200 to-purple-400 bg-clip-text text-lg font-extrabold tracking-tight text-transparent sm:text-xl">
+              <h1 className="text-white font-bold tracking-tight text-lg sm:text-xl">
                 The Token Cosmos
               </h1>
-              <span className="rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-semibold text-cyan-400 border border-cyan-500/20">
+              <span className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-mono text-gray-300 border border-white/10">
                 v2.1
               </span>
             </div>
-            <p className="text-xs text-slate-400 hidden sm:block">
+            <p className="text-xs text-gray-400 hidden sm:block">
               Interactive LLM Probability Visualizer & Educational Guide
             </p>
           </div>
         </div>
 
         {/* Action Controls & Navigation */}
-        <div className="flex items-center space-x-2.5">
-          {/* Export Code Button */}
+        <div className="flex items-center space-x-2">
+          {/* Export Code Button (Inverted Primary) */}
           {onOpenCodeExport && (
             <button
               onClick={onOpenCodeExport}
               aria-label="Export sampling setup into production code snippets"
-              className="flex items-center space-x-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold bg-gradient-to-r from-cyan-500 to-purple-600 text-white shadow-neon-cyan hover:opacity-90 transition-opacity"
+              className="btn-primary-matte flex items-center space-x-1.5 px-3 py-1.5 text-xs"
               title="Export Setup to Python / LangChain / cURL Code"
             >
               <Code2 className="h-3.5 w-3.5" />
@@ -68,14 +66,14 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* Share Setup Link */}
+          {/* Share Setup Link (Stealth Secondary) */}
           <button
             onClick={handleCopy}
             aria-label="Copy current parameter setup link to clipboard"
-            className="flex items-center space-x-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium bg-slate-900 text-slate-300 border border-slate-800 hover:border-cyan-500/40 hover:text-cyan-300 transition-all"
+            className="btn-secondary-matte flex items-center space-x-1.5 px-3 py-1.5 text-xs"
             title="Copy Setup Link to Clipboard"
           >
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5 text-cyan-400" />}
+            {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5" />}
             <span className="hidden sm:inline">{copied ? 'Link Copied!' : 'Share Setup'}</span>
           </button>
 
@@ -83,10 +81,10 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onOpenSettings}
             aria-label="Open Bring Your Own Engine configuration settings modal"
-            className="flex items-center space-x-1.5 rounded-lg p-2 text-xs font-medium bg-slate-900 text-slate-300 border border-slate-800 hover:border-purple-500/40 hover:text-purple-300 transition-all"
+            className="btn-secondary-matte p-2 text-xs"
             title="Bring Your Own Engine (BYOE) Settings"
           >
-            <Settings className="h-4 w-4 text-purple-400" />
+            <Settings className="h-4 w-4" />
           </button>
 
           {/* A/B Duel Mode Toggle */}
@@ -96,18 +94,18 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label={splitView ? 'Disable A/B Duel Mode' : 'Enable side-by-side A/B Duel Mode'}
               className={`flex items-center space-x-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                 splitView
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40 shadow-lg'
-                  : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700 hover:text-white'
+                  ? 'bg-white/10 text-white border border-white/20'
+                  : 'btn-secondary-matte'
               }`}
               title="Compare Model / Parameter Configurations side-by-side"
             >
-              <Swords className="h-3.5 w-3.5 text-purple-400" />
+              <Swords className="h-3.5 w-3.5" />
               <span className="hidden md:inline">{splitView ? 'A/B Duel Active' : 'A/B Duel Mode'}</span>
             </button>
           )}
 
           {/* Tab buttons */}
-          <div className="flex rounded-lg bg-slate-900 p-1 border border-slate-800" role="tablist">
+          <div className="flex rounded-lg bg-black p-1 border border-white/10" role="tablist">
             <button
               onClick={() => setActiveTab('visualizer')}
               role="tab"
@@ -115,8 +113,8 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Switch to Interactive Cosmos Visualizer tab"
               className={`flex items-center space-x-1.5 rounded-md px-3 py-1 text-xs font-medium transition-all ${
                 activeTab === 'visualizer'
-                  ? 'bg-cyan-500 text-slate-950 font-semibold shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-black font-semibold'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               <Sparkles className="h-3.5 w-3.5" />
@@ -126,11 +124,11 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('blog')}
               role="tab"
               aria-selected={activeTab === 'blog'}
-              aria-label="Switch to Educational Guide and Cheat Sheet tab"
+              aria-label="Switch to Guide & Cheat Sheet tab"
               className={`flex items-center space-x-1.5 rounded-md px-3 py-1 text-xs font-medium transition-all ${
                 activeTab === 'blog'
-                  ? 'bg-purple-600 text-white font-semibold shadow-md'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-black font-semibold'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
@@ -138,14 +136,14 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          {/* GitHub link */}
+          {/* GitHub Repository Link */}
           <a
             href="https://github.com/thokchomlolet03-cpu/the-token-cosmos"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="View source code repository on GitHub"
-            className="hidden sm:flex items-center justify-center rounded-lg border border-slate-800 bg-slate-900 p-2 text-slate-400 transition-colors hover:border-slate-700 hover:text-white"
-            title="View Code Repository on GitHub"
+            aria-label="Open The Token Cosmos GitHub repository"
+            className="btn-secondary-matte p-2 text-xs"
+            title="GitHub Repository"
           >
             <Github className="h-4 w-4" />
           </a>
