@@ -402,17 +402,24 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-cosmos-dark text-slate-100 font-sans">
-      {/* Header Bar */}
-      <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        splitView={splitView}
-        setSplitView={setSplitView}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onCopySetupLink={copySetupLink}
-        onOpenCodeExport={() => setIsCodeExportOpen(true)}
-      />
+    <div className="relative flex flex-col min-h-screen bg-[#050714] text-slate-100 font-sans overflow-x-hidden select-text">
+      {/* Ambient Nebula Dynamics Background Orbs (Refracts through Liquid Glass UI) */}
+      <div className="fixed -top-40 -left-40 w-[45rem] h-[45rem] bg-cyan-600/15 rounded-full blur-3xl pointer-events-none z-0 animate-float-slow" />
+      <div className="fixed -bottom-40 -right-40 w-[50rem] h-[50rem] bg-purple-600/15 rounded-full blur-3xl pointer-events-none z-0 animate-float-slow" style={{ animationDelay: '-10s' }} />
+      <div className="fixed top-1/3 left-1/3 w-[35rem] h-[35rem] bg-sky-600/10 rounded-full blur-3xl pointer-events-none z-0" />
+
+      {/* Main UI Layer */}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* Header Bar */}
+        <Header
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          splitView={splitView}
+          setSplitView={setSplitView}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onCopySetupLink={copySetupLink}
+          onOpenCodeExport={() => setIsCodeExportOpen(true)}
+        />
 
       {/* Main Workspace */}
       <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 sm:p-6 flex flex-col space-y-6">
@@ -559,6 +566,7 @@ export const App: React.FC = () => {
         modelName={modelName}
         provider={provider}
       />
+      </div>
     </div>
   );
 };

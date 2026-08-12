@@ -148,7 +148,7 @@ export const FrictionAnalysis: React.FC<FrictionAnalysisProps> = ({
           onChange={e => { setInputText(e.target.value); setReport(null); }}
           placeholder="Paste a business process, code block, job description, or any complex text to analyze for logical friction points..."
           rows={6}
-          className="w-full rounded-xl bg-slate-950/80 border border-slate-800 px-3 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:border-orange-400/60 focus:outline-none resize-none font-mono leading-relaxed"
+          className="w-full rounded-xl bg-slate-950/80 border border-slate-800/80 px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400/50 resize-none font-mono leading-relaxed"
         />
         <div className="absolute bottom-2 right-2 flex items-center space-x-1.5">
           <button

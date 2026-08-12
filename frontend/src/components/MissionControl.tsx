@@ -162,9 +162,9 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   };
 
   return (
-    <div className="glass-panel flex flex-col h-full rounded-2xl overflow-hidden border border-cyan-500/20 shadow-2xl">
+    <div className="glass-panel-liquid flex flex-col h-full rounded-2xl overflow-hidden shadow-2xl">
       {/* Header with Tab Switching */}
-      <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/60 px-5 py-3">
+      <div className="flex items-center justify-between border-b border-white/10 bg-slate-950/60 px-5 py-3">
         <div className="flex items-center space-x-2">
           <Sliders className="h-5 w-5 text-cyan-400" />
           <h2 className="text-base font-bold text-slate-100 hidden sm:block">Mission Control</h2>

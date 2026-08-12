@@ -117,7 +117,7 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="glass-panel w-full rounded-2xl p-4 border border-cyan-500/20 shadow-2xl flex flex-col space-y-3 relative">
+    <div ref={containerRef} className="glass-panel-liquid w-full rounded-2xl p-4 shadow-2xl flex flex-col space-y-3 relative">
       {/* Flight Control Bar */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3">
         <div className="flex items-center space-x-2">

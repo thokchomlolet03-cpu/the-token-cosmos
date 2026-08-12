@@ -29,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-cyan-500/15 bg-slate-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full glass-panel-liquid border-b border-white/10">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Brand logo & title */}
         <div className="flex items-center space-x-3">
