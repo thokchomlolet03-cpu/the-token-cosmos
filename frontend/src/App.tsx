@@ -402,7 +402,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-gray-100 font-sans selection:bg-gray-800 selection:text-white select-text">
+    <div className="flex flex-col min-h-screen bg-[#1c1c21] text-gray-100 font-sans selection:bg-pink-500/30 selection:text-white select-text">
       {/* Header Bar */}
       <Header
         activeTab={activeTab}

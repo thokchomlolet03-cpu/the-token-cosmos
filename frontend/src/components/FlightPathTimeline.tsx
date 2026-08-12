@@ -116,21 +116,38 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
     return 'bg-red-500/20 text-red-300 border-red-500/30';
   };
 
+  // Playback Scrubber Timer State
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    if (steps.length <= 1) {
+      setIsPlaying(false);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      onSelectStep((currentStepIndex + 1) % steps.length);
+    }, 900);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, currentStepIndex, steps.length, onSelectStep]);
+
   return (
     <div ref={containerRef} className="glass-panel-matte w-full rounded-xl p-4 flex flex-col space-y-3 relative">
       {/* Flight Control Bar */}
       <div className="flex items-center justify-between border-b border-white/10 pb-3">
         <div className="flex items-center space-x-2">
-          <Orbit className="h-4 w-4 text-white" />
+          <Orbit className="h-4 w-4 text-pink-400" />
           <div>
             <h3 className="text-sm font-bold text-white tracking-tight">Sentence Flight Path Trajectory</h3>
             <p className="text-xs text-gray-400 font-mono">
-              Hover tokens for confidence details • Perplexity heatmap
+              Hover tokens for confidence details • Perplexity heatmap & timeline scrubber
             </p>
           </div>
         </div>
 
-        {/* Perplexity Summary Badge */}
+        {/* Perplexity Summary Badge & Timeline Scrubber */}
         <div className="flex items-center space-x-2">
           {steps.length > 1 && (
             <div className={`flex items-center space-x-1.5 rounded-lg px-2.5 py-1 text-[10px] font-mono font-bold border ${getConfidenceBadgeColor(avgConfidence)}`}>
@@ -143,17 +160,30 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
 
           {/* Step Controls */}
           <div className="flex items-center space-x-2">
+            {/* Play/Pause Timeline Scrubber Toggle */}
+            {steps.length > 1 && (
+              <button
+                onClick={() => setIsPlaying(!isPlaying)}
+                aria-label={isPlaying ? 'Pause timeline playback' : 'Play interactive timeline scrubber'}
+                className="flex items-center space-x-1 rounded-full bg-pink-500/20 border border-pink-500/40 text-pink-300 px-2.5 py-1 text-xs font-mono font-bold hover:bg-pink-500/30 transition-colors"
+                title="Auto Play/Pause Timeline Scrubber"
+              >
+                <Play className={`h-3 w-3 ${isPlaying ? 'fill-pink-300' : ''}`} />
+                <span>{isPlaying ? 'Pause' : 'Scrub'}</span>
+              </button>
+            )}
+
             <button
               onClick={() => currentStepIndex > 0 && onSelectStep(currentStepIndex - 1)}
               disabled={currentStepIndex <= 0}
               aria-label="Rewind to previous token generation step"
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-full bg-[#18181b] border border-white/10 text-gray-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
               title="Rewind Step"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
 
-            <span className="text-xs font-mono font-bold text-cyan-400 px-2">
+            <span className="text-xs font-mono font-bold text-pink-400 px-2">
               Step {currentStepIndex + 1} of {steps.length}
             </span>
 
@@ -161,7 +191,7 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
               onClick={() => currentStepIndex < steps.length - 1 && onSelectStep(currentStepIndex + 1)}
               disabled={currentStepIndex >= steps.length - 1}
               aria-label="Forward to next token generation step"
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-full bg-[#18181b] border border-white/10 text-gray-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
               title="Forward Step"
             >
               <ChevronRight className="h-4 w-4" />
@@ -171,7 +201,7 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
               onClick={onGenerateNextStep}
               disabled={isGenerating}
               aria-label="Sample next token in sentence trajectory"
-              className="flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-600 px-3 py-1.5 text-xs font-semibold text-white shadow-neon-cyan hover:opacity-90 transition-opacity"
+              className="flex items-center space-x-1.5 rounded-full bg-pink-500 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-pink-400 transition-colors shadow-sm"
             >
               <Play className="h-3.5 w-3.5 fill-current" />
               <span>{isGenerating ? 'Sampling...' : 'Sample Next Token'}</span>
@@ -180,7 +210,7 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
             <button
               onClick={onResetTimeline}
               aria-label="Reset constellation flight path trajectory"
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+              className="p-1.5 rounded-full bg-[#18181b] border border-white/10 text-gray-400 hover:text-white"
               title="Reset Constellation Flight Path"
             >
               <RotateCcw className="h-4 w-4" />

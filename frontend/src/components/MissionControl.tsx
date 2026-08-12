@@ -164,19 +164,19 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   return (
     <div className="glass-panel-matte flex flex-col h-full rounded-xl overflow-hidden">
       {/* Header with Tab Switching */}
-      <div className="flex items-center justify-between border-b border-white/10 bg-[#0A0A0A] px-5 py-3">
+      <div className="flex items-center justify-between border-b border-white/10 bg-[#1c1c21] px-5 py-3">
         <div className="flex items-center space-x-2">
-          <Sliders className="h-4 w-4 text-white" />
+          <Sliders className="h-4 w-4 text-pink-400" />
           <h2 className="text-sm font-bold text-white tracking-tight hidden sm:block">Mission Control</h2>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex rounded-lg bg-black p-1 border border-white/10">
+        <div className="flex rounded-full bg-[#18181b] p-1 border border-white/10">
           <button
             onClick={() => setActiveTab('sampling')}
-            className={`flex items-center space-x-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+            className={`flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
               activeTab === 'sampling'
-                ? 'bg-white text-black font-semibold'
+                ? 'bg-pink-500 text-white font-semibold shadow-sm'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -185,9 +185,9 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('friction')}
-            className={`flex items-center space-x-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+            className={`flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
               activeTab === 'friction'
-                ? 'bg-white text-black font-semibold'
+                ? 'bg-pink-500 text-white font-semibold shadow-sm'
                 : 'text-gray-400 hover:text-white'
             }`}
           >

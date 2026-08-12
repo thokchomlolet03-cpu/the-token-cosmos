@@ -80,7 +80,7 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x000000, 1.0); // Pure Black Void
+    renderer.setClearColor(0x1c1c21, 1.0); // Cosmograph Deep Charcoal Void (#1c1c21)
 
     // 2. Setup 2D/3D Orthographic Camera
     const aspect = width / height;
@@ -375,7 +375,7 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
 
         let nodeColor = 0x555555;
         if (node.isCenter) nodeColor = 0xffffff;
-        else if (c.rank === 1) nodeColor = 0x10b981;
+        else if (c.rank === 1) nodeColor = 0xec4899; // Cosmograph Magenta (#ec4899)
         else if (c.is_rag_grounded) nodeColor = 0x06b6d4;
         else if (c.isFiltered) nodeColor = 0x222222;
         else if (c.filterReason === 'Banned') nodeColor = 0xef4444;
@@ -418,9 +418,9 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
       <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
         <div>
           <h3 className="text-sm font-bold text-white tracking-tight flex items-center space-x-2">
-            <span className="h-2 w-2 rounded-full bg-white" />
+            <span className="h-2 w-2 rounded-full bg-pink-500" />
             <span>{title}</span>
-            <span className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-mono text-gray-300 border border-white/10">
+            <span className="rounded-full bg-pink-500/20 px-2.5 py-0.5 text-[10px] font-mono text-pink-300 border border-pink-500/30">
               WebGL GPU
             </span>
           </h3>
@@ -428,9 +428,9 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
         </div>
 
         {/* Legend */}
-        <div className="flex items-center space-x-3 text-[11px] bg-[#0A0A0A]/90 px-3 py-1.5 rounded-lg border border-white/10 font-mono">
+        <div className="flex items-center space-x-3 text-[11px] bg-[#232329]/90 px-3 py-1.5 rounded-lg border border-white/10 font-mono">
           <div className="flex items-center space-x-1">
-            <span className="h-2 w-2 rounded-full bg-[#10b981]" />
+            <span className="h-2 w-2 rounded-full bg-[#ec4899]" />
             <span className="text-gray-300">Winner Candidate</span>
           </div>
           <div className="flex items-center space-x-1">
