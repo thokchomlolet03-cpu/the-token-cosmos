@@ -190,15 +190,15 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
       </div>
 
       {/* Generated Sentence Preview with inline heatmap coloring */}
-      <div className="rounded-xl bg-slate-950/80 px-4 py-2 border border-slate-800 flex items-start space-x-2">
-        <span className="text-xs font-bold uppercase text-slate-400 font-mono shrink-0 pt-0.5">Output:</span>
-        <span className="text-xs font-mono tracking-wide flex flex-wrap">
+      <div className="rounded-lg bg-[#111111] px-4 py-2.5 border border-white/10 flex items-start space-x-2">
+        <span className="text-xs font-bold uppercase text-gray-400 font-mono shrink-0 pt-0.5">Output:</span>
+        <span className="text-xs font-mono tracking-wide flex flex-wrap text-gray-100">
           {steps.map((step, idx) => {
             const perp = perplexityMap[idx];
             return (
               <span
                 key={idx}
-                style={{ color: perp?.perplexityColor || '#94a3b8' }}
+                style={{ color: perp?.perplexityColor || '#f3f4f6' }}
                 className="transition-colors"
               >
                 {step.selectedToken.token_str}
@@ -211,7 +211,7 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
       {/* Constellation Step Nodes — Perplexity Heatmap */}
       <div className="relative flex items-center space-x-3 overflow-x-auto py-2 px-1" role="list">
         {/* Constellation line background */}
-        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500/30 via-purple-500/30 to-slate-800 -translate-y-1/2 z-0" />
+        <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-white/10 -translate-y-1/2 z-0" />
 
         {steps.map((step, idx) => {
           const isActive = idx === currentStepIndex;

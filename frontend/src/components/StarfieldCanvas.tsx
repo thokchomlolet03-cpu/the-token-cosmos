@@ -358,31 +358,31 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full min-h-[480px] rounded-2xl glass-panel overflow-hidden border border-cyan-500/20 shadow-2xl flex flex-col select-none"
+      className="relative w-full h-full min-h-[480px] rounded-xl glass-panel-matte overflow-hidden flex flex-col select-none"
     >
       {/* Canvas Top Overlay Header */}
       <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
         <div>
-          <h3 className="text-sm font-bold text-slate-100 flex items-center space-x-2">
-            <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+          <h3 className="text-sm font-bold text-white tracking-tight flex items-center space-x-2">
+            <span className="h-2 w-2 rounded-full bg-white" />
             <span>{title}</span>
           </h3>
-          <p className="text-xs text-slate-400">{subtitle}</p>
+          <p className="text-xs text-gray-400 font-mono">{subtitle}</p>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center space-x-3 text-[11px] bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800 backdrop-blur-md">
+        <div className="flex items-center space-x-3 text-[11px] bg-[#0A0A0A]/90 px-3 py-1.5 rounded-lg border border-white/10 font-mono">
           <div className="flex items-center space-x-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-            <span className="text-slate-300">Top Supergiant</span>
+            <span className="h-2 w-2 rounded-full bg-amber-400" />
+            <span className="text-gray-300">Top Supergiant</span>
           </div>
           <div className="flex items-center space-x-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-cyan-400" />
-            <span className="text-slate-300">RAG Grounded</span>
+            <span className="h-2 w-2 rounded-full bg-cyan-400" />
+            <span className="text-gray-300">RAG Grounded</span>
           </div>
           <div className="flex items-center space-x-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
-            <span className="text-slate-300">Black-Hole Banned</span>
+            <span className="h-2 w-2 rounded-full bg-rose-500" />
+            <span className="text-gray-300">Black-Hole Banned</span>
           </div>
         </div>
       </div>
@@ -400,17 +400,17 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
       />
 
       {/* Viewport Navigation Overlay Controls (Zoom & Pan Controls) */}
-      <div className="absolute bottom-4 right-4 z-20 flex items-center space-x-2 bg-slate-950/90 p-1.5 rounded-xl border border-slate-800 shadow-xl backdrop-blur-md">
+      <div className="absolute bottom-4 right-4 z-20 flex items-center space-x-2 bg-[#0A0A0A]/90 p-1.5 rounded-lg border border-white/10">
         <button
           onClick={zoomIn}
           aria-label="Zoom in starfield universe"
-          className="p-1.5 rounded-lg bg-slate-900 text-slate-300 hover:text-cyan-400 hover:bg-slate-800 transition-colors"
+          className="p-1.5 rounded-md bg-black text-gray-300 hover:text-white transition-colors"
           title="Zoom In"
         >
           <ZoomIn className="h-4 w-4" />
         </button>
 
-        <span className="text-xs font-mono font-bold text-cyan-300 px-1 min-w-[42px] text-center">
+        <span className="text-xs font-mono font-medium text-white px-1 min-w-[42px] text-center">
           {Math.round(scale * 100)}%
         </span>
 

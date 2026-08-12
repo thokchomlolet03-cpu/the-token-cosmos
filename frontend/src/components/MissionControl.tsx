@@ -238,30 +238,30 @@ export const MissionControl: React.FC<MissionControlProps> = ({
         </div>
 
         {/* Feature 1: System Override (Persona) Accordion */}
-        <div className="rounded-xl border border-purple-500/20 bg-purple-950/20 overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-[#111111] overflow-hidden">
           <button
             onClick={() => setIsSystemExpanded(!isSystemExpanded)}
             aria-label="Toggle System Override Persona instructions"
             aria-expanded={isSystemExpanded}
-            className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-purple-900/20 transition-colors"
+            className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-gray-200 hover:bg-white/5 transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <UserCheck className={`h-4 w-4 ${systemPrompt.trim() ? 'text-purple-400 animate-pulse' : 'text-slate-500'}`} />
-              <span className="font-semibold text-slate-100">System Override (Persona)</span>
+              <UserCheck className={`h-4 w-4 ${systemPrompt.trim() ? 'text-white' : 'text-gray-500'}`} />
+              <span className="font-semibold text-white tracking-tight">System Override (Persona)</span>
               <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  systemPrompt.trim() ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30' : 'bg-slate-800 text-slate-400'
+                className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-medium ${
+                  systemPrompt.trim() ? 'bg-white/10 text-white border border-white/15' : 'bg-black text-gray-400 border border-white/10'
                 }`}
               >
                 {systemPrompt.trim() ? 'ACTIVE' : 'DEFAULT'}
               </span>
             </div>
-            {isSystemExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+            {isSystemExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
           </button>
 
           {isSystemExpanded && (
-            <div className="p-3 border-t border-purple-500/15 space-y-2 bg-slate-950/40">
-              <p className="text-[11px] text-purple-200/80 leading-relaxed">
+            <div className="p-3 border-t border-white/10 space-y-2 bg-[#0A0A0A]">
+              <p className="text-[11px] text-gray-400 leading-relaxed font-mono">
                 Paste proprietary system instructions (e.g. <em>"You are a senior PostgreSQL DBA. Reply only with valid SQL."</em>). Shifts baseline probability before sampling.
               </p>
               <textarea
@@ -278,7 +278,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                   });
                 }}
                 rows={2}
-                className="w-full rounded-lg bg-slate-900 border border-purple-500/20 px-2.5 py-1.5 text-xs text-purple-100 placeholder-slate-600 focus:border-purple-400 focus:outline-none font-mono"
+                className="w-full rounded-lg bg-[#111111] border border-white/10 px-2.5 py-1.5 text-xs text-gray-100 placeholder:text-gray-600 focus:border-gray-500 focus:ring-0 focus:outline-none font-mono"
                 placeholder="You are a senior PostgreSQL DBA. Reply only with valid SQL queries..."
               />
             </div>
@@ -289,11 +289,11 @@ export const MissionControl: React.FC<MissionControlProps> = ({
         <div className="space-y-3">
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="prompt-input" className="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
-                <FileText className="h-3.5 w-3.5 text-cyan-400" />
-                <span>Flight Console (Custom Prompt)</span>
+              <label htmlFor="prompt-input" className="text-xs font-semibold text-gray-300 flex items-center space-x-1.5">
+                <FileText className="h-3.5 w-3.5 text-gray-400" />
+                <span className="text-white tracking-tight">Flight Console (Custom Prompt)</span>
               </label>
-              <span className="text-[10px] text-slate-400 font-mono">Custom Input</span>
+              <span className="text-[10px] text-gray-400 font-mono">Custom Input</span>
             </div>
             <textarea
               id="prompt-input"
@@ -301,13 +301,13 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
               rows={2}
-              className="w-full rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400/50 resize-none font-mono"
+              className="w-full rounded-lg bg-[#111111] border border-white/10 px-3 py-2 text-xs text-gray-100 placeholder:text-gray-600 focus:border-gray-500 focus:outline-none focus:ring-0 resize-none font-mono leading-relaxed"
               placeholder="Try typing: 'The best way to cook a steak is...' or 'What is the capital of France?'"
             />
           </div>
 
           {/* RAG Fact Injector Collapsible Box */}
-          <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/20 overflow-hidden">
+          <div className="rounded-xl border border-white/10 bg-[#111111] overflow-hidden">
             <button
               onClick={() => {
                 const nextState = !ragEnabled;
@@ -323,27 +323,27 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               }}
               aria-label={ragEnabled ? 'Turn RAG Fact Anchor OFF' : 'Turn RAG Fact Anchor ON'}
               aria-expanded={isRagExpanded}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-cyan-900/20 transition-colors"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-gray-200 hover:bg-white/5 transition-colors"
             >
               <div className="flex items-center space-x-2">
-                <Anchor className={`h-4 w-4 ${ragEnabled ? 'text-cyan-400 animate-pulse' : 'text-slate-500'}`} />
-                <span className="font-semibold text-slate-100">RAG Grounding (Inject Facts)</span>
+                <Anchor className={`h-4 w-4 ${ragEnabled ? 'text-white' : 'text-gray-500'}`} />
+                <span className="font-semibold text-white tracking-tight">RAG Grounding (Inject Facts)</span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    ragEnabled ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30' : 'bg-slate-800 text-slate-400'
+                  className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-medium ${
+                    ragEnabled ? 'bg-white/10 text-white border border-white/15' : 'bg-black text-gray-400 border border-white/10'
                   }`}
                 >
                   {ragEnabled ? 'ON • Tethered' : 'OFF'}
                 </span>
               </div>
-              {isRagExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+              {isRagExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
             </button>
 
             {isRagExpanded && (
-              <div className="p-3 border-t border-cyan-500/15 space-y-2 bg-slate-950/40">
-                <div className="flex items-center space-x-1.5 text-[11px] text-cyan-200/90 font-medium">
-                  <Anchor className="h-3.5 w-3.5 text-cyan-400" />
-                  <span>Paste retrieved factual context to anchor AI probabilities in cyan</span>
+              <div className="p-3 border-t border-white/10 space-y-2 bg-[#0A0A0A]">
+                <div className="flex items-center space-x-1.5 text-[11px] text-gray-300 font-mono">
+                  <Anchor className="h-3.5 w-3.5 text-gray-400" />
+                  <span>Paste retrieved factual context to anchor AI probabilities</span>
                 </div>
                 <textarea
                   aria-label="Retrieved factual context for RAG grounding"
