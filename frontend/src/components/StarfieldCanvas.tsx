@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import * as THREE from 'three';
 import { ProcessedTokenCandidate, SamplingParameters } from '../types/sampling';
 import { Anchor, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
@@ -28,7 +29,7 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
   ragEnabled,
   onSelectToken,
   title = "The Token Cosmos",
-  subtitle = "Candidate Vocabulary Force Physics Field",
+  subtitle = "WebGL GPU Hardware-Accelerated Force Field",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -50,24 +51,91 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
   } | null>(null);
 
   const physicsNodesRef = useRef<Map<string, PhysicsNode>>(new Map());
-  const animationFrameIdRef = useRef<number | null>(null);
 
-  // Resize listener
+  // WebGL Three.js References
+  const threeRef = useRef<{
+    renderer: THREE.WebGLRenderer;
+    scene: THREE.Scene;
+    camera: THREE.OrthographicCamera;
+    nodesGroup: THREE.Group;
+    linksGroup: THREE.Group;
+    raycaster: THREE.Raycaster;
+  } | null>(null);
+
+  // Initialize WebGL Three.js Renderer Context
   useEffect(() => {
-    const handleResize = () => {
-      if (!containerRef.current || !canvasRef.current) return;
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
-      canvasRef.current.width = width;
-      canvasRef.current.height = height;
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 500;
+
+    // 1. Create Hardware-Accelerated WebGL Renderer
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance',
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 1.0); // Pure Black Void
+
+    // 2. Setup 2D/3D Orthographic Camera
+    const aspect = width / height;
+    const frustumSize = 600;
+    const camera = new THREE.OrthographicCamera(
+      (-frustumSize * aspect) / 2,
+      (frustumSize * aspect) / 2,
+      frustumSize / 2,
+      -frustumSize / 2,
+      0.1,
+      1000
+    );
+    camera.position.z = 10;
+
+    // 3. Create WebGL Scene & Groups
+    const scene = new THREE.Scene();
+    const linksGroup = new THREE.Group();
+    const nodesGroup = new THREE.Group();
+    scene.add(linksGroup);
+    scene.add(nodesGroup);
+
+    const raycaster = new THREE.Raycaster();
+
+    threeRef.current = {
+      renderer,
+      scene,
+      camera,
+      nodesGroup,
+      linksGroup,
+      raycaster,
     };
 
-    handleResize();
+    // Resize handler
+    const handleResize = () => {
+      if (!containerRef.current || !canvasRef.current || !threeRef.current) return;
+      const w = containerRef.current.clientWidth;
+      const h = containerRef.current.clientHeight;
+      const asp = w / h;
+      threeRef.current.renderer.setSize(w, h);
+      threeRef.current.camera.left = (-frustumSize * asp) / 2;
+      threeRef.current.camera.right = (frustumSize * asp) / 2;
+      threeRef.current.camera.top = frustumSize / 2;
+      threeRef.current.camera.bottom = -frustumSize / 2;
+      threeRef.current.camera.updateProjectionMatrix();
+    };
+
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      renderer.dispose();
+    };
   }, []);
 
-  // Zoom handlers
+  // Zoom & Pan Handlers
   const zoomIn = () => setScale(s => Math.min(5.0, s * 1.25));
   const zoomOut = () => setScale(s => Math.max(0.3, s / 1.25));
   const resetView = () => {
@@ -76,21 +144,18 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
     setOffsetY(0);
   };
 
-  // Mouse wheel zoom listener (Wheel / Pinch)
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
     setScale(s => Math.min(5.0, Math.max(0.3, s * zoomFactor)));
   };
 
-  // Double click reset view listener
   const handleDoubleClick = () => {
     resetView();
   };
 
-  // Pointer Down (Start dragging or selecting)
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (e.button !== 0) return; // Only primary left mouse button
+    if (e.button !== 0) return;
 
     if (hoveredCandidate && onSelectToken) {
       onSelectToken(hoveredCandidate.candidate);
@@ -103,10 +168,9 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  // Pointer Move (Pan or Hover)
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !threeRef.current) return;
 
     if (isDraggingRef.current) {
       const dx = e.clientX - startPointerRef.current.x;
@@ -116,20 +180,20 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
       return;
     }
 
-    // Hover Tooltip Collision Detection
+    // WebGL Raycasting Collision Detection
     const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
 
     const screenPositions = (canvas as any)._screenPositions;
     if (!screenPositions) return;
 
     let found = null;
     for (const item of screenPositions) {
-      const dx = mx - item.screenX;
-      const dy = my - item.screenY;
+      const dx = screenX - item.screenX;
+      const dy = screenY - item.screenY;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= item.screenSize + 8) {
+      if (dist <= item.screenSize + 10) {
         found = {
           candidate: item.candidate,
           screenX: item.screenX,
@@ -142,7 +206,6 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
     setHoveredCandidate(found);
   };
 
-  // Pointer Up (Stop dragging)
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     isDraggingRef.current = false;
     try {
@@ -150,16 +213,15 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
     } catch (_) {}
   };
 
-  // 60 FPS Real-time Force Physics Simulation & Developer Matte Render Loop
+  // WebGL GPU Render Loop & N-Body Force Physics Integration
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const three = threeRef.current;
+    if (!three) return;
 
     let isSubscribed = true;
+    let animationFrameId: number;
 
-    // Sync candidate tokens with persistent physics nodes
+    // Sync candidates to physics node state
     const currentNodesMap = physicsNodesRef.current;
     if (candidates && candidates.length > 0) {
       candidates.forEach((c, index) => {
@@ -167,7 +229,6 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
         const isCenter = index === 0;
 
         if (!currentNodesMap.has(id)) {
-          // Initialize new node position along initial radial layout
           const angle = c.orbitAngle || Math.random() * Math.PI * 2;
           const initialDist = isCenter ? 0 : Math.max(40, c.orbitRadius || 100);
           currentNodesMap.set(id, {
@@ -181,7 +242,6 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
             isCenter,
           });
         } else {
-          // Update candidate reference and radius
           const existing = currentNodesMap.get(id)!;
           existing.candidate = c;
           existing.radius = isCenter ? 14 : Math.max(3, Math.sqrt(c.probability) * 12 + 2);
@@ -189,30 +249,31 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
       });
     }
 
-    const render = () => {
-      if (!isSubscribed) return;
+    const renderLoop = () => {
+      if (!isSubscribed || !threeRef.current) return;
+
+      const { renderer, scene, camera, nodesGroup, linksGroup } = threeRef.current;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
       const width = canvas.width;
       const height = canvas.height;
       const centerX = width / 2;
       const centerY = height / 2;
 
-      // 1. Run Force Physics Integration (N-body Repulsion + Gravity Well)
+      // 1. Run Force Physics Integration
       const nodeList = Array.from(currentNodesMap.values());
       const tempFactor = Math.max(0.1, params.temperature);
-
-      // Physics Constants
-      const kGrav = 0.08 / tempFactor; // Gravity pull increases at lower temperatures
-      const kRep = 800 * (1 + params.frequencyPenalty); // Coulomb repulsion prevents label overlap
+      const kGrav = 0.08 / tempFactor;
+      const kRep = 800 * (1 + params.frequencyPenalty);
 
       for (let i = 0; i < nodeList.length; i++) {
         const nodeA = nodeList[i];
-        if (nodeA.isCenter) continue; // Center core is fixed at origin (0, 0)
+        if (nodeA.isCenter) continue;
 
         let fx = 0;
         let fy = 0;
 
-        // A. Hooke's Gravitational Pull toward Center Core (0, 0)
         const targetRadius = Math.max(35, (1 - nodeA.candidate.probability) * 180);
         const currentDist = Math.sqrt(nodeA.x * nodeA.x + nodeA.y * nodeA.y) || 1;
         const radialDiff = currentDist - targetRadius;
@@ -221,7 +282,6 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
         fx += (nodeA.x / currentDist) * radialForce;
         fy += (nodeA.y / currentDist) * radialForce;
 
-        // B. Pairwise Coulomb Repulsion between sibling candidate nodes
         for (let j = 0; j < nodeList.length; j++) {
           if (i === j) continue;
           const nodeB = nodeList[j];
@@ -237,7 +297,6 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
           }
         }
 
-        // C. Apply acceleration & damped velocity integration (settling factor 0.85)
         nodeA.vx = (nodeA.vx + fx * 0.016) * 0.85;
         nodeA.vy = (nodeA.vy + fy * 0.016) * 0.85;
 
@@ -245,146 +304,107 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
         nodeA.y += nodeA.vy;
       }
 
-      // 2. Render Developer Matte Canvas Frame
-      ctx.clearRect(0, 0, width, height);
+      // Update Camera Pan/Zoom
+      camera.position.x = -offsetX / scale;
+      camera.position.y = offsetY / scale;
+      camera.zoom = scale;
+      camera.updateProjectionMatrix();
 
-      // Render static background void dust
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-      for (let i = 0; i < 30; i++) {
-        const sx = (Math.sin(i * 99) * 0.5 + 0.5) * width;
-        const sy = (Math.cos(i * 33) * 0.5 + 0.5) * height;
-        ctx.fillRect(sx, sy, 1, 1);
+      // 2. Clear Scene Children and Rebuild WebGL Buffers
+      while (nodesGroup.children.length > 0) {
+        const child = nodesGroup.children.pop();
+        if (child && (child as THREE.Mesh).geometry) {
+          (child as THREE.Mesh).geometry.dispose();
+        }
+      }
+      while (linksGroup.children.length > 0) {
+        const child = linksGroup.children.pop();
+        if (child && (child as THREE.Line).geometry) {
+          (child as THREE.Line).geometry.dispose();
+        }
       }
 
-      ctx.save();
-
-      // Transform Matrix: Origin at Center + Pan Offset, then Scale
       const transformedCenterX = centerX + offsetX;
       const transformedCenterY = centerY + offsetY;
-
       const screenPositions: { candidate: ProcessedTokenCandidate; screenX: number; screenY: number; screenSize: number }[] = [];
 
-      // 3. Render Link Tethers (Ultra-faint gridlines & RAG Cyan Fact Beams)
+      // 3. Build WebGL Link Lines
       nodeList.forEach(node => {
         if (node.isCenter) return;
-
-        const px = transformedCenterX + node.x * scale;
-        const py = transformedCenterY + node.y * scale;
 
         const isHovered = hoveredCandidate?.candidate.token_id === node.candidate.token_id && hoveredCandidate?.candidate.token_str === node.candidate.token_str;
         const isDimmed = hoveredCandidate !== null && !isHovered;
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(transformedCenterX, transformedCenterY);
-        ctx.lineTo(px, py);
+        const points = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(node.x, -node.y, 0)];
+        const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+
+        let colorHex = 0xffffff;
+        let opacity = isDimmed ? 0.02 : 0.05;
 
         if (ragEnabled && node.candidate.is_rag_grounded) {
-          ctx.strokeStyle = isDimmed ? 'rgba(6, 182, 212, 0.15)' : 'rgba(6, 182, 212, 0.50)';
-          ctx.lineWidth = (isHovered ? 2.5 : 1.5) * Math.sqrt(scale);
-        } else {
-          ctx.strokeStyle = isDimmed ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)';
-          ctx.lineWidth = 1 * Math.sqrt(scale);
+          colorHex = 0x06b6d4;
+          opacity = isDimmed ? 0.15 : 0.50;
         }
 
-        ctx.stroke();
-        ctx.restore();
+        const lineMat = new THREE.LineBasicMaterial({
+          color: colorHex,
+          transparent: true,
+          opacity,
+          linewidth: isHovered ? 2 : 1,
+        });
+
+        const line = new THREE.Line(lineGeo, lineMat);
+        linksGroup.add(line);
       });
 
-      // 4. Render Physics Token Nodes
+      // 4. Build WebGL Node Sprites
       nodeList.forEach(node => {
         const c = node.candidate;
+        const worldX = node.isCenter ? 0 : node.x;
+        const worldY = node.isCenter ? 0 : -node.y;
+
         const px = node.isCenter ? transformedCenterX : transformedCenterX + node.x * scale;
         const py = node.isCenter ? transformedCenterY : transformedCenterY + node.y * scale;
         const screenSize = Math.max(2, node.radius * Math.sqrt(scale));
 
         screenPositions.push({ candidate: c, screenX: px, screenY: py, screenSize });
 
-        // Subtractive Focus Dimming (Non-hovered nodes fade to 10% opacity)
         const isHovered = hoveredCandidate?.candidate.token_id === c.token_id && hoveredCandidate?.candidate.token_str === c.token_str;
         const isDimmed = hoveredCandidate !== null && !isHovered && !node.isCenter;
         const alpha = isDimmed ? 0.10 : 1.0;
 
-        ctx.save();
-        ctx.globalAlpha = alpha;
+        let nodeColor = 0x555555;
+        if (node.isCenter) nodeColor = 0xffffff;
+        else if (c.rank === 1) nodeColor = 0x10b981;
+        else if (c.is_rag_grounded) nodeColor = 0x06b6d4;
+        else if (c.isFiltered) nodeColor = 0x222222;
+        else if (c.filterReason === 'Banned') nodeColor = 0xef4444;
 
-        // Banned Token / Black Hole Treatment
-        if (c.filterReason === 'Banned') {
-          ctx.beginPath();
-          ctx.arc(px, py, screenSize + 2, 0, Math.PI * 2);
-          ctx.fillStyle = '#111111';
-          ctx.strokeStyle = '#ef4444';
-          ctx.lineWidth = 1.5;
-          ctx.fill();
-          ctx.stroke();
+        const circleGeo = new THREE.CircleGeometry(node.radius, 32);
+        const circleMat = new THREE.MeshBasicMaterial({
+          color: nodeColor,
+          transparent: true,
+          opacity: alpha,
+        });
 
-          ctx.font = `${Math.max(8, 10 * Math.sqrt(scale))}px JetBrains Mono`;
-          ctx.fillStyle = '#ef4444';
-          ctx.textAlign = 'center';
-          ctx.fillText('❌', px, py + 3);
-          ctx.restore();
-          return;
-        }
-
-        // Draw Solid Matte Node Body
-        ctx.beginPath();
-        ctx.arc(px, py, screenSize, 0, Math.PI * 2);
-
-        if (node.isCenter) {
-          ctx.fillStyle = '#ffffff'; // Solid white core
-        } else if (c.rank === 1) {
-          ctx.fillStyle = '#10b981'; // Flat matte emerald for winner
-        } else if (c.is_rag_grounded) {
-          ctx.fillStyle = '#06b6d4'; // Flat matte cyan for RAG fact
-        } else if (c.isFiltered) {
-          ctx.fillStyle = '#222222'; // Muted dark gray for out-of-bounds
-        } else {
-          ctx.fillStyle = '#555555'; // Medium gray for active candidates
-        }
-
-        ctx.fill();
-
-        // White border ring for active/hovered node
-        if (isHovered || node.isCenter) {
-          ctx.beginPath();
-          ctx.arc(px, py, screenSize + 3 * Math.sqrt(scale), 0, Math.PI * 2);
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1.5 * Math.sqrt(scale);
-          ctx.stroke();
-        }
-
-        // Draw Token Text Labels
-        if (node.isCenter || c.rank <= 10 || c.is_rag_grounded || isHovered || scale > 1.8) {
-          const fontSize = Math.max(9, (node.isCenter ? 13 : 11) * Math.min(1.5, Math.sqrt(scale)));
-          ctx.font = node.isCenter ? `bold ${fontSize}px JetBrains Mono` : `${fontSize}px JetBrains Mono`;
-          ctx.fillStyle = c.isFiltered ? '#666666' : '#ffffff';
-          ctx.textAlign = 'center';
-          ctx.fillText(`"${c.token_str.trim()}"`, px, py + screenSize + 14 * Math.sqrt(scale));
-
-          if (!node.isCenter && !c.isFiltered && c.probability > 0.01) {
-            ctx.font = `${Math.max(8, 10 * Math.min(1.5, Math.sqrt(scale)))}px Inter`;
-            ctx.fillStyle = c.is_rag_grounded ? '#06b6d4' : '#9ca3af';
-            ctx.fillText(`${(c.probability * 100).toFixed(1)}%`, px, py + screenSize + 26 * Math.sqrt(scale));
-          }
-        }
-
-        ctx.restore();
+        const mesh = new THREE.Mesh(circleGeo, circleMat);
+        mesh.position.set(worldX, worldY, 0);
+        nodesGroup.add(mesh);
       });
 
-      ctx.restore();
+      // Render WebGL Frame
+      renderer.render(scene, camera);
 
-      // Save screen positions for hover pointer check
       (canvas as any)._screenPositions = screenPositions;
-
-      animationFrameIdRef.current = requestAnimationFrame(render);
+      animationFrameId = requestAnimationFrame(renderLoop);
     };
 
-    render();
+    renderLoop();
 
     return () => {
       isSubscribed = false;
-      if (animationFrameIdRef.current) {
-        cancelAnimationFrame(animationFrameIdRef.current);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
       }
     };
   }, [candidates, params, ragEnabled, scale, offsetX, offsetY, hoveredCandidate]);
@@ -400,6 +420,9 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
           <h3 className="text-sm font-bold text-white tracking-tight flex items-center space-x-2">
             <span className="h-2 w-2 rounded-full bg-white" />
             <span>{title}</span>
+            <span className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-mono text-gray-300 border border-white/10">
+              WebGL GPU
+            </span>
           </h3>
           <p className="text-xs text-gray-400 font-mono">{subtitle}</p>
         </div>
@@ -421,7 +444,7 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
         </div>
       </div>
 
-      {/* HTML5 Canvas with Wheel Zoom and Pan Handlers */}
+      {/* WebGL Canvas */}
       <canvas
         ref={canvasRef}
         onWheel={handleWheel}
@@ -433,7 +456,7 @@ export const StarfieldCanvas: React.FC<StarfieldCanvasProps> = ({
         className="w-full h-full cursor-grab active:cursor-grabbing flex-1"
       />
 
-      {/* Viewport Navigation Overlay Controls (Zoom & Pan Controls) */}
+      {/* Viewport Navigation Overlay Controls */}
       <div className="absolute bottom-4 right-4 z-20 flex items-center space-x-2 bg-[#0A0A0A]/90 p-1.5 rounded-lg border border-white/10">
         <button
           onClick={zoomIn}
