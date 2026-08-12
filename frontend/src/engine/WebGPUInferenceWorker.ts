@@ -85,7 +85,7 @@ async function loadModel(modelId: string) {
       model_list: [
         ...prebuiltAppConfig.model_list,
         {
-          model: "https://huggingface.co/mlc-ai/DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC",
+          model: "https://huggingface.co/mlc-ai/DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC/",
           model_id: "DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC",
           model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/qwen2-1.5b-q4f16_1-ctx4k-webgpu.wasm",
           vram_required_MB: 1100,
