@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Github, Layers, BookOpen, Orbit, Settings, Share2, Check, Swords } from 'lucide-react';
+import { Sparkles, Github, Layers, BookOpen, Orbit, Settings, Share2, Check, Swords, Code2 } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'visualizer' | 'blog';
@@ -8,6 +8,7 @@ interface HeaderProps {
   setSplitView: (val: boolean) => void;
   onOpenSettings: () => void;
   onCopySetupLink: () => void;
+  onOpenCodeExport?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,6 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   setSplitView,
   onOpenSettings,
   onCopySetupLink,
+  onOpenCodeExport,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
 
@@ -42,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
                 The Token Cosmos
               </h1>
               <span className="rounded-full bg-cyan-500/10 px-2.5 py-0.5 text-xs font-semibold text-cyan-400 border border-cyan-500/20">
-                v2.0
+                v2.1
               </span>
             </div>
             <p className="text-xs text-slate-400 hidden sm:block">
@@ -53,6 +55,19 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls & Navigation */}
         <div className="flex items-center space-x-2.5">
+          {/* Export Code Button */}
+          {onOpenCodeExport && (
+            <button
+              onClick={onOpenCodeExport}
+              aria-label="Export sampling setup into production code snippets"
+              className="flex items-center space-x-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold bg-gradient-to-r from-cyan-500 to-purple-600 text-white shadow-neon-cyan hover:opacity-90 transition-opacity"
+              title="Export Setup to Python / LangChain / cURL Code"
+            >
+              <Code2 className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Export Code</span>
+            </button>
+          )}
+
           {/* Share Setup Link */}
           <button
             onClick={handleCopy}

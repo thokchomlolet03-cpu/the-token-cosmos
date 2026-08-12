@@ -482,6 +482,23 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             <p className="text-[11px] text-slate-400">
               Low (0.1) concentrated focus; High (1.5) cosmic entropy & creative variance.
             </p>
+            <div className="flex items-center space-x-1.5 mt-1">
+              {params.temperature <= 0.2 ? (
+                <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono font-bold flex items-center space-x-1">
+                  <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                  <span>🟢 Factual Precision (Legal / Medical / Code)</span>
+                </span>
+              ) : params.temperature >= 1.2 ? (
+                <span className="rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 text-[10px] font-mono font-bold flex items-center space-x-1">
+                  <Flame className="h-3 w-3 text-rose-400" />
+                  <span>🔴 High Entropy (Creative Fiction / Dialogue)</span>
+                </span>
+              ) : (
+                <span className="rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 px-2 py-0.5 text-[10px] font-mono font-medium">
+                  🔵 Balanced Assistant Mode (General Q&A)
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Top-K Slider */}

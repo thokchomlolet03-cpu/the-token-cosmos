@@ -7,6 +7,9 @@ import { FlightPathTimeline } from './components/FlightPathTimeline';
 import { EducationalBlog } from './components/EducationalBlog';
 import { TheNavigator, ActiveInteractionNotice } from './components/TheNavigator';
 import { EngineSettingsModal, ProviderType } from './components/EngineSettingsModal';
+import { HeroBanner } from './components/HeroBanner';
+import { TelemetryBar } from './components/TelemetryBar';
+import { CodeExportModal } from './components/CodeExportModal';
 import { SamplingParameters, ProcessedTokenCandidate, FlightStep, RawTokenCandidate, PresetScenario } from './types/sampling';
 import { PRESET_SCENARIOS, SAMPLE_RAW_LOGITS_MAP } from './utils/tokenData';
 import { calculateTokenProbabilities, normalizeOpenAILogprobs } from './utils/samplingMath';
@@ -15,6 +18,9 @@ import { useUrlState } from './utils/useUrlState';
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'visualizer' | 'blog'>('visualizer');
   const [splitView, setSplitView] = useState<boolean>(false);
+
+  // Code Export Modal State
+  const [isCodeExportOpen, setIsCodeExportOpen] = useState<boolean>(false);
 
   // Proactive Interaction Notice state for The Navigator AI explanations
   const [activeNotice, setActiveNotice] = useState<ActiveInteractionNotice | null>(null);
@@ -405,12 +411,16 @@ export const App: React.FC = () => {
         setSplitView={setSplitView}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onCopySetupLink={copySetupLink}
+        onOpenCodeExport={() => setIsCodeExportOpen(true)}
       />
 
       {/* Main Workspace */}
       <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 sm:p-6 flex flex-col space-y-6">
         {activeTab === 'visualizer' ? (
           <>
+            {/* Split-Reality Educational Hero Banner */}
+            <HeroBanner />
+
             {/* Top Workspace Grid: Left Panel A (Mission Control) + Center Panel B (Starfield Canvas) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[580px]">
               {/* Panel A: Mission Control (Left Pane) */}
@@ -439,45 +449,55 @@ export const App: React.FC = () => {
               </div>
 
               {/* Panel B: Center Canvas (The Starfield Cosmos or A/B Duel) */}
-              <div className="lg:col-span-8 xl:col-span-8 h-full min-h-[500px]">
-                {splitView ? (
-                  <SplitViewCosmos
-                    leftCandidates={processedCandidates}
-                    rightCandidates={duelCandidates}
-                    leftParams={params}
-                    rightParams={duelParams}
-                    leftTitle={
-                      provider !== 'default'
-                        ? `Universe A [${provider.toUpperCase()}] (${modelName})`
-                        : `Universe A (Temp = ${params.temperature.toFixed(2)})`
-                    }
-                    leftSubtitle={`Primary Sampling Config • Top-K ${params.topK}`}
-                    rightTitle={
-                      provider !== 'default'
-                        ? `Universe B [Cloud Run Qwen]`
-                        : `Universe B (Temp = ${duelParams.temperature.toFixed(2)})`
-                    }
-                    rightSubtitle={`Secondary A/B Config • Top-K ${duelParams.topK}`}
-                    leftRagEnabled={ragEnabled}
-                    rightRagEnabled={ragEnabled}
-                    onSelectToken={handleSelectToken}
-                    onUpdateRightTemp={newTemp => setDuelParams(prev => ({ ...prev, temperature: newTemp }))}
-                    isByoeMode={provider !== 'default'}
-                  />
-                ) : (
-                  <StarfieldCanvas
-                    candidates={processedCandidates}
-                    params={params}
-                    ragEnabled={ragEnabled}
-                    onSelectToken={handleSelectToken}
-                    title="The Responsive Token Cosmos"
-                    subtitle={
-                      provider !== 'default'
-                        ? `Connected to BYOE Provider [${provider.toUpperCase()}] (${modelName})`
-                        : "50 Candidate Tokens Orbiting Vocabulary Center"
-                    }
-                  />
-                )}
+              <div className="lg:col-span-8 xl:col-span-8 h-full flex flex-col space-y-3 min-h-[500px]">
+                {/* Real-Time Telemetry Health Bar */}
+                <TelemetryBar
+                  candidates={processedCandidates}
+                  params={params}
+                  ragEnabled={ragEnabled}
+                  historyLength={historyTokens.length}
+                />
+
+                <div className="flex-1 min-h-[460px]">
+                  {splitView ? (
+                    <SplitViewCosmos
+                      leftCandidates={processedCandidates}
+                      rightCandidates={duelCandidates}
+                      leftParams={params}
+                      rightParams={duelParams}
+                      leftTitle={
+                        provider !== 'default'
+                          ? `Universe A [${provider.toUpperCase()}] (${modelName})`
+                          : `Universe A (Temp = ${params.temperature.toFixed(2)})`
+                      }
+                      leftSubtitle={`Primary Sampling Config • Top-K ${params.topK}`}
+                      rightTitle={
+                        provider !== 'default'
+                          ? `Universe B [Cloud Run Qwen]`
+                          : `Universe B (Temp = ${duelParams.temperature.toFixed(2)})`
+                      }
+                      rightSubtitle={`Secondary A/B Config • Top-K ${duelParams.topK}`}
+                      leftRagEnabled={ragEnabled}
+                      rightRagEnabled={ragEnabled}
+                      onSelectToken={handleSelectToken}
+                      onUpdateRightTemp={newTemp => setDuelParams(prev => ({ ...prev, temperature: newTemp }))}
+                      isByoeMode={provider !== 'default'}
+                    />
+                  ) : (
+                    <StarfieldCanvas
+                      candidates={processedCandidates}
+                      params={params}
+                      ragEnabled={ragEnabled}
+                      onSelectToken={handleSelectToken}
+                      title="The Responsive Token Cosmos"
+                      subtitle={
+                        provider !== 'default'
+                          ? `Connected to BYOE Provider [${provider.toUpperCase()}] (${modelName})`
+                          : "50 Candidate Tokens Orbiting Vocabulary Center"
+                      }
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -525,6 +545,19 @@ export const App: React.FC = () => {
         customUrl={customUrl}
         customApiKey={customApiKey}
         modelName={modelName}
+      />
+
+      {/* Developer Code Export Hub Modal */}
+      <CodeExportModal
+        isOpen={isCodeExportOpen}
+        onClose={() => setIsCodeExportOpen(false)}
+        params={params}
+        prompt={prompt}
+        systemPrompt={systemPrompt}
+        ragContext={ragContext}
+        ragEnabled={ragEnabled}
+        modelName={modelName}
+        provider={provider}
       />
     </div>
   );
