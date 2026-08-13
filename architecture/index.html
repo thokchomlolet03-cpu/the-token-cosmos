@@ -1,0 +1,1637 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Interactive LLM Probability Visualizer & Educational Guide Master Documentation Suite">
+      
+      
+        <meta name="author" content="Google Deepmind Advanced Agentic Coding Team & The Token Cosmos Contributors">
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../deployment/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>System Architecture - The Token Cosmos</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#system-architecture-how-why-it-works" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="The Token Cosmos" class="md-header__button md-logo" aria-label="The Token Cosmos" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            The Token Cosmos
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              System Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Welcome
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  System Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../deployment/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Infrastructure & Deployment
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../ownership/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Component Ownership (RACI)
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../monitoring/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Monitoring & Observability
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../security/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Security & Vulnerability
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../disaster_recovery/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Disaster Recovery
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../api/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../sla/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  SLAs & Requirements
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../onboarding/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Developer Onboarding
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../user_guide/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  End-User Manual
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../glossary/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Terminology Glossary
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../compliance/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Compliance & Safety
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Changelog
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../testing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Testing Strategy
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../telemetry_schema/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Data Telemetry
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../adrs/0001-use-edge-webgpu-inference/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Decision Log (ADR-0001)
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="The Token Cosmos" class="md-nav__button md-logo" aria-label="The Token Cosmos" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    The Token Cosmos
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Welcome
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-architectural-blueprint-data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Architectural Blueprint &amp; Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-technical-stack-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Technical Stack &amp; Rationale
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-mathematical-pipeline-samplingmathts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Mathematical Pipeline (samplingMath.ts)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Mathematical Pipeline (samplingMath.ts)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-logit-bias-penalties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Logit Bias &amp; Penalties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-temperature-scaling-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Temperature Scaling &amp; Softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-sampling-filters-top-k-top-p-min-p" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Sampling Filters (Top-K, Top-P, Min-P)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-why-edge-ai-webgpu-over-cloud-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Why Edge-AI (WebGPU) Over Cloud APIs?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Why Edge-AI (WebGPU) Over Cloud APIs?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-zero-infrastructure-idle-costs-000-idle-cost-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Zero Infrastructure Idle Costs ($0.00 Idle Cost Design)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-privacy-by-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Privacy by Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-infinite-scalability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Infinite Scalability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-token-streaming-reasoning-state-pipelines-v41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Token Streaming &amp; Reasoning State Pipelines (v4.1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Token Streaming &amp; Reasoning State Pipelines (v4.1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#autoregressive-streaming-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Autoregressive Streaming Topology
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reasoning-model-think-parsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reasoning Model (&lt;think&gt;) Parsing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infrastructure & Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ownership/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Component Ownership (RACI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring & Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security & Vulnerability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../disaster_recovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Disaster Recovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sla/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLAs & Requirements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../onboarding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Onboarding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    End-User Manual
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Terminology Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance & Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../telemetry_schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Telemetry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adrs/0001-use-edge-webgpu-inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Log (ADR-0001)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-architectural-blueprint-data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Architectural Blueprint &amp; Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-technical-stack-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Technical Stack &amp; Rationale
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-mathematical-pipeline-samplingmathts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Mathematical Pipeline (samplingMath.ts)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Mathematical Pipeline (samplingMath.ts)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-logit-bias-penalties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Logit Bias &amp; Penalties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-temperature-scaling-softmax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Temperature Scaling &amp; Softmax
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-sampling-filters-top-k-top-p-min-p" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Sampling Filters (Top-K, Top-P, Min-P)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-why-edge-ai-webgpu-over-cloud-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Why Edge-AI (WebGPU) Over Cloud APIs?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Why Edge-AI (WebGPU) Over Cloud APIs?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-zero-infrastructure-idle-costs-000-idle-cost-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Zero Infrastructure Idle Costs ($0.00 Idle Cost Design)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-privacy-by-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Privacy by Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-infinite-scalability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Infinite Scalability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-token-streaming-reasoning-state-pipelines-v41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Token Streaming &amp; Reasoning State Pipelines (v4.1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Token Streaming &amp; Reasoning State Pipelines (v4.1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#autoregressive-streaming-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Autoregressive Streaming Topology
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reasoning-model-think-parsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reasoning Model (&lt;think&gt;) Parsing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="system-architecture-how-why-it-works">System Architecture (How &amp; Why It Works)</h1>
+<p>The Token Cosmos architecture is built on a <strong>fully-decentralized client-first paradigm</strong>. Rather than performing heavy matrix math and sampling filters on expensive backend GPUs, the mathematical transformation pipeline runs directly in the client's browser. This page details the components, data flows, and design rationale.</p>
+<hr />
+<h2 id="1-architectural-blueprint-data-flow">1. Architectural Blueprint &amp; Data Flow</h2>
+<p>The Token Cosmos supports two execution paths:
+1. <strong>Local Edge Mode (WebGPU / WASM)</strong>: Runs full model inference in browser memory, utilizing the client's local GPU.
+2. <strong>Cloud Run API Mode</strong>: Interacts with the lightweight FastAPI container to retrieve logits (either simulated or computed via a local GGUF model running on the container's CPU).</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Browser[&quot;Client Browser Environment&quot;]
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        UI[&quot;React SPA UI\n(Vite + Tailwind)&quot;]
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        Canvas[&quot;Starfield Canvas\n(2D Canvas / 3D Terrain)&quot;]
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        MathPipe[&quot;Client Math Pipeline\n(samplingMath.ts)&quot;]
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        subgraph WebWorker[&quot;WebWorker Thread&quot;]
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>            WebGPU[&quot;@mlc-ai/web-llm\n(Local Inference)&quot;]
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>            WorkerMath[&quot;Logit Interceptor\n(CosmosLogitProcessor)&quot;]
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        end
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    end
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    subgraph Backend[&quot;GCP Cloud Run Container (Stateless)&quot;]
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        FastAPI[&quot;FastAPI API\n(main.py)&quot;]
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        LlamaCPP[&quot;llama-cpp-python\n(Optional GGUF engine)&quot;]
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    end
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    UI --&gt;|Render Stars| Canvas
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    UI --&gt;|Adjust Sliders| MathPipe
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    %% Local Inference Flow
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    UI --&gt;|Load Model / Generate| WebGPU
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    WebGPU --&gt;|Extract Logits| WorkerMath
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    WorkerMath --&gt;|Raw Logit array| MathPipe
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    %% Remote API Flow
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    UI --&gt;|POST /api/logits| FastAPI
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    FastAPI --&gt;|Check GGUF / Synthetic| LlamaCPP
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    LlamaCPP --&gt;|Return logits JSON| UI
+</span></code></pre></div>
+<hr />
+<h2 id="2-technical-stack-rationale">2. Technical Stack &amp; Rationale</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Technology</th>
+<th style="text-align: left;">Purpose</th>
+<th style="text-align: left;">Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>React + TypeScript</strong></td>
+<td style="text-align: left;">Core Application framework</td>
+<td style="text-align: left;">Enables reactive, modular state management. Type safety ensures stable data structures when transferring raw buffers (like Float32Arrays) between the main thread and WebWorkers.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>HTML5 2D Canvas &amp; WebGL</strong></td>
+<td style="text-align: left;">Particle Starfield &amp; Semantic Terrain</td>
+<td style="text-align: left;">Rendering 150,000+ vocabulary tokens as individual stars at 60 FPS. Standard DOM elements would crash the browser, whereas canvas/WebGL handles massive coordinate sets efficiently.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>WebGPU (<code>@mlc-ai/web-llm</code>)</strong></td>
+<td style="text-align: left;">Edge-AI Local Inference</td>
+<td style="text-align: left;">Offloads model calculations directly to client-side GPU hardware. Eliminates server-side hosting costs and ensures user privacy.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FastAPI (Python 3.11)</strong></td>
+<td style="text-align: left;">Backend API and Static Hosting</td>
+<td style="text-align: left;">A high-performance, asynchronous microservice that compiles and serves the React SPA alongside API endpoints, maintaining a single, unified Docker layer.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>llama-cpp-python</strong></td>
+<td style="text-align: left;">CPU GGUF inference</td>
+<td style="text-align: left;">Allows local developers or CPU environments to load small Qwen or Llama models via GGUF files without GPU requirements.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-mathematical-pipeline-samplingmathts">3. Mathematical Pipeline (<code>samplingMath.ts</code>)</h2>
+<p>The client math pipeline runs in browser memory at 60 FPS, updating the visual probabilities instantly as users drag the parameter sliders.</p>
+<h3 id="step-1-logit-bias-penalties">Step 1: Logit Bias &amp; Penalties</h3>
+<p>We modify the raw logits $z_i$ received from the model based on user-defined biases and penalties:
+$$z_i' = z_i + \text{bias}_i - (\text{presence_penalty} \times p(x_i) + \text{frequency_penalty} \times c(x_i))$$
+- $\text{bias}_i$ is the Logit Bias added to token $i$.
+- $p(x_i) \in {0, 1}$ indicates if token $i$ is present in the historical output.
+- $c(x_i)$ is the frequency count of token $i$ in the output.</p>
+<h3 id="step-2-temperature-scaling-softmax">Step 2: Temperature Scaling &amp; Softmax</h3>
+<p>To convert scaled logits into probabilities, we use a <strong>Numerically Stable Softmax</strong> with the <strong>Log-Sum-Exp Trick</strong> to avoid overflow/underflow errors in JavaScript:
+$$P(x_i) = \frac{\exp\left(\frac{z_i' - z_{\max}}{T}\right)}{\sum_j \exp\left(\frac{z_j' - z_{\max}}{T}\right)}$$
+- $T$ is the Temperature parameter.
+- $z_{\max} = \max_j(z_j')$ is subtracted from each logit to keep exponents $\le 0$.
+- <strong>Greedy Fallback</strong>: If $T \le 0.01$, we bypass the softmax and set the highest logit token to $1.0$ (100%), setting all others to $0.0$.</p>
+<h3 id="step-3-sampling-filters-top-k-top-p-min-p">Step 3: Sampling Filters (Top-K, Top-P, Min-P)</h3>
+<p>We truncate the probability distribution to keep only high-likelihood tokens:
+1. <strong>Top-K</strong>: Sort tokens by probability and discard any token ranked below index $K$.
+2. <strong>Top-P (Nucleus)</strong>: Discard tokens beyond the cumulative probability threshold $P$.
+3. <strong>Min-P</strong>: Filter out tokens whose probability is lower than $min_p \times P_{\max}$. This is a superior alternative to Top-P because it scales dynamically based on the model's confidence.</p>
+<hr />
+<h2 id="4-why-edge-ai-webgpu-over-cloud-apis">4. Why Edge-AI (WebGPU) Over Cloud APIs?</h2>
+<p>Choosing WebGPU local execution instead of calling cloud endpoints (like OpenAI or Replicate) provides three massive structural advantages:</p>
+<h3 id="1-zero-infrastructure-idle-costs-000-idle-cost-design">1. Zero Infrastructure Idle Costs ($0.00 Idle Cost Design)</h3>
+<p>If no one is using the application, Google Cloud Run scales the API container to zero instances. Because inference runs in the user's browser, there are no running VMs with idle GPUs billing the company.</p>
+<h3 id="2-privacy-by-design">2. Privacy by Design</h3>
+<p>Prompts, system prompts, and output text are processed entirely inside the client browser. No text is transmitted over the network when running in WebGPU mode, making the application 100% compliant with strict enterprise data privacy rules.</p>
+<h3 id="3-infinite-scalability">3. Infinite Scalability</h3>
+<p>Under traditional architectures, supporting 1,000 concurrent users running inference requires massive clusters of NVIDIA A100/H100 GPUs. With the WebGPU edge design, scaling to 100,000 users requires zero server scaling; each user provides their own computational hardware.</p>
+<hr />
+<h2 id="5-token-streaming-reasoning-state-pipelines-v41">5. Token Streaming &amp; Reasoning State Pipelines (v4.1)</h2>
+<p>In version 4.1, the application introduces a decoupled real-time streaming model to display token transitions at 60 FPS while isolating reasoning chains.</p>
+<h3 id="autoregressive-streaming-topology">Autoregressive Streaming Topology</h3>
+<ol>
+<li><strong>WebWorker Execution</strong>: The MLCEngine generates tokens autoregressively. As each token index is predicted:</li>
+<li>The logits are captured by the <code>CosmosLogitProcessor</code>.</li>
+<li>The worker detokenizes the index and posts a <code>TOKEN_GENERATED</code> event alongside a <code>LOGITS_READY</code> payload containing the raw logit buffer.</li>
+<li><strong>Main Thread Integration</strong>: The main React thread intercepts these messages via the <code>useInferenceEngine</code> hook. Rather than wait for full sequence generation, the state appends the new text segment and recalculates coordinate projections instantly.</li>
+<li><strong>Canvas Updates</strong>: The 2D and 3D canvases capture the coordinate updates. Particle trails are recalculated and animated using web frame interpolations, preventing layout shifts or visual stutter during fast generation steps (&gt;20 tokens/sec).</li>
+</ol>
+<h3 id="reasoning-model-think-parsing">Reasoning Model (<code>&lt;think&gt;</code>) Parsing</h3>
+<p>Reasoning-capable models structure their outputs by prefixing thinking sequences with <code>&lt;think&gt;</code> and concluding with <code>&lt;/think&gt;</code>. The Token Cosmos handles this structural separation at the state layer:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>                  REASONING STATE ROUTING
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>             ┌─────────────────────────────────┐
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>             │    WebGPU Token Generation      │
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>             └─────────────────────────────────┘
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>                              |
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>                              v
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>             ┌─────────────────────────────────┐
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>             │   Worker checks &lt;think&gt; State   │
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>             └─────────────────────────────────┘
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>             /                                 \
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>      (Inside &lt;think&gt;)                  (Outside &lt;think&gt;)
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>             v                                 v
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>┌─────────────────────────┐       ┌─────────────────────────┐
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│  - isThinking = True    │       │  - isThinking = False   │
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│  - Route to Thought Log │       │  - Route to Output UI   │
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│  - Render Dim Asteroids │       │  - Render Main Stars    │
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>└─────────────────────────┘       └─────────────────────────┘
+</span></code></pre></div>
+<ul>
+<li><strong>State Flags</strong>: The worker monitors token streams. Upon encountering <code>&lt;think&gt;</code>, it sets the <code>isThinking</code> flag to <code>true</code> in all subsequent <code>LogitSnapshot</code> payloads. It reverts the flag to <code>false</code> when <code>&lt;/think&gt;</code> is detected.</li>
+<li><strong>Visual Separation</strong>: </li>
+<li><em>Thought Log Panel</em>: The frontend intercepts the <code>isThinking</code> packets and streams them into a separate collapsible text field, hiding them from the standard user generation box.</li>
+<li><em>Canvas Highlight Dimming</em>: The 3D canvas dims the main Supergiant star constellations and highlights the reasoning tokens as a faint outer cloud of asteroids, illustrating the cognitive density of the model's self-reflection process in real-time.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.tabs", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
