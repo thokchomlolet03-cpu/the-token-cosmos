@@ -1080,6 +1080,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-friction-hunter-ingestion-synchronization-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Friction Hunter Ingestion &amp; Synchronization Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Friction Hunter Ingestion &amp; Synchronization Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ingestion-flow-buffering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ingestion Flow &amp; Buffering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bigquery-friction-schema-cosmos_telemetryfriction_points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery Friction Schema (cosmos_telemetry.friction_points)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bigquery-partitioning-cost-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery Partitioning &amp; Cost Controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1182,6 +1232,56 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-friction-hunter-ingestion-synchronization-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Friction Hunter Ingestion &amp; Synchronization Pipeline
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Friction Hunter Ingestion &amp; Synchronization Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ingestion-flow-buffering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ingestion Flow &amp; Buffering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bigquery-friction-schema-cosmos_telemetryfriction_points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery Friction Schema (cosmos_telemetry.friction_points)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bigquery-partitioning-cost-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery Partitioning &amp; Cost Controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1333,6 +1433,81 @@
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">client</span> <span class="o">=</span> <span class="n">bigquery</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
 </span></code></pre></div></li>
 </ol>
+<hr />
+<h2 id="5-friction-hunter-ingestion-synchronization-pipeline">5. Friction Hunter Ingestion &amp; Synchronization Pipeline</h2>
+<p>The <strong>Friction Hunter</strong> is a diagnostic bridge that analyzes the logical flow of text sequences. It monitors points where the mathematical transition probability drops abruptly between consecutive phrases.</p>
+<h3 id="ingestion-flow-buffering">Ingestion Flow &amp; Buffering</h3>
+<ol>
+<li><strong>Calculation</strong>: The client-side logic calculates consecutive log-probability differences $D_i$ at 60 FPS.</li>
+<li><strong>Detection</strong>: Friction points are flagged if $D_i$ exceeds the $\sigma$-based sensitivity threshold (formula: $D_i &gt; \mu + \theta_\sigma \times \sigma \times 0.5$).</li>
+<li><strong>Buffering</strong>: To prevent spamming HTTP connections, the client buffers these events in memory. When the buffer reaches 5 events, or the user navigates away, the client streams the payload via <code>POST /api/telemetry/friction</code>.</li>
+<li><strong>Backend Routing</strong>: FastAPI receives the JSON payload, validates it, and streams the events into BigQuery.</li>
+</ol>
+<h3 id="bigquery-friction-schema-cosmos_telemetryfriction_points">BigQuery Friction Schema (<code>cosmos_telemetry.friction_points</code>)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Column Name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Constraint</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>timestamp</code></td>
+<td style="text-align: center;"><code>TIMESTAMP</code></td>
+<td style="text-align: center;">Required</td>
+<td style="text-align: left;">Ingestion date/time.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>session_id</code></td>
+<td style="text-align: center;"><code>STRING</code></td>
+<td style="text-align: center;">Required</td>
+<td style="text-align: left;">Unique session UUID (PII-free).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>phrase</code></td>
+<td style="text-align: center;"><code>STRING</code></td>
+<td style="text-align: center;">Required</td>
+<td style="text-align: left;">The text fragment that caused the drop (e.g. "Select * from").</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>log_prob_drop</code></td>
+<td style="text-align: center;"><code>FLOAT</code></td>
+<td style="text-align: center;">Required</td>
+<td style="text-align: left;">The logit difference $D_i$.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>previous_log_prob</code></td>
+<td style="text-align: center;"><code>FLOAT</code></td>
+<td style="text-align: center;">Required</td>
+<td style="text-align: left;">Probability before the drop.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>current_log_prob</code></td>
+<td style="text-align: center;"><code>FLOAT</code></td>
+<td style="text-align: center;">Required</td>
+<td style="text-align: left;">Probability after the drop.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>severity</code></td>
+<td style="text-align: center;"><code>STRING</code></td>
+<td style="text-align: center;">Required</td>
+<td style="text-align: left;">Severity rating: <code>critical</code>, <code>warning</code>, or <code>info</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>reason</code></td>
+<td style="text-align: center;"><code>STRING</code></td>
+<td style="text-align: center;">Required</td>
+<td style="text-align: left;">Structured text reason string indicating why the drop occurred.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="bigquery-partitioning-cost-controls">BigQuery Partitioning &amp; Cost Controls</h3>
+<p>To minimize analysis costs, the <code>friction_points</code> table is partitioned by day using the <code>timestamp</code> field:
+- <strong>Partition Filter</strong>: All analytical queries must include a filter on <code>timestamp</code> (e.g. <code>WHERE timestamp &gt; TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)</code>).
+- <strong>Clustering</strong>: Rows are clustered by <code>severity</code> and <code>model_id</code> to speed up filtering on critical failures.</p>
 
 
 
