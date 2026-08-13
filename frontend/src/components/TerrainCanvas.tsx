@@ -443,11 +443,12 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [rawCoordinates]);
 
+  // Focus once when the coordinates first load, then let the user control the camera manually
   useEffect(() => {
-    if (latestLogits && isLoaded) {
-      setTimeout(focusOnGreedyAnchor, 100);
+    if (isLoaded && argmaxIndexRef.current !== -1) {
+      setTimeout(focusOnGreedyAnchor, 200);
     }
-  }, [latestLogits, isLoaded]);
+  }, [isLoaded]);
 
   useEffect(() => {
     if (!pointsRef.current || !isLoaded) return;
