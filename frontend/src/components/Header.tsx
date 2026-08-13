@@ -46,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-xs text-gray-400 hidden sm:block">
-              Interactive LLM Probability Visualizer & Educational Guide
+              See How AI Actually Thinks & Chooses Words
             </p>
           </div>
         </div>

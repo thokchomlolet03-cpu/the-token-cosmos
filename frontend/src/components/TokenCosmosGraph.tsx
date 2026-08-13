@@ -241,7 +241,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
       {/* ─── Telemetry Strip ─── */}
       <div className="flex items-center space-x-6 px-4 py-1.5 border-b border-white/5 text-[10px] font-mono text-gray-400">
         <span><Zap className="inline h-3 w-3 text-cyan-400 mr-1" />Top: <strong className="text-white">{topToken?.token_str.trim() || '—'}</strong> ({topToken ? (topToken.probability * 100).toFixed(1) : 0}%)</span>
-        <span><Activity className="inline h-3 w-3 text-pink-400 mr-1" />Entropy: <strong className="text-white">{entropy.toFixed(2)} bits</strong></span>
+        <span><Activity className="inline h-3 w-3 text-pink-400 mr-1" />Uncertainty: <strong className="text-white">{entropy.toFixed(2)} bits</strong></span>
         <span><Anchor className="inline h-3 w-3 text-blue-400 mr-1" />RAG: <strong className="text-white">{ragEnabled ? `${groundedCount} grounded` : 'OFF'}</strong></span>
         <span>Candidates: <strong className="text-white">{candidates.filter(c => !c.isFiltered).length}</strong> / {candidates.length}</span>
       </div>
@@ -269,7 +269,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              Linear
+              Standard View
             </button>
             <button
               onClick={() => setHeightMode('log')}
@@ -279,7 +279,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              Log Scale
+              Enhanced 3D
             </button>
             <button
               onClick={() => setHeightMode('logit')}
@@ -289,7 +289,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              Logits
+              Raw Data
             </button>
           </div>
 
@@ -307,7 +307,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
         {/* Floating Top 10 Overlay */}
         <div className="absolute top-4 right-4 w-64 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 overflow-hidden pointer-events-none">
           <div className="px-3 py-1.5 bg-white/5 border-b border-white/10">
-            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Top Candidates</span>
+            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Most Likely Next Words</span>
           </div>
           <div className="p-2 space-y-1">
             {candidates.slice(0, 10).map((c, i) => (

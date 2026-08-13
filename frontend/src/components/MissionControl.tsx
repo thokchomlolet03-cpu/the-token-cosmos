@@ -207,11 +207,12 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           <div className="space-y-6">
             {/* Preset Scenarios ("Vibe Buttons") */}
             <div>
-          <label className="text-[11px] font-mono uppercase tracking-wider text-gray-400 flex items-center space-x-1.5 mb-2.5">
-            <Sparkles className="h-3.5 w-3.5 text-gray-300" />
-            <span>Preset Scenarios</span>
-          </label>
-          <div className="grid grid-cols-2 gap-2">
+            <label className="text-[11px] font-mono uppercase tracking-wider text-gray-400 flex items-center space-x-1.5 mb-1">
+              <Sparkles className="h-3.5 w-3.5 text-gray-300" />
+              <span>Example Tasks</span>
+            </label>
+            <p className="text-[10px] text-gray-500 mb-2.5">Click one to see how the AI handles different jobs.</p>
+            <div className="grid grid-cols-2 gap-2">
             {PRESET_SCENARIOS.map(preset => (
               <button
                 key={preset.id}
@@ -243,14 +244,15 @@ export const MissionControl: React.FC<MissionControlProps> = ({
         {/* Feature 1: System Override (Persona) Accordion */}
         <div className="rounded-xl border border-white/10 bg-[#111111] overflow-hidden">
           <button
+            type="button"
             onClick={() => setIsSystemExpanded(!isSystemExpanded)}
-            aria-label="Toggle System Override Persona instructions"
+            aria-label="Toggle AI Personality and Role instructions"
             aria-expanded={isSystemExpanded}
             className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-gray-200 hover:bg-white/5 transition-colors"
           >
             <div className="flex items-center space-x-2">
               <UserCheck className={`h-4 w-4 ${systemPrompt.trim() ? 'text-white' : 'text-gray-500'}`} />
-              <span className="font-semibold text-white tracking-tight">System Override (Persona)</span>
+              <span className="font-semibold text-white tracking-tight">AI Personality & Role</span>
               <span
                 className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-medium ${
                   systemPrompt.trim() ? 'bg-white/10 text-white border border-white/15' : 'bg-black text-gray-400 border border-white/10'
@@ -265,7 +267,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           {isSystemExpanded && (
             <div className="p-3 border-t border-white/10 space-y-2 bg-[#0A0A0A]">
               <p className="text-[11px] text-gray-400 leading-relaxed font-mono">
-                Paste proprietary system instructions (e.g. <em>"You are a senior PostgreSQL DBA. Reply only with valid SQL."</em>). Shifts baseline probability before sampling.
+                Tell the AI who it should act like (e.g., <em>"You are a helpful tutor"</em>). Shifts the baseline word probabilities.
               </p>
               <textarea
                 aria-label="System prompt persona instructions"
@@ -294,9 +296,9 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             <div className="flex items-center justify-between mb-1.5">
               <label htmlFor="prompt-input" className="text-xs font-semibold text-gray-300 flex items-center space-x-1.5">
                 <FileText className="h-3.5 w-3.5 text-gray-400" />
-                <span className="text-white tracking-tight">Flight Console (Custom Prompt)</span>
+                <span className="text-white tracking-tight">Your Message (The Prompt)</span>
               </label>
-              <span className="text-[10px] text-gray-400 font-mono">Custom Input</span>
+              <span className="text-[10px] text-gray-400 font-mono">Custom Prompt</span>
             </div>
             <textarea
               id="prompt-input"
@@ -305,7 +307,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               onChange={e => setPrompt(e.target.value)}
               rows={2}
               className="w-full rounded-lg bg-[#111111] border border-white/10 px-3 py-2 text-xs text-gray-100 placeholder:text-gray-600 focus:border-gray-500 focus:outline-none focus:ring-0 resize-none font-mono leading-relaxed"
-              placeholder="Try typing: 'The best way to cook a steak is...' or 'What is the capital of France?'"
+              placeholder="Type your question or starting sentence here..."
             />
           </div>
 
@@ -330,13 +332,13 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             >
               <div className="flex items-center space-x-2">
                 <Anchor className={`h-4 w-4 ${ragEnabled ? 'text-white' : 'text-gray-500'}`} />
-                <span className="font-semibold text-white tracking-tight">RAG Grounding (Inject Facts)</span>
+                <span className="font-semibold text-white tracking-tight">Provide Reference Facts</span>
                 <span
                   className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-medium ${
                     ragEnabled ? 'bg-white/10 text-white border border-white/15' : 'bg-black text-gray-400 border border-white/10'
                   }`}
                 >
-                  {ragEnabled ? 'ON • Tethered' : 'OFF'}
+                  {ragEnabled ? 'ON • Grounded' : 'OFF'}
                 </span>
               </div>
               {isRagExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
@@ -346,7 +348,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               <div className="p-3 border-t border-white/10 space-y-2 bg-[#0A0A0A]">
                 <div className="flex items-center space-x-1.5 text-[11px] text-gray-300 font-mono">
                   <Anchor className="h-3.5 w-3.5 text-gray-400" />
-                  <span>Paste retrieved factual context to anchor AI probabilities</span>
+                  <span>Paste reference facts here. The AI will read this instead of guessing.</span>
                 </div>
                 <textarea
                   aria-label="Retrieved factual context for RAG grounding"
@@ -381,7 +383,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             >
               <div className="flex items-center space-x-2">
                 <Code2 className={`h-4 w-4 ${jsonSchemaEnabled ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`} />
-                <span className="font-semibold text-slate-100">Structured Output (JSON Schema)</span>
+                <span className="font-semibold text-slate-100">Force Strict Formatting</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                     jsonSchemaEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-slate-800 text-slate-400'
@@ -396,7 +398,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             {isSchemaExpanded && (
               <div className="p-3 border-t border-emerald-500/15 space-y-2 bg-slate-950/40">
                 <p className="text-[11px] text-emerald-200/80 leading-relaxed">
-                  Enforces JSON Grammar rules. Invalid grammar tokens drop to hard 0.0% probability.
+                  Forces the AI to answer in a rigid data format instead of a paragraph.
                 </p>
                 <textarea
                   aria-label="JSON Schema for structured output enforcement"
@@ -420,12 +422,12 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             {isFetchingLogits ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
-                <span>Evaluating Vocabulary Universe...</span>
+                <span>Mapping AI Thoughts...</span>
               </>
             ) : (
               <>
                 <Rocket className="h-4 w-4 fill-slate-950" />
-                <span>Launch Constellation (Evaluate Prompt)</span>
+                <span>Map the AI's Thoughts</span>
               </>
             )}
           </button>
@@ -438,7 +440,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
         <div className="space-y-4 pt-2 border-t border-slate-800">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
             <Flame className="h-3.5 w-3.5 text-amber-400" />
-            <span>Sampling Parameters</span>
+            <span>Brain Controls (How it Picks Words)</span>
           </h3>
 
           {isReasoningModel ? (
@@ -484,8 +486,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
               <label htmlFor="temp-slider" className="font-medium text-slate-200 flex items-center space-x-1">
-                <span>The Cosmic Heat</span>
-                <span className="text-slate-400 font-mono text-[11px]">(Temperature T)</span>
+                <span>Creativity vs. Focus (Temperature)</span>
               </label>
               <span className="font-mono font-bold text-amber-400">{params.temperature.toFixed(2)}</span>
             </div>
@@ -522,7 +523,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               className="w-full"
             />
             <p className="text-[11px] text-slate-400">
-              Low (0.1) concentrated focus; High (1.5) cosmic entropy & creative variance.
+              Low = Predictable and strict. High = Creative, random, and chaotic.
             </p>
             <div className="flex items-center space-x-1.5 mt-1">
               {params.temperature <= 0.2 ? (
@@ -547,8 +548,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
               <label htmlFor="topk-slider" className="font-medium text-slate-200 flex items-center space-x-1">
-                <span>The Orbital Ring</span>
-                <span className="text-slate-400 font-mono text-[11px]">(Top-K)</span>
+                <span>Word Limit (Top-K)</span>
               </label>
               <span className="font-mono font-bold text-cyan-400">{params.topK}</span>
             </div>
@@ -585,7 +585,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               className="w-full"
             />
             <p className="text-[11px] text-slate-400">
-              Keep top K candidate tokens. Outer tokens beyond rank K fade to gray.
+              Only allow the AI to choose from the top K most likely words. Ignores the rest.
             </p>
           </div>
 
@@ -593,8 +593,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
               <label htmlFor="topp-slider" className="font-medium text-slate-200 flex items-center space-x-1">
-                <span>The Energy Shield</span>
-                <span className="text-slate-400 font-mono text-[11px]">(Top-P / Nucleus)</span>
+                <span>Confidence Cutoff (Top-P)</span>
               </label>
               <span className="font-mono font-bold text-purple-400">{(params.topP * 100).toFixed(0)}%</span>
             </div>
@@ -622,7 +621,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               className="w-full"
             />
             <p className="text-[11px] text-slate-400">
-              Cumulative probability cutoff envelope. Dynamically shrinks and expands.
+              Only use words that make up the top P% of total probability.
             </p>
           </div>
 
@@ -630,8 +629,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
               <label htmlFor="minp-slider" className="font-medium text-slate-200 flex items-center space-x-1">
-                <span>The Gravity Well</span>
-                <span className="text-slate-400 font-mono text-[11px]">(Min-P)</span>
+                <span>Ignore Wild Guesses (Min-P)</span>
               </label>
               <span className="font-mono font-bold text-pink-400">{(params.minP * 100).toFixed(1)}%</span>
             </div>
@@ -659,7 +657,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               className="w-full"
             />
             <p className="text-[11px] text-slate-400">
-              Filters tokens relative to top star chance (min_p × max_probability).
+              Hide words that have a near-zero chance of making sense.
             </p>
           </div>
             </>
@@ -675,7 +673,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           >
             <div className="flex items-center space-x-2">
               <Shield className={`h-4 w-4 ${params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0 ? 'text-emerald-400 animate-pulse' : 'text-gray-500'}`} />
-              <span className="font-semibold text-white tracking-tight">Penalties & Guardrails</span>
+              <span className="font-semibold text-white tracking-tight">Repetition Blockers (Penalties)</span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                   params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0

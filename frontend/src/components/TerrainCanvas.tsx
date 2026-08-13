@@ -598,7 +598,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                 }}
                 className="absolute bottom-4 right-4 bg-white/10 hover:bg-white/20 backdrop-blur text-white text-[10px] font-mono px-3 py-1.5 rounded-full border border-white/20 shadow-lg transition-colors z-20"
             >
-                [SPACE] Focus Greedy Anchor
+                [SPACE] Target #1 Word
             </button>
         )}
         

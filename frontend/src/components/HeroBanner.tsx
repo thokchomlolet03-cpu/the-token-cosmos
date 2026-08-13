@@ -54,7 +54,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = () => {
               <div className="flex items-center space-x-2 mb-2">
                 <span className="h-2 w-2 rounded-full bg-gray-500" />
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-400 font-mono">
-                  The Chatbot Illusion (What Users See)
+                  What You Usually See (The Chatbot)
                 </span>
               </div>
               <p className="text-xs text-gray-200 leading-relaxed font-mono bg-[#161616] p-3 rounded-lg border border-white/10">
@@ -73,7 +73,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = () => {
                 <div className="flex items-center space-x-2">
                   <span className="h-2 w-2 rounded-full bg-white" />
                   <span className="text-xs font-bold uppercase tracking-wider text-white font-mono">
-                    The Token Cosmos Reality (What Actually Happens)
+                    What is Actually Happening (The Brain)
                   </span>
                 </div>
                 <Eye className="h-3.5 w-3.5 text-gray-400" />
