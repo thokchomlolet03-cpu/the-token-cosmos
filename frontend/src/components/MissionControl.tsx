@@ -554,10 +554,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             </div>
             <input
               id="topk-slider"
-              aria-label="Adjust Top-K slider from 1 to 50"
+              aria-label="Adjust Top-K slider from 1 to 100"
               type="range"
               min="1"
-              max="50"
+              max="100"
               step="1"
               value={params.topK}
               onFocus={() => {
@@ -599,11 +599,11 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             </div>
             <input
               id="topp-slider"
-              aria-label="Adjust Top-P Nucleus threshold slider from 5% to 100%"
+              aria-label="Adjust Top-P slider from 1% to 100%"
               type="range"
-              min="0.05"
+              min="0.01"
               max="1.0"
-              step="0.05"
+              step="0.01"
               value={params.topP}
               onFocus={() => setActiveParam('topP')}
               onChange={e => {
@@ -635,10 +635,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             </div>
             <input
               id="minp-slider"
-              aria-label="Adjust Min-P threshold slider from 0% to 50%"
+              aria-label="Adjust Min-P slider from 0% to 100%"
               type="range"
               min="0.0"
-              max="0.5"
+              max="1.0"
               step="0.01"
               value={params.minP}
               onFocus={() => setActiveParam('minP')}
@@ -697,11 +697,11 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                 </div>
                 <input
                   id="freq-penalty-slider"
-                  aria-label="Adjust Frequency Penalty (Exhaustion Meter) slider from 0 to 1.5"
+                  aria-label="Adjust Frequency Penalty (Exhaustion Meter) slider from -2 to 2"
                   type="range"
-                  min="0.0"
-                  max="1.5"
-                  step="0.05"
+                  min="-2.0"
+                  max="2.0"
+                  step="0.01"
                   value={params.frequencyPenalty}
                   onFocus={() => setActiveParam('frequencyPenalty')}
                   onChange={e => {
@@ -728,11 +728,11 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                 </div>
                 <input
                   id="presence-penalty-slider"
-                  aria-label="Adjust Presence Penalty (Horizon Booster) slider from 0 to 1.5"
+                  aria-label="Adjust Presence Penalty (Horizon Booster) slider from -2 to 2"
                   type="range"
-                  min="0.0"
-                  max="1.5"
-                  step="0.05"
+                  min="-2.0"
+                  max="2.0"
+                  step="0.01"
                   value={params.presencePenalty}
                   onFocus={() => setActiveParam('presencePenalty')}
                   onChange={e => {
