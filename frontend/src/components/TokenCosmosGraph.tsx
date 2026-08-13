@@ -6,14 +6,14 @@
  * Phase 3 TerrainCanvas replaces it entirely.
  * ───────────────────────────────────────────────────────────────────── */
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { ProcessedTokenCandidate, SamplingParameters, FlightStep } from '../types/sampling';
 import { calculateTokenEntropy, getConfidenceLevel } from '../utils/samplingMath';
 import { TerrainCanvas } from './TerrainCanvas';
 import {
   ZoomIn, ZoomOut, RotateCcw, Search, Save, Copy, Share2,
   Anchor, Activity, Zap, Flame, AlertCircle, Play, Pause,
-  ChevronLeft, ChevronRight, Eye
+  ChevronLeft, ChevronRight, Eye, Maximize2, Minimize2
 } from 'lucide-react';
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -144,6 +144,30 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
     }
   };
 
+  const graphContainerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!graphContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      graphContainerRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   // Compute telemetry
   const entropy = useMemo(() => {
     const probs = candidates.filter(c => !c.isFiltered).map(c => c.probability);
@@ -185,6 +209,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
 
   return (
     <div
+      ref={graphContainerRef}
       className="relative w-full h-full min-h-[480px] rounded-xl overflow-hidden bg-[#050714] flex flex-col"
       role="region"
       aria-label="Token Probability Distribution"
@@ -233,37 +258,49 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
           heightMode={heightMode}
         />
         
-        {/* Floating Height Mode Controls */}
-        <div className="absolute top-4 left-4 z-10 flex bg-black/60 backdrop-blur-md rounded-lg border border-white/10 p-0.5 pointer-events-auto shadow-lg">
+        {/* Floating Height Mode & Zen Mode Controls */}
+        <div className="absolute top-4 left-4 z-10 flex items-center space-x-2">
+          <div className="flex bg-black/60 backdrop-blur-md rounded-lg border border-white/10 p-0.5 pointer-events-auto shadow-lg">
+            <button
+              onClick={() => setHeightMode('linear')}
+              className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
+                heightMode === 'linear'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              Linear
+            </button>
+            <button
+              onClick={() => setHeightMode('log')}
+              className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
+                heightMode === 'log'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              Log Scale
+            </button>
+            <button
+              onClick={() => setHeightMode('logit')}
+              className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
+                heightMode === 'logit'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              Logits
+            </button>
+          </div>
+
           <button
-            onClick={() => setHeightMode('linear')}
-            className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
-              heightMode === 'linear'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
-                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-            }`}
+            type="button"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit Full Screen" : "Go Full Screen"}
+            className="flex items-center space-x-1 px-2 py-1 text-[9px] font-mono font-bold rounded-lg bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 text-gray-400 hover:text-white transition-all shadow-lg pointer-events-auto"
           >
-            Linear
-          </button>
-          <button
-            onClick={() => setHeightMode('log')}
-            className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
-              heightMode === 'log'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
-                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-            }`}
-          >
-            Log Scale
-          </button>
-          <button
-            onClick={() => setHeightMode('logit')}
-            className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
-              heightMode === 'logit'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
-                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-            }`}
-          >
-            Logits
+            {isFullscreen ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+            <span>{isFullscreen ? 'Exit Zen' : 'Zen Mode'}</span>
           </button>
         </div>
         
