@@ -348,6 +348,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../incident_response/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Incident Response Plan
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../api/" class="md-tabs__link">
         
   
@@ -860,6 +879,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-access-control-branch-protection-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Access Control &amp; Branch Protection Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Access Control &amp; Branch Protection Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-github-branch-protection-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. GitHub Branch Protection Policies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-two-factor-authentication-2fa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Two-Factor Authentication (2FA)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -883,6 +941,33 @@
     
   
     Disaster Recovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../incident_response/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Incident Response Plan
   
 
     
@@ -1285,6 +1370,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-access-control-branch-protection-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Access Control &amp; Branch Protection Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Access Control &amp; Branch Protection Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-github-branch-protection-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. GitHub Branch Protection Policies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-two-factor-authentication-2fa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Two-Factor Authentication (2FA)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1367,8 +1491,8 @@ The configuration uses <code>allow_credentials=False</code> because the wild-car
 </span></code></pre></div>
 <h3 id="1-automated-detection-pre-commit-ci">1. Automated Detection (Pre-Commit &amp; CI)</h3>
 <ul>
-<li><strong>Local Git Hooks</strong>: The git pre-commit hook (installed via <code>scripts/install_hooks.py</code>) runs <code>python3 scripts/detect_secrets.py</code> on every commit. If a developer accidentally hardcodes an API key, the commit is blocked.</li>
-<li><strong>CI/CD Gates</strong>: The GitHub Actions runner executes <code>detect_secrets.py</code> on all branch pushes and pull requests. If a leak bypasses local hooks, the CI build fails immediately and prevents deployment.</li>
+<li><strong>Local Git Hooks</strong>: The git pre-commit hook (installed via <code>scripts/install_hooks.py</code>) runs <code>gitleaks protect</code> locally on staged files. If a developer accidentally stages a secret, the commit is blocked.</li>
+<li><strong>CI/CD Gates</strong>: The GitHub Actions runner executes <code>gitleaks-action</code> on all branch pushes and pull requests. If a leak bypasses local hooks, the CI build fails immediately and prevents deployment.</li>
 </ul>
 <h3 id="2-runtime-secrets-resolution-gcp-secret-manager">2. Runtime Secrets Resolution (GCP Secret Manager)</h3>
 <p>If the backend is scaled to connect to external systems requiring authentication (e.g., relational databases, private reasoning endpoints):
@@ -1380,6 +1504,21 @@ The configuration uses <code>allow_credentials=False</code> because the wild-car
 </span></code></pre></div></p>
 <h3 id="3-cicd-environment-credentials">3. CI/CD Environment Credentials</h3>
 <p>Deployment authentication variables (<code>GCP_WORKLOAD_IDENTITY_PROVIDER</code>, <code>GCP_SERVICE_ACCOUNT</code>) are stored as <strong>GitHub Repository Variables</strong>, rather than Secrets. Because Workload Identity Federation uses temporary OIDC tokens, these variables are completely safe to expose to developers in the repository settings.</p>
+<hr />
+<h2 id="6-access-control-branch-protection-rules">6. Access Control &amp; Branch Protection Rules</h2>
+<p>To comply with SOC 2 access control guidelines and prevent unauthorized code execution in the production environment, the following governance rules are enforced:</p>
+<h3 id="1-github-branch-protection-policies">1. GitHub Branch Protection Policies</h3>
+<p>Direct pushes to the <code>main</code> and <code>master</code> branches are blocked. Branch protection rules mandate:
+- <strong>Required Reviews</strong>: All pull requests must receive at least <strong>one approving review</strong> from a designated code owner (mapped via <code>.github/CODEOWNERS</code>) before they can be merged.
+- <strong>Mandatory Status Checks</strong>: The pull request cannot merge until all automated checks in <code>.github/workflows/docs.yml</code> pass successfully. This guarantees that:
+  - Trivy Container vulnerability scans report zero vulnerabilities.
+  - Gitleaks detects zero hardcoded secrets.
+  - <code>pip-audit</code> and <code>npm audit</code> return zero dependency CVE vulnerabilities.
+  - Backend unit tests pass.
+- <strong>Block Force Pushes</strong>: Force pushes (<code>git push --force</code>) are globally blocked to prevent history alteration.
+- <strong>Signed Commits Enforced</strong>: All commits must be cryptographically signed using GPG or SSH keys. Unsigned commits are blocked by the gateway.</p>
+<h3 id="2-two-factor-authentication-2fa">2. Two-Factor Authentication (2FA)</h3>
+<p>All contributors, organization members, and external collaborators are required to enable Two-Factor Authentication (2FA) on their GitHub profiles. Contributors without 2FA active are automatically stripped of repository access.</p>
 
 
 

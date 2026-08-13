@@ -348,6 +348,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../incident_response/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Incident Response Plan
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../api/" class="md-tabs__link">
         
   
@@ -819,6 +838,73 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-hardware-degradation-graceful-fallback-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Hardware Degradation &amp; Graceful Fallback Strategy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Hardware Degradation &amp; Graceful Fallback Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-cascade-degradation-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Cascade Degradation Tiers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Cascade Degradation Tiers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tier-1-local-webgpu-acceleration-target-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tier 1: Local WebGPU Acceleration (Target Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tier-2-webassembly-wasm-cpu-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tier 2: WebAssembly (WASM) CPU Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tier-3-backend-api-synthetic-logit-fallback-zero-compute-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tier 3: Backend API / Synthetic Logit Fallback (Zero-Compute Client)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -950,6 +1036,33 @@
     
   
     Disaster Recovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../incident_response/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Incident Response Plan
   
 
     
@@ -1419,6 +1532,73 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-hardware-degradation-graceful-fallback-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Hardware Degradation &amp; Graceful Fallback Strategy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Hardware Degradation &amp; Graceful Fallback Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-cascade-degradation-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Cascade Degradation Tiers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Cascade Degradation Tiers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tier-1-local-webgpu-acceleration-target-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tier 1: Local WebGPU Acceleration (Target Mode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tier-2-webassembly-wasm-cpu-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tier 2: WebAssembly (WASM) CPU Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tier-3-backend-api-synthetic-logit-fallback-zero-compute-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tier 3: Backend API / Synthetic Logit Fallback (Zero-Compute Client)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1577,6 +1757,58 @@ $$P(x_i) = \frac{\exp\left(\frac{z_i' - z_{\max}}{T}\right)}{\sum_j \exp\left(\f
 <li><strong>Visual Separation</strong>: </li>
 <li><em>Thought Log Panel</em>: The frontend intercepts the <code>isThinking</code> packets and streams them into a separate collapsible text field, hiding them from the standard user generation box.</li>
 <li><em>Canvas Highlight Dimming</em>: The 3D canvas dims the main Supergiant star constellations and highlights the reasoning tokens as a faint outer cloud of asteroids, illustrating the cognitive density of the model's self-reflection process in real-time.</li>
+</ul>
+<hr />
+<h2 id="5-hardware-degradation-graceful-fallback-strategy">5. Hardware Degradation &amp; Graceful Fallback Strategy</h2>
+<p>To guarantee platform resilience on legacy browsers, mobile devices, or hardware with constrained graphical resources, <strong>The Token Cosmos</strong> implements a progressive, three-tier hardware degradation cascade.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>                   PROGRESSIVE DEGRADATION CASCADE
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>   ┌────────────────────────────────────────────────────────┐
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>   │                  App Initialization                    │
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>   └────────────────────────────────────────────────────────┘
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>                               │
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>               ┌───────────────┴───────────────┐
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>      [WebGPU Supported]              [Unsupported / OOM]
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>               │                               │
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>               ▼                               ▼
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>     ┌───────────────────┐           ┌───────────────────┐
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>     │  Tier 1: WebGPU   │           │   Tier 2: WASM    │
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>     │  In-VRAM LLM Run  │           │  CPU-Threaded Run │
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>     │  (&gt; 35 tokens/s)  │           │  (5-10 tokens/s)  │
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>     └───────────────────┘           └───────────────────┘
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>                                               │
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>                                       [WASM Load Error /
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>                                        Strict RAM Cap]
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>                                               │
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>                                               ▼
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>                                     ┌───────────────────┐
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>                                     │  Tier 3: Backend  │
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>                                     │  FastAPI API /    │
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>                                     │  Synthetic Logits │
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>                                     └───────────────────┘
+</span></code></pre></div>
+<h3 id="1-cascade-degradation-tiers">1. Cascade Degradation Tiers</h3>
+<h4 id="tier-1-local-webgpu-acceleration-target-mode">Tier 1: Local WebGPU Acceleration (Target Mode)</h4>
+<ul>
+<li><strong>Runtime</strong>: Executed via <code>@mlc-ai/web-llm</code> in a background WebWorker, binding directly to Vulkan, Metal, or Direct3D12 drivers.</li>
+<li><strong>Capabilities</strong>: Full 60 FPS rendering on the 3D semantic canvas; instant Z-axis terrain heights. SmolLM2/Qwen models operate inside dedicated VRAM segments.</li>
+<li><strong>Metrics</strong>: Uptime and token throughput &gt; 35 tokens/sec.</li>
+</ul>
+<h4 id="tier-2-webassembly-wasm-cpu-fallback">Tier 2: WebAssembly (WASM) CPU Fallback</h4>
+<ul>
+<li><strong>Trigger</strong>: The client detects that WebGPU context creation fails (<code>navigator.gpu</code> is undefined, or <code>requestAdapter()</code> returns null).</li>
+<li><strong>Execution</strong>: The browser unloads the WebGPU worker thread and initializes a multi-threaded WASM compilation of the inference engine. </li>
+<li><strong>User Interface Impact</strong>: A warning banner is displayed: <code>Running in WebAssembly CPU Fallback Mode. Canvas updates may occur at a lower refresh rate.</code></li>
+<li><strong>Metrics</strong>: Performance drops to 5-10 tokens/sec. The particle count on the 3D starfield is automatically throttled from 150,000 to 30,000 nodes to prevent main-thread lag.</li>
+</ul>
+<h4 id="tier-3-backend-api-synthetic-logit-fallback-zero-compute-client">Tier 3: Backend API / Synthetic Logit Fallback (Zero-Compute Client)</h4>
+<ul>
+<li><strong>Trigger</strong>: The local browser execution throws a fatal memory allocation error (OOM) due to strict sandbox limitations (common on mobile browsers with &lt; 1GB RAM caps), or WebAssembly execution fails.</li>
+<li><strong>Execution</strong>: All local WebWorker scripts are terminated. The client initiates a silent proxy bridge, routing all logits retrieval to the FastAPI backend service (<code>POST /api/logits</code>).</li>
+<li><strong>Backend Resolution</strong>:</li>
+<li>The server attempts to fulfill queries using the CPU-bound GGUF model (<code>llama-cpp-python</code> loading <code>qwen2.5-0.5b-instruct-q4_k_m.gguf</code> in CPU memory).</li>
+<li>If the GGUF model fails or is unprovisioned, the API cascades to the deterministic <strong>Synthetic Logit Generator Engine</strong>.</li>
+<li><strong>User Interface Impact</strong>: The visualizer remains fully functional and interactive. However, all inference computations are executed on the server, ensuring compatibility on legacy devices.</li>
 </ul>
 
 
