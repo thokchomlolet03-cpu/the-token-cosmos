@@ -582,7 +582,7 @@ export const App: React.FC = () => {
   const isInferencePending = isFetchingLogits || inferenceEngine.state.status === 'generating';
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#050714] text-gray-100 font-sans selection:bg-pink-500/30 selection:text-white select-text">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#050714] text-gray-100 font-sans selection:bg-pink-500/30 selection:text-white select-text">
       {/* WebGPU Model Loading Overlay (Also acts as WebGPU Guardrail) */}
       {shouldShowModelOverlay && (
         <ModelLoadingOverlay
@@ -606,7 +606,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Workspace */}
-      <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 sm:p-6 flex flex-col space-y-6">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 sm:p-6 flex flex-col space-y-6 min-h-0 overflow-hidden">
         {activeTab === 'experiment' ? (
           <>
             {/* Split-Reality Educational Hero Banner */}
@@ -619,9 +619,9 @@ export const App: React.FC = () => {
             )}
 
             {/* Top Workspace Grid: Left Panel A (Mission Control) + Center Panel B (Starfield Canvas) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[580px]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
               {/* Panel A: Mission Control (Left Pane) */}
-              <div className="lg:col-span-4 xl:col-span-4 h-full">
+              <div className="lg:col-span-4 xl:col-span-4 h-full min-h-0 overflow-hidden">
                 <MissionControl
                   params={params}
                   setParams={setParams}
@@ -647,8 +647,8 @@ export const App: React.FC = () => {
               </div>
 
               {/* Panel B: Center Canvas (The Token Cosmos Galaxy or A/B Duel) */}
-              <div className="lg:col-span-8 xl:col-span-8 h-full flex flex-col min-h-[500px]">
-                <div className="flex-1 min-h-[460px]">
+              <div className="lg:col-span-8 xl:col-span-8 h-full min-h-0 overflow-hidden flex flex-col">
+                <div className="flex-1 min-h-0 overflow-hidden">
                   {splitView ? (
                     <SplitViewCosmos
                       leftCandidates={processedCandidates}
@@ -706,10 +706,12 @@ export const App: React.FC = () => {
             {/* Timeline is now integrated inside TokenCosmosGraph */}
           </>
         ) : activeTab === 'learn' ? (
-          <EducationalBlog />
+          <div className="flex-1 overflow-y-auto">
+            <EducationalBlog />
+          </div>
         ) : (
-          <div className="flex-1 max-w-4xl mx-auto w-full pt-8">
-            <div className="bg-[#1c1c21] rounded-xl border border-white/10 p-6 shadow-2xl overflow-hidden relative min-h-[600px]">
+          <div className="flex-1 max-w-4xl mx-auto w-full pt-8 min-h-0 overflow-hidden">
+            <div className="bg-[#1c1c21] rounded-xl border border-white/10 p-6 shadow-2xl overflow-hidden relative h-full">
               <div className="absolute inset-0 overflow-y-auto p-2">
                 <CodeExportModal
                   isOpen={true}

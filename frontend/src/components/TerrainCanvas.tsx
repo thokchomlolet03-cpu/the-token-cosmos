@@ -326,12 +326,20 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
 
     const handleResize = () => {
         if (!containerRef.current || !cameraRef.current || !rendererRef.current || !composerRef.current) return;
-        cameraRef.current.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
+        const width = containerRef.current.clientWidth;
+        const height = containerRef.current.clientHeight;
+        cameraRef.current.aspect = width / height;
         cameraRef.current.updateProjectionMatrix();
-        rendererRef.current.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-        composerRef.current.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+        rendererRef.current.setSize(width, height);
+        composerRef.current.setSize(width, height);
     };
-    window.addEventListener('resize', handleResize);
+
+    const resizeObserver = new ResizeObserver(() => {
+        requestAnimationFrame(handleResize);
+    });
+    if (containerRef.current) {
+        resizeObserver.observe(containerRef.current);
+    }
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -389,7 +397,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     containerRef.current.addEventListener('mousemove', onMouseMove);
 
     return () => {
-        window.removeEventListener('resize', handleResize);
+        resizeObserver.disconnect();
         if (containerRef.current) {
             containerRef.current.removeEventListener('mousemove', onMouseMove);
             if (rendererRef.current && rendererRef.current.domElement) {

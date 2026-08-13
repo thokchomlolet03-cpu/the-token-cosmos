@@ -76,6 +76,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   const [isSystemExpanded, setIsSystemExpanded] = useState<boolean>(Boolean(systemPrompt.trim()));
   const [isSchemaExpanded, setIsSchemaExpanded] = useState<boolean>(jsonSchemaEnabled);
   const [isRagExpanded, setIsRagExpanded] = useState<boolean>(ragEnabled);
+  const [isPenaltiesExpanded, setIsPenaltiesExpanded] = useState<boolean>(false);
   const [newBiasWord, setNewBiasWord] = useState('');
   const [newBiasVal, setNewBiasVal] = useState<number>(-100);
   const [newStopSeq, setNewStopSeq] = useState('');
@@ -663,183 +664,207 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           </div>
             </>
           )}
-        </div>
-
-        {/* Penalties & Guardrails */}
-        <div className="space-y-4 pt-2 border-t border-slate-800">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-            <Shield className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Penalties & Guardrails</span>
-          </h3>
-
-          {/* Frequency Penalty */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <label htmlFor="freq-penalty-slider" className="font-medium text-slate-200">Exhaustion Meter (Frequency Penalty)</label>
-              <span className="font-mono font-bold text-emerald-400">{params.frequencyPenalty.toFixed(2)}</span>
-            </div>
-            <input
-              id="freq-penalty-slider"
-              aria-label="Adjust Frequency Penalty (Exhaustion Meter) slider from 0 to 1.5"
-              type="range"
-              min="0.0"
-              max="1.5"
-              step="0.05"
-              value={params.frequencyPenalty}
-              onFocus={() => setActiveParam('frequencyPenalty')}
-              onChange={e => {
-                const val = parseFloat(e.target.value);
-                setActiveParam('frequencyPenalty');
-                updateParam('frequencyPenalty', val);
-                notifyInteraction({
-                  feature: `Exhaustion Meter (Frequency Penalty = ${val.toFixed(2)})`,
-                  whatItIs: 'Repetition penalty proportional to exact token frequency count.',
-                  whyItIs: 'Breaks stubborn repetitive phrases and word loops.',
-                  impact: 'Words used repeatedly in context history dim in opacity.',
-                  guidance: 'Increase >0.5 to stop the model from repeating words.',
-                });
-              }}
-              className="w-full"
-            />
-          </div>
-
-          {/* Presence Penalty */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <label htmlFor="presence-penalty-slider" className="font-medium text-slate-200">Horizon Booster (Presence Penalty)</label>
-              <span className="font-mono font-bold text-sky-400">{params.presencePenalty.toFixed(2)}</span>
-            </div>
-            <input
-              id="presence-penalty-slider"
-              aria-label="Adjust Presence Penalty (Horizon Booster) slider from 0 to 1.5"
-              type="range"
-              min="0.0"
-              max="1.5"
-              step="0.05"
-              value={params.presencePenalty}
-              onFocus={() => setActiveParam('presencePenalty')}
-              onChange={e => {
-                const val = parseFloat(e.target.value);
-                setActiveParam('presencePenalty');
-                updateParam('presencePenalty', val);
-                notifyInteraction({
-                  feature: `Horizon Booster (Presence Penalty = ${val.toFixed(2)})`,
-                  whatItIs: 'Flat penalty applied once to any token present in context.',
-                  whyItIs: 'Encourages the model to introduce fresh new topics.',
-                  impact: 'Broadens vocabulary scope across outer orbital rings.',
-                  guidance: 'Increase >0.5 to encourage diverse topic exploration.',
-                });
-              }}
-              className="w-full"
-            />
-          </div>
-
-          {/* Logit Bias / Black Hole Magnet */}
-          <div className="space-y-2">
-            <label htmlFor="bias-word-input" className="text-xs font-medium text-slate-200 flex items-center justify-between">
-              <span className="flex items-center space-x-1">
-                <Magnet className="h-3.5 w-3.5 text-pink-400" />
-                <span>Magnet / Black Hole (Logit Bias)</span>
+            {/* Feature 5: Penalties & Guardrails Accordion */}
+        <div className="rounded-xl border border-white/10 bg-[#111111] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsPenaltiesExpanded(!isPenaltiesExpanded)}
+            aria-label="Toggle Penalties and Guardrails sampling options"
+            aria-expanded={isPenaltiesExpanded}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-gray-200 hover:bg-white/5 transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <Shield className={`h-4 w-4 ${params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0 ? 'text-emerald-400 animate-pulse' : 'text-gray-500'}`} />
+              <span className="font-semibold text-white tracking-tight">Penalties & Guardrails</span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                    : 'bg-slate-800 text-slate-400'
+                }`}
+              >
+                {params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0 ? 'ACTIVE' : 'DEFAULT'}
               </span>
-            </label>
+            </div>
+            {isPenaltiesExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+          </button>
 
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {Object.entries(params.logitBiases).map(([word, bias]) => (
-                <span
-                  key={word}
-                  className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-mono border ${
-                    bias < 0
-                      ? 'bg-rose-950/60 text-rose-300 border-rose-800'
-                      : 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
-                  }`}
-                >
-                  <span>'{word}':</span>
-                  <span className="font-bold">{bias > 0 ? `+${bias}` : bias}</span>
-                  <button
-                    onClick={() => handleRemoveBias(word)}
-                    aria-label={`Remove logit bias for ${word}`}
-                    className="hover:text-white ml-1"
+          {isPenaltiesExpanded && (
+            <div className="p-4 border-t border-white/10 space-y-4 bg-[#0A0A0A]">
+              {/* Frequency Penalty */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <label htmlFor="freq-penalty-slider" className="font-medium text-slate-200">Exhaustion Meter (Frequency Penalty)</label>
+                  <span className="font-mono font-bold text-emerald-400">{params.frequencyPenalty.toFixed(2)}</span>
+                </div>
+                <input
+                  id="freq-penalty-slider"
+                  aria-label="Adjust Frequency Penalty (Exhaustion Meter) slider from 0 to 1.5"
+                  type="range"
+                  min="0.0"
+                  max="1.5"
+                  step="0.05"
+                  value={params.frequencyPenalty}
+                  onFocus={() => setActiveParam('frequencyPenalty')}
+                  onChange={e => {
+                    const val = parseFloat(e.target.value);
+                    setActiveParam('frequencyPenalty');
+                    updateParam('frequencyPenalty', val);
+                    notifyInteraction({
+                      feature: `Exhaustion Meter (Frequency Penalty = ${val.toFixed(2)})`,
+                      whatItIs: 'Repetition penalty proportional to exact token frequency count.',
+                      whyItIs: 'Breaks stubborn repetitive phrases and word loops.',
+                      impact: 'Words used repeatedly in context history dim in opacity.',
+                      guidance: 'Increase >0.5 to stop the model from repeating words.',
+                    });
+                  }}
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 hover:accent-emerald-400 transition-all"
+                />
+              </div>
+
+              {/* Presence Penalty */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <label htmlFor="presence-penalty-slider" className="font-medium text-slate-200">Horizon Booster (Presence Penalty)</label>
+                  <span className="font-mono font-bold text-sky-400">{params.presencePenalty.toFixed(2)}</span>
+                </div>
+                <input
+                  id="presence-penalty-slider"
+                  aria-label="Adjust Presence Penalty (Horizon Booster) slider from 0 to 1.5"
+                  type="range"
+                  min="0.0"
+                  max="1.5"
+                  step="0.05"
+                  value={params.presencePenalty}
+                  onFocus={() => setActiveParam('presencePenalty')}
+                  onChange={e => {
+                    const val = parseFloat(e.target.value);
+                    setActiveParam('presencePenalty');
+                    updateParam('presencePenalty', val);
+                    notifyInteraction({
+                      feature: `Horizon Booster (Presence Penalty = ${val.toFixed(2)})`,
+                      whatItIs: 'Flat penalty applied once to any token present in context.',
+                      whyItIs: 'Encourages the model to introduce fresh new topics.',
+                      impact: 'Broadens vocabulary scope across outer orbital rings.',
+                      guidance: 'Increase >0.5 to encourage diverse topic exploration.',
+                    });
+                  }}
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500 hover:accent-sky-400 transition-all"
+                />
+              </div>
+
+              {/* Logit Bias / Black Hole Magnet */}
+              <div className="space-y-2">
+                <label htmlFor="bias-word-input" className="text-xs font-medium text-slate-200 flex items-center justify-between">
+                  <span className="flex items-center space-x-1">
+                    <Magnet className="h-3.5 w-3.5 text-pink-400" />
+                    <span>Magnet / Black Hole (Logit Bias)</span>
+                  </span>
+                </label>
+
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {Object.entries(params.logitBiases).map(([word, bias]) => (
+                    <span
+                      key={word}
+                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-mono border ${
+                        bias < 0
+                          ? 'bg-rose-950/60 text-rose-300 border-rose-800'
+                          : 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
+                      }`}
+                    >
+                      <span>'{word}':</span>
+                      <span className="font-bold">{bias > 0 ? `+${bias}` : bias}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBias(word)}
+                        aria-label={`Remove logit bias for ${word}`}
+                        className="hover:text-white ml-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="bias-word-input"
+                    type="text"
+                    placeholder="Target word (e.g. delve)"
+                    aria-label="Word to apply logit bias to"
+                    value={newBiasWord}
+                    onChange={e => setNewBiasWord(e.target.value)}
+                    className="flex-1 rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1 text-xs text-slate-200 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
+                  />
+                  <select
+                    aria-label="Select logit bias value"
+                    value={newBiasVal}
+                    onChange={e => setNewBiasVal(parseFloat(e.target.value))}
+                    className="rounded-lg bg-slate-900 border border-slate-800 px-2 py-1 text-xs text-slate-200 font-mono focus:outline-none"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                id="bias-word-input"
-                type="text"
-                placeholder="Target word (e.g. delve)"
-                aria-label="Word to apply logit bias to"
-                value={newBiasWord}
-                onChange={e => setNewBiasWord(e.target.value)}
-                className="flex-1 rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1 text-xs text-slate-200 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
-              />
-              <select
-                aria-label="Select logit bias value"
-                value={newBiasVal}
-                onChange={e => setNewBiasVal(parseFloat(e.target.value))}
-                className="rounded-lg bg-slate-900 border border-slate-800 px-2 py-1 text-xs text-slate-200 font-mono focus:outline-none"
-              >
-                <option value={-100}>-100 (Black Hole / Ban)</option>
-                <option value={-5}>-5.0 (Discourage)</option>
-                <option value={5}>+5.0 (Boost)</option>
-                <option value={10}>+10.0 (Magnet)</option>
-              </select>
-              <button
-                onClick={handleAddBias}
-                aria-label="Add logit bias word"
-                className="rounded-lg bg-cyan-500/20 p-1.5 text-cyan-300 border border-cyan-400/40 hover:bg-cyan-500/30"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Stop Sequences Tag Input */}
-          <div className="space-y-2">
-            <label htmlFor="stop-seq-input" className="text-xs font-medium text-slate-200 flex items-center space-x-1">
-              <CircleDot className="h-3.5 w-3.5 text-amber-400" />
-              <span>Emergency Brake (Stop Sequences)</span>
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {params.stopSequences.map(seq => (
-                <span
-                  key={seq}
-                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-mono bg-slate-800 text-amber-300 border border-slate-700"
-                >
-                  <span>"{seq}"</span>
+                    <option value={-100}>-100 (Black Hole / Ban)</option>
+                    <option value={-5}>-5.0 (Discourage)</option>
+                    <option value={5}>+5.0 (Boost)</option>
+                    <option value={10}>+10.0 (Magnet)</option>
+                  </select>
                   <button
-                    onClick={() => handleRemoveStopSeq(seq)}
-                    aria-label={`Remove stop sequence ${seq}`}
-                    className="hover:text-white ml-1"
+                    type="button"
+                    onClick={handleAddBias}
+                    aria-label="Add logit bias word"
+                    className="rounded-lg bg-cyan-500/20 p-1.5 text-cyan-300 border border-cyan-400/40 hover:bg-cyan-500/30"
                   >
-                    <X className="h-3 w-3" />
+                    <Plus className="h-3.5 w-3.5" />
                   </button>
-                </span>
-              ))}
+                </div>
+              </div>
+
+              {/* Stop Sequences Tag Input */}
+              <div className="space-y-2">
+                <label htmlFor="stop-seq-input" className="text-xs font-medium text-slate-200 flex items-center space-x-1">
+                  <CircleDot className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Emergency Brake (Stop Sequences)</span>
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {params.stopSequences.map(seq => (
+                    <span
+                      key={seq}
+                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-mono bg-slate-800 text-amber-300 border border-slate-700"
+                    >
+                      <span>"{seq}"</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStopSeq(seq)}
+                        aria-label={`Remove stop sequence ${seq}`}
+                        className="hover:text-white ml-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="stop-seq-input"
+                    type="text"
+                    placeholder="e.g. \n or END"
+                    aria-label="Stop sequence string to add"
+                    value={newStopSeq}
+                    onChange={e => setNewStopSeq(e.target.value)}
+                    className="flex-1 rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1 text-xs text-slate-200 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddStopSeq}
+                    aria-label="Add stop sequence"
+                    className="rounded-lg bg-amber-500/20 p-1.5 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <input
-                id="stop-seq-input"
-                type="text"
-                placeholder="e.g. \n or END"
-                aria-label="Stop sequence string to add"
-                value={newStopSeq}
-                onChange={e => setNewStopSeq(e.target.value)}
-                className="flex-1 rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1 text-xs text-slate-200 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
-              />
-              <button
-                onClick={handleAddStopSeq}
-                aria-label="Add stop sequence"
-                className="rounded-lg bg-amber-500/20 p-1.5 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-          </div>
+          )}
+        </div>      </div>
         </div>
       )}
     </div>
