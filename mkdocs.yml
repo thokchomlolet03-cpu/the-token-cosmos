@@ -52,6 +52,7 @@ nav:
   - End-User Manual: user_guide.md
   - Terminology Glossary: glossary.md
   - Compliance & Safety: compliance.md
+  - Third-Party Subprocessors: subprocessors.md
   - Release Changelog: changelog.md
   - Testing Strategy: testing.md
   - Data Telemetry: telemetry_schema.md

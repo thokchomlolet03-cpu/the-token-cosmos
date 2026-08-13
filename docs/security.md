@@ -120,4 +120,25 @@ Direct pushes to the `main` and `master` branches are blocked. Branch protection
 ### 2. Two-Factor Authentication (2FA)
 All contributors, organization members, and external collaborators are required to enable Two-Factor Authentication (2FA) on their GitHub profiles. Contributors without 2FA active are automatically stripped of repository access.
 
+---
+
+## 7. External Audits & Penetration Testing Calendar
+
+To satisfy SOC 2 Type II and ISO 27001 compliance standards, internal security linting is supplemented by independent, external validation.
+
+### 1. Annual Penetration Testing
+The Token Cosmos contracts independent, CREST-accredited security auditing firms once per calendar year to perform comprehensive **Black-Box and Grey-Box Penetration Testing** on the hosted Cloud Run endpoints and public API infrastructure.
+- **Scope**: Includes application-layer logic checks (OWASP Top 10, cross-site scripting, prototype pollution), container breakout audits, and GCP IAM privilege escalation attempts.
+- **Remediation**: All identified vulnerabilities are logged in internal trackers and must be resolved according to our standard patch response SLAs:
+  - *Critical/High severity issues*: remediated within 14 business days.
+  - *Medium severity issues*: remediated within 30 business days.
+
+### 2. Letters of Attestation (LoA) & Reports Access
+Audited compliance summaries are stored securely in GCP Cloud Storage. Enterprise clients, legal teams, and stakeholders can request:
+- **SOC 2 Type II Reports** (updated annually).
+- **Penetration Test Executive Summary & Letters of Attestation (LoA)**.
+- **Software Bill of Materials (SBOM)** exports.
+- *Request Procedure*: Contact `security@the-token-cosmos.com`. All requests require an active Mutual Non-Disclosure Agreement (NDA) and approval from the Chief Information Security Officer (CISO).
+
+
 

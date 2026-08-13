@@ -74,8 +74,9 @@ To explore specific topics in detail, navigate through the following sections:
 11. **[End-User Interface Manual](user_guide.md)**: Guides on how to use Mission Control sliders, interpret 3D visual star shapes/UMAP terrain, and troubleshoot interface loops.
 12. **[LLM & WebGPU Glossary](glossary.md)**: A dictionary of key technical terms such as Logit, Softmax, Min-P, UMAP, and WebGPU.
 13. **[Compliance & AI Safety](compliance.md)**: Open-source license attributions, model usage guidelines, and a browser-side data privacy guarantee.
-14. **[Release Changelog](changelog.md)**: Semantic Versioning details for version milestones, including the current `v4.1.0` release.
-15. **[Testing Strategy](testing.md)**: Explains backend unit testing, browser WebGPU worker mocking, and WebGL E2E Playwright setup.
-16. **[Telemetry & BigQuery Schemas](telemetry_schema.md)**: Specifications for Google Cloud BigQuery data ingestion, payloads, PII filtering, and service identity.
-17. **[Architecture Decision Records (ADR)](adrs/0001-use-edge-webgpu-inference.md)**: Historical log of major architectural decisions, starting with ADR-0001.
+14. **[Third-Party Subprocessors](subprocessors.md)**: Public ledger of external processors (GCP, Sentry, API providers) handling metadata, data location, and privacy links.
+15. **[Release Changelog](changelog.md)**: Semantic Versioning details for version milestones, including the current `v4.1.0` release.
+16. **[Testing Strategy](testing.md)**: Explains backend unit testing, browser WebGPU worker mocking, and WebGL E2E Playwright setup.
+17. **[Telemetry & BigQuery Schemas](telemetry_schema.md)**: Specifications for Google Cloud BigQuery data ingestion, payloads, PII filtering, and service identity.
+18. **[Architecture Decision Records (ADR)](adrs/0001-use-edge-webgpu-inference.md)**: Historical log of major architectural decisions, starting with ADR-0001.
 

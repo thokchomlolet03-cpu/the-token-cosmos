@@ -19,6 +19,7 @@ REQUIRED_FILES = [
     "user_guide.md",
     "glossary.md",
     "compliance.md",
+    "subprocessors.md",
     "changelog.md",
     "testing.md",
     "telemetry_schema.md",
