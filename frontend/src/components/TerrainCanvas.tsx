@@ -28,6 +28,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   heightMode = 'log',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const labelsContainerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const composerRef = useRef<EffectComposer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -262,6 +263,62 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         
         material.uniforms.time.value = (performance.now() - startTime) / 1000;
         composerRef.current.render();
+
+        // ─── Project Dynamic HTML overlays for Top 8 active candidates ───
+        const container = labelsContainerRef.current;
+        const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
+        const positions = positionsAttr.array as Float32Array;
+        
+        if (container && cameraRef.current && containerRef.current && candidatesRef.current && rawCoordinates) {
+            const camera = cameraRef.current;
+            const rect = containerRef.current.getBoundingClientRect();
+            const topN = candidatesRef.current.filter(c => !c.isFiltered).slice(0, 8);
+            
+            while (container.children.length > topN.length) {
+                container.removeChild(container.lastChild!);
+            }
+            while (container.children.length < topN.length) {
+                const div = document.createElement('div');
+                div.className = "absolute pointer-events-none px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-950/80 backdrop-blur border text-white shadow-lg transition-opacity duration-150 flex items-center space-x-1 border-white/10";
+                container.appendChild(div);
+            }
+            
+            for (let i = 0; i < topN.length; i++) {
+                const c = topN[i];
+                const el = container.children[i] as HTMLDivElement;
+                const tid = c.token_id;
+                
+                if (tid >= 0 && tid < vocabSize) {
+                    const px = rawCoordinates[tid * 2] * spread;
+                    const pz = rawCoordinates[tid * 2 + 1] * spread;
+                    const py = positions[tid * 3 + 1];
+                    
+                    const vec = new THREE.Vector3(px, py, pz);
+                    vec.project(camera);
+                    
+                    const isBehind = vec.z > 1.0;
+                    if (isBehind) {
+                        el.style.opacity = '0';
+                    } else {
+                        const xPos = (vec.x * 0.5 + 0.5) * rect.width;
+                        const yPos = (-vec.y * 0.5 + 0.5) * rect.height;
+                        
+                        el.style.transform = `translate3d(${xPos}px, ${yPos - 20}px, 0) translate(-50%, -50%)`;
+                        el.style.opacity = '1';
+                        el.style.borderColor = `${c.color}60`;
+                        el.style.boxShadow = `0 0 6px ${c.color}20`;
+                        
+                        el.innerHTML = `
+                          <span style="color: ${c.color}; font-weight: 800;">#${c.rank}</span>
+                          <span>${c.token_str.trim() || '—'}</span>
+                          <span class="text-slate-400 font-normal text-[8px] opacity-80">(${(c.probability * 100).toFixed(1)}%)</span>
+                        `;
+                    }
+                } else {
+                    el.style.opacity = '0';
+                }
+            }
+        }
       }
       animationFrameId = requestAnimationFrame(trackCamera);
     };
@@ -465,6 +522,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   return (
     <div className="w-full h-full relative group">
         <div ref={containerRef} className="absolute inset-0 cursor-move" />
+        <div ref={labelsContainerRef} className="absolute inset-0 pointer-events-none overflow-hidden" />
         {hoveredToken && (
             <div 
                 className="absolute z-30 pointer-events-none bg-slate-950/90 backdrop-blur-md border border-slate-700/60 rounded-lg px-2.5 py-2 text-[10px] font-mono text-slate-200 shadow-2xl min-w-[150px]"
