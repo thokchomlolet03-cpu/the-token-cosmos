@@ -17,3 +17,7 @@ models/*.gguf
 .DS_Store
 .vscode/
 .idea/
+
+# Documentation compile directory
+site/
+

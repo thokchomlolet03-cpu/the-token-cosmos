@@ -37,11 +37,15 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Test backend
+      - name: Test and Scan Backend
         working-directory: backend
+        env:
+          SKIP_MODEL_LOAD: "true"
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+          python -m pip install bandit
+          bandit -r .
           python -m unittest discover -s . -p 'test_*.py'
 
       - name: Report deployment configuration

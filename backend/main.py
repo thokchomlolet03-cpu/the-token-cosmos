@@ -61,7 +61,7 @@ MODEL_PATH = os.getenv(
     str(Path(__file__).parent / "models" / "qwen2.5-0.5b-instruct-q4_k_m.gguf"),
 )
 
-if os.path.exists(MODEL_PATH):
+if os.path.exists(MODEL_PATH) and os.getenv("SKIP_MODEL_LOAD") != "true":
     try:
         from llama_cpp import Llama
         print(f"Loading GGUF model from {MODEL_PATH}...")
@@ -194,7 +194,7 @@ def get_logits(req: LogitRequest):
                 w = f" token_{i+1}"
 
             # High logits for rank 1-5, decreasing logit curve
-            raw_logit = 16.0 - math.log(i + 1) * 3.2 + (random.random() * 0.8)
+            raw_logit = 16.0 - math.log(i + 1) * 3.2 + (random.random() * 0.8)  # nosec B311
 
             # RAG grounding boost & boolean flag
             is_grounded = False
@@ -246,4 +246,4 @@ if STATIC_DIR.exists() and (STATIC_DIR / "index.html").exists():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)  # nosec B104

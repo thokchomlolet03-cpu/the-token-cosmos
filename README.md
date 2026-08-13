@@ -1,6 +1,9 @@
 # 🌌 The Token Cosmos — Interactive LLM Probability Visualizer & Educational Guide
 
+[![Documentation Status](https://img.shields.io/badge/docs-GitHub_Pages-blueviolet.svg)](https://lolet.github.io/the-token-cosmos/)
+
 **"The Token Cosmos"** is a full-stack, responsive web application and educational guide built to teach everyday AI users how LLM sampling parameters (Temperature, Top-K, Top-P, Min-P, Penalties, Logit Bias) and Retrieval-Augmented Generation (RAG) mathematically shape AI token generation.
+
 
 ---
 

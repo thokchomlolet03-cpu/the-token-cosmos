@@ -1,0 +1,28 @@
+# CODEOWNERS
+# Automates PR review assignments based on project RACI Matrix definitions.
+# Each line maps a folder or file pattern to responsible review groups.
+
+# Default owner for the entire repository
+* @lolet
+
+# DevOps / Cloud Infrastructure Changes
+# Assigned to the DevOps team and Product Owner
+/.github/workflows/                     @cosmos-team/devops @lolet
+/Dockerfile                             @cosmos-team/devops @lolet
+/backend/Dockerfile                     @cosmos-team/devops @lolet
+/frontend/Dockerfile                    @cosmos-team/devops @lolet
+/nginx.conf                             @cosmos-team/devops @lolet
+/frontend/nginx.conf                    @cosmos-team/devops @lolet
+
+# AI & WebGPU Engine / Math Changes
+# Assigned to the Principal AI / WebGL Engineer and Lead Developer
+/frontend/src/engine/                   @cosmos-team/ai-engineers @lolet
+/frontend/src/utils/samplingMath.ts     @cosmos-team/ai-engineers @lolet
+/backend/main.py                        @cosmos-team/ai-engineers @cosmos-team/devops @lolet
+
+# Frontend UI & Canvas Components
+# Assigned to the Frontend Developer and WebGL Engineers
+/frontend/src/components/               @cosmos-team/frontend-devs @lolet
+/frontend/src/terrain/                  @cosmos-team/frontend-devs @cosmos-team/ai-engineers @lolet
+/frontend/src/App.tsx                   @cosmos-team/frontend-devs @lolet
+/frontend/package.json                  @cosmos-team/frontend-devs @cosmos-team/devops @lolet
