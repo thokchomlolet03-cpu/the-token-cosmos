@@ -417,16 +417,16 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             onClick={onLaunchPrompt}
             disabled={isFetchingLogits || !prompt.trim()}
             aria-label="Launch prompt evaluation and fetch token candidates"
-            className="w-full flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-purple-600 py-2.5 text-xs font-bold text-slate-950 shadow-neon-cyan hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full flex items-center justify-center space-x-2 rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isFetchingLogits ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
+                <Loader2 className="h-4 w-4 animate-spin text-white" />
                 <span>Mapping AI Thoughts...</span>
               </>
             ) : (
               <>
-                <Rocket className="h-4 w-4 fill-slate-950" />
+                <Rocket className="h-4 w-4 fill-white text-white" />
                 <span>Map the AI's Thoughts</span>
               </>
             )}

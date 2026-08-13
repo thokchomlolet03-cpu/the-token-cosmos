@@ -136,13 +136,13 @@ print(response.text)
 
   return (
     <div className="w-full h-full flex items-start justify-center animate-in fade-in duration-200 select-text">
-      <div className="w-full max-w-3xl rounded-2xl border border-cyan-500/30 bg-[#15151a] p-6 shadow-2xl space-y-4">
+      <div className="w-full max-w-3xl rounded-2xl border border-slate-800 bg-[#15151a] p-6 shadow-2xl space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center space-x-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 p-0.5 shadow-neon-cyan">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 p-0.5 shadow-md">
               <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-slate-950">
-                <Code2 className="h-4 w-4 text-cyan-400" />
+                <Code2 className="h-4 w-4 text-blue-400" />
               </div>
             </div>
             <div>
@@ -167,7 +167,7 @@ print(response.text)
               onClick={() => setActiveTab('openai')}
               className={`flex items-center space-x-1.5 rounded-md px-3 py-1 font-bold transition-all ${
                 activeTab === 'openai'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md'
+                  ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -178,7 +178,7 @@ print(response.text)
               onClick={() => setActiveTab('anthropic')}
               className={`flex items-center space-x-1.5 rounded-md px-3 py-1 font-bold transition-all ${
                 activeTab === 'anthropic'
-                  ? 'bg-purple-600 text-white shadow-md'
+                  ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -189,7 +189,7 @@ print(response.text)
               onClick={() => setActiveTab('gemini')}
               className={`flex items-center space-x-1.5 rounded-md px-3 py-1 font-bold transition-all ${
                 activeTab === 'gemini'
-                  ? 'bg-amber-500 text-slate-950 shadow-md'
+                  ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -200,7 +200,7 @@ print(response.text)
 
           <button
             onClick={handleCopy}
-            className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 px-3 py-1.5 text-xs font-bold text-white shadow-neon-cyan hover:opacity-90 transition-opacity"
+            className="flex items-center space-x-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs font-bold text-white shadow-md transition-colors"
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}
             <span>{copied ? 'Copied to Clipboard!' : 'Copy Snippet'}</span>

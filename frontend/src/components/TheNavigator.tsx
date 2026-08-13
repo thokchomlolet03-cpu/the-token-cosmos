@@ -380,28 +380,28 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
           {/* Header Bar (Draggable Drag Handle) */}
           <div
             onMouseDown={handleMouseDown}
-            className="flex items-center justify-between border-b border-cyan-500/20 bg-slate-950 px-4 py-3 cursor-grab active:cursor-grabbing select-none"
+            className="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-4 py-3 cursor-grab active:cursor-grabbing select-none"
           >
             <div className="flex items-center space-x-2.5">
-              <Move className="h-4 w-4 text-cyan-400/70" />
-              <div className={`relative flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 p-0.5 ${
-                isSpeaking ? 'shadow-neon-cyan ring-2 ring-cyan-400' : ''
+              <Move className="h-4 w-4 text-slate-500" />
+              <div className={`relative flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 p-0.5 ${
+                isSpeaking ? 'shadow-md ring-2 ring-blue-500' : ''
               }`}>
                 <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-slate-950">
-                  <Compass className="h-4 w-4 text-cyan-400" />
+                  <Compass className="h-4 w-4 text-blue-400" />
                 </div>
               </div>
               <div>
                 <div className="flex items-center space-x-2">
                   <h3 className="text-sm font-bold text-slate-100">The Navigator</h3>
                   {isSpeaking && (
-                    <span className="flex items-center space-x-1 rounded-full bg-cyan-500/20 px-2 py-0.5 text-[9px] font-mono font-bold text-cyan-300 border border-cyan-400/30">
-                      <AudioWaveform className="h-3 w-3 animate-pulse text-cyan-400" />
+                    <span className="flex items-center space-x-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-mono font-bold text-blue-300 border border-blue-500/20">
+                      <AudioWaveform className="h-3 w-3 animate-pulse text-blue-400" />
                       <span>Speaking</span>
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-cyan-400 font-mono flex items-center space-x-1">
+                <p className="text-[10px] text-blue-400 font-mono flex items-center space-x-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Free-Floating Mobility • Real-time AI</span>
                 </p>
@@ -437,8 +437,8 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
           <div className="flex items-center justify-between bg-slate-900/90 px-4 py-1.5 border-b border-slate-800 text-[10px] font-mono text-slate-300">
             <span>Temp: <strong className="text-amber-400">{params.temperature.toFixed(2)}</strong></span>
             <span>Top-K: <strong className="text-cyan-400">{params.topK}</strong></span>
-            <span>RAG: <strong className={ragEnabled ? 'text-cyan-400' : 'text-slate-400'}>{ragEnabled ? 'ON' : 'OFF'}</strong></span>
-            <span>Voice: <strong className={!isMuted ? 'text-cyan-300' : 'text-slate-500'}>{!isMuted ? 'ON' : 'MUTED'}</strong></span>
+            <span>RAG: <strong className={ragEnabled ? 'text-blue-400' : 'text-slate-400'}>{ragEnabled ? 'ON' : 'OFF'}</strong></span>
+            <span>Voice: <strong className={!isMuted ? 'text-blue-300' : 'text-slate-500'}>{!isMuted ? 'ON' : 'MUTED'}</strong></span>
           </div>
 
           {/* Chat Messages */}
@@ -449,14 +449,14 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
                 className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
                 {msg.badge && (
-                  <span className="mb-1 rounded-full bg-cyan-500/10 px-2 py-0.5 text-[9px] font-mono font-bold text-cyan-300 border border-cyan-500/20">
+                  <span className="mb-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-mono font-bold text-blue-300 border border-blue-500/20">
                     ⚡ {msg.badge}
                   </span>
                 )}
                 <div
                   className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-wrap ${
                     msg.sender === 'user'
-                      ? 'bg-gradient-to-r from-cyan-500 to-sky-600 text-slate-950 font-medium rounded-br-none'
+                      ? 'bg-blue-600 text-white font-medium rounded-br-none'
                       : 'bg-slate-900/90 border border-slate-800 text-slate-200 rounded-bl-none shadow-md'
                   }`}
                 >
@@ -470,9 +470,9 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
 
             {isTyping && (
               <div className="flex items-center space-x-1.5 bg-slate-900 border border-slate-800 p-2 rounded-2xl rounded-bl-none w-16">
-                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-bounce" />
-                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-bounce delay-100" />
-                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-bounce delay-200" />
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce" />
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce delay-100" />
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce delay-200" />
               </div>
             )}
             <div ref={messagesEndRef} />

@@ -582,7 +582,7 @@ export const App: React.FC = () => {
   const isInferencePending = isFetchingLogits || inferenceEngine.state.status === 'generating';
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#050714] text-gray-100 font-sans selection:bg-pink-500/30 selection:text-white select-text">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#050714] text-gray-100 font-sans selection:bg-blue-500/30 selection:text-white select-text">
       {/* WebGPU Model Loading Overlay (Also acts as WebGPU Guardrail) */}
       {shouldShowModelOverlay && (
         <ModelLoadingOverlay

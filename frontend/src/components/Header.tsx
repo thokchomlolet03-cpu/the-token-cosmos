@@ -33,15 +33,15 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:flex-nowrap sm:px-6 sm:py-3">
         {/* Brand logo & title */}
         <div className="flex min-w-0 flex-1 items-center space-x-3 sm:flex-none">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-pink-500/10 border border-pink-500/30">
-            <Orbit className="h-4 w-4 text-pink-400" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 border border-blue-500/30">
+            <Orbit className="h-4 w-4 text-blue-400" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="whitespace-nowrap text-base font-bold text-white sm:text-xl">
                 The Token Cosmos
               </h1>
-              <span className="hidden rounded-full border border-pink-500/30 bg-pink-500/20 px-2.5 py-0.5 font-mono text-[10px] text-pink-300 sm:inline">
+              <span className="hidden rounded-full border border-blue-500/30 bg-blue-500/20 px-2.5 py-0.5 font-mono text-[10px] text-blue-300 sm:inline">
                 v4.0
               </span>
             </div>
@@ -81,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label={splitView ? 'Disable A/B Duel Mode' : 'Enable side-by-side A/B Duel Mode'}
               className={`flex shrink-0 items-center space-x-2 rounded-full p-2 text-xs font-medium transition-all sm:px-3.5 sm:py-1.5 ${
                 splitView
-                  ? 'bg-pink-500 text-white border border-pink-400 shadow-sm'
+                  ? 'bg-blue-600 text-white border border-blue-500 shadow-sm'
                   : 'btn-secondary-matte'
               }`}
               title="Compare Model / Parameter Configurations side-by-side"
@@ -100,7 +100,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Switch to LEARN mode"
               className={`flex items-center space-x-1.5 rounded-full p-2 text-xs font-medium transition-all sm:px-3.5 sm:py-1 ${
                 activeTab === 'learn'
-                  ? 'bg-pink-500 text-white font-semibold shadow-sm'
+                  ? 'bg-blue-600 text-white font-semibold shadow-sm'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Switch to EXPERIMENT mode"
               className={`flex items-center space-x-1.5 rounded-full p-2 text-xs font-medium transition-all sm:px-3.5 sm:py-1 ${
                 activeTab === 'experiment'
-                  ? 'bg-pink-500 text-white font-semibold shadow-sm'
+                  ? 'bg-blue-600 text-white font-semibold shadow-sm'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -128,7 +128,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Switch to EXPORT mode"
               className={`flex items-center space-x-1.5 rounded-full p-2 text-xs font-medium transition-all sm:px-3.5 sm:py-1 ${
                 activeTab === 'export'
-                  ? 'bg-pink-500 text-white font-semibold shadow-sm'
+                  ? 'bg-blue-600 text-white font-semibold shadow-sm'
                   : 'text-gray-400 hover:text-white'
               }`}
             >

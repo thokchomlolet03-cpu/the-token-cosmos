@@ -202,7 +202,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
             onClick={handleSave}
             type="button"
             aria-label="Save engine configuration"
-            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-xs font-bold text-white shadow-neon-cyan hover:opacity-95"
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-md transition-colors"
           >
             {savedSuccess ? (
               <>

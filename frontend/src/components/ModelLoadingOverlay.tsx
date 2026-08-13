@@ -32,8 +32,8 @@ export const ModelLoadingOverlay: React.FC<ModelLoadingOverlayProps> = ({
       <div className="w-full max-w-md mx-4">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-pink-500/20 border border-white/10 mb-4">
-            <Cpu className="w-8 h-8 text-cyan-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/30 mb-4">
+            <Cpu className="w-8 h-8 text-blue-400" />
           </div>
           <h2 className="text-xl font-bold text-white tracking-tight">
             WebGPU Inference Engine
@@ -67,16 +67,16 @@ export const ModelLoadingOverlay: React.FC<ModelLoadingOverlayProps> = ({
           <div className="rounded-xl bg-white/5 border border-white/10 p-5 mb-4">
             <div className="flex items-center space-x-3 mb-3">
               {state.status === 'downloading' ? (
-                <Download className="w-5 h-5 text-cyan-400 animate-bounce" />
+                <Download className="w-5 h-5 text-blue-400 animate-bounce" />
               ) : (
-                <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+                <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
               )}
               <span className="text-sm text-white font-mono">{state.progressText}</span>
             </div>
             {/* Progress Bar */}
             <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-cyan-500 to-pink-500 rounded-full transition-all duration-300 ease-out"
+                className="h-full bg-blue-600 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${state.progress}%` }}
               />
             </div>
@@ -84,7 +84,7 @@ export const ModelLoadingOverlay: React.FC<ModelLoadingOverlayProps> = ({
               <span className="text-[10px] text-gray-500 font-mono">
                 {state.status === 'downloading' ? 'Downloading weights' : 'Initializing WebGPU'}
               </span>
-              <span className="text-[10px] text-cyan-400 font-mono font-bold">
+              <span className="text-[10px] text-blue-400 font-mono font-bold">
                 {state.progress}%
               </span>
             </div>
@@ -116,21 +116,15 @@ export const ModelLoadingOverlay: React.FC<ModelLoadingOverlayProps> = ({
               <button
                 key={model.id}
                 onClick={() => onSelectModel(model.id)}
-                className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 p-4 text-left transition-all duration-200 group"
+                className="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 p-4 text-left transition-all duration-200 group"
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">
+                      <span className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">
                         {model.label}
                       </span>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider ${
-                        model.tier === 'light'
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : model.tier === 'standard'
-                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                            : 'bg-pink-500/20 text-pink-400 border border-pink-500/30'
-                      }`}>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
                         {model.tier}
                       </span>
                     </div>

@@ -240,17 +240,17 @@ export function getConfidenceLevel(
   let perplexityColor: string;
 
   if (rank <= 3 && prob > 0.7) {
-    // Top 3 with >70% → high confidence (green)
+    // Top 3 with >70% → high confidence (light slate)
     confidence = 'high';
-    perplexityColor = '#10b981'; // Emerald green
+    perplexityColor = '#475569'; // Muted slate-600
   } else if (prob >= 0.10) {
-    // Moderate uncertainty (yellow/amber)
+    // Moderate uncertainty (medium slate)
     confidence = 'moderate';
-    perplexityColor = '#f59e0b'; // Amber
+    perplexityColor = '#334155'; // Muted slate-700
   } else {
-    // High perplexity / surprise — hallucination risk (red)
+    // High perplexity (dark slate)
     confidence = 'low';
-    perplexityColor = '#ef4444'; // Red
+    perplexityColor = '#1e293b'; // Muted slate-800
   }
 
   return {

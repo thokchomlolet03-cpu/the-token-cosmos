@@ -310,16 +310,19 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
             <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Most Likely Next Words</span>
           </div>
           <div className="p-2 space-y-1">
-            {candidates.slice(0, 10).map((c, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <span className="text-[10px] font-mono truncate mr-2" style={{ color: c.color }}>
-                  {c.token_str.trim() || '—'}
-                </span>
-                <span className="text-[9px] font-mono text-gray-400">
-                  {(c.probability * 100).toFixed(1)}%
-                </span>
-              </div>
-            ))}
+            {candidates.slice(0, 10).map((c, i) => {
+              const opacity = Math.max(0.3, 1.0 - i * 0.07);
+              return (
+                <div key={i} className="flex items-center justify-between" style={{ opacity }}>
+                  <span className="text-[10px] font-mono text-slate-100 font-medium truncate mr-2">
+                    {c.token_str.trim() || '—'}
+                  </span>
+                  <span className="text-[9px] font-mono text-slate-400">
+                    {(c.probability * 100).toFixed(1)}%
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

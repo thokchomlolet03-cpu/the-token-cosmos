@@ -287,7 +287,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
             }
             while (container.children.length < topN.length) {
                 const div = document.createElement('div');
-                div.className = "absolute pointer-events-none px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-950/80 backdrop-blur border text-white shadow-lg transition-opacity duration-150 flex items-center space-x-1 border-white/10";
+                div.className = "absolute pointer-events-none px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-950/80 backdrop-blur border text-white shadow-lg transition-opacity duration-150 flex items-center space-x-1 border-slate-700/80";
                 container.appendChild(div);
             }
             
@@ -313,11 +313,11 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                         
                         el.style.transform = `translate3d(${xPos}px, ${yPos - 20}px, 0) translate(-50%, -50%)`;
                         el.style.opacity = '1';
-                        el.style.borderColor = `${c.color}60`;
-                        el.style.boxShadow = `0 0 6px ${c.color}20`;
+                        el.style.borderColor = `rgba(71, 85, 105, 0.8)`; // border-slate-600 with opacity
+                        el.style.boxShadow = `0 4px 6px rgba(0, 0, 0, 0.3)`; // drop shadow, no glowing neon shadow
                         
                         el.innerHTML = `
-                          <span style="color: ${c.color}; font-weight: 800;">#${c.rank}</span>
+                          <span style="color: #60a5fa; font-weight: 800;">#${c.rank}</span>
                           <span>${c.token_str.trim() || '—'}</span>
                           <span class="text-slate-400 font-normal text-[8px] opacity-80">(${(c.probability * 100).toFixed(1)}%)</span>
                         `;
@@ -588,20 +588,20 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                 <div className="space-y-0.5">
                     <div className="flex justify-between text-[9px]">
                         <span className="text-slate-400">Prob:</span>
-                        <span className="text-cyan-400 font-semibold">
+                        <span className="text-blue-400 font-semibold">
                             {(hoveredToken.probability * 100).toFixed(2)}%
                         </span>
                     </div>
                     {hoveredToken.rank !== -1 && (
                         <div className="flex justify-between text-[9px]">
                             <span className="text-slate-400">Rank:</span>
-                            <span className="text-purple-400">#{hoveredToken.rank}</span>
+                            <span className="text-slate-300">#{hoveredToken.rank}</span>
                         </div>
                     )}
                     {hoveredToken.rawLogit !== -999.0 && (
                         <div className="flex justify-between text-[9px]">
                             <span className="text-slate-400">Logit:</span>
-                            <span className="text-amber-400">{hoveredToken.rawLogit.toFixed(2)}</span>
+                            <span className="text-slate-300">{hoveredToken.rawLogit.toFixed(2)}</span>
                         </div>
                     )}
                     {hoveredToken.isFiltered && (
@@ -613,8 +613,8 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                         </div>
                     )}
                     {hoveredToken.isRag && (
-                        <div className="text-[8px] text-blue-400 font-bold uppercase mt-0.5 flex items-center">
-                            <span className="w-1 h-1 rounded-full bg-blue-400 mr-1" />
+                        <div className="text-[8px] text-slate-400 font-bold uppercase mt-0.5 flex items-center">
+                            <span className="w-1 h-1 rounded-full bg-slate-400 mr-1" />
                             RAG Grounded
                         </div>
                     )}
