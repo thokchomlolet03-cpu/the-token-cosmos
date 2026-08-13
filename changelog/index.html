@@ -1447,6 +1447,7 @@
 <ul>
 <li><strong>Token Streaming Optimizations</strong>: Added real-time token streaming support to the WebGPU inference worker, rendering tokens dynamically in the flight path at 60 FPS.</li>
 <li><strong>Reasoning Model Support</strong>: Implemented parsing for <code>&lt;think&gt;</code> tag blocks, isolating the reasoning process visually on the canvas (represented as distinct asteroid-like thinking states) and formatting thoughts in a separate UI panel.</li>
+<li><strong>Friction Hunter &amp; BigQuery Ingestion</strong>: Deployed the automated Friction Hunter diagnostics pipeline (August 2026) to calculate probability drops between phrases and stream telemetry logs directly into day-partitioned GCP BigQuery tables (<code>cosmos_telemetry.friction_points</code>).</li>
 <li><strong>Automated Pre-Commit Hooks</strong>: Added local git pre-commit link-checking hooks.</li>
 <li><strong>SAST Security Scanning</strong>: Integrated Bandit static security scanning into CI/CD pipelines to audit python dependencies and code files.</li>
 </ul>

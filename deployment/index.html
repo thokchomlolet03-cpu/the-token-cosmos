@@ -802,6 +802,95 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-infrastructure-provisioning-cloud-governance-manual-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Infrastructure Provisioning &amp; Cloud Governance (Manual Setup)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Infrastructure Provisioning &amp; Cloud Governance (Manual Setup)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-initial-gcp-resource-setup-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Initial GCP Resource Setup Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Initial GCP Resource Setup Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-a-configure-project-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step A: Configure Project &amp; APIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-b-create-artifact-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step B: Create Artifact Registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-c-create-bigquery-telemetry-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step C: Create BigQuery Telemetry Dataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-d-create-partitioned-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step D: Create Partitioned Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-infrastructure-as-code-iac-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Infrastructure as Code (IaC) Governance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1331,6 +1420,95 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-infrastructure-provisioning-cloud-governance-manual-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Infrastructure Provisioning &amp; Cloud Governance (Manual Setup)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Infrastructure Provisioning &amp; Cloud Governance (Manual Setup)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-initial-gcp-resource-setup-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Initial GCP Resource Setup Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Initial GCP Resource Setup Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-a-configure-project-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step A: Configure Project &amp; APIs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-b-create-artifact-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step B: Create Artifact Registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-c-create-bigquery-telemetry-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step C: Create BigQuery Telemetry Dataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-d-create-partitioned-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step D: Create Partitioned Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-infrastructure-as-code-iac-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Infrastructure as Code (IaC) Governance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1441,6 +1619,53 @@
 <li><code>GCP_WORKLOAD_IDENTITY_PROVIDER</code>: The resource identifier for your Workload Identity Pool Provider (e.g. <code>projects/&lt;number&gt;/locations/global/workloadIdentityPools/&lt;pool&gt;/providers/&lt;provider&gt;</code>).</li>
 <li><code>GCP_SERVICE_ACCOUNT</code>: The service account email with permissions to push to Artifact Registry and deploy services (e.g. <code>deployer@&lt;project-id&gt;.iam.gserviceaccount.com</code>).</li>
 </ul>
+<hr />
+<h2 id="5-infrastructure-provisioning-cloud-governance-manual-setup">5. Infrastructure Provisioning &amp; Cloud Governance (Manual Setup)</h2>
+<p>As of current operations, <strong>The Token Cosmos</strong> manages its Google Cloud Platform resources manually via the Google Cloud Console and <code>gcloud</code> CLI (no Terraform or other Infrastructure as Code scripts are active in the source repository).</p>
+<h3 id="1-initial-gcp-resource-setup-commands">1. Initial GCP Resource Setup Commands</h3>
+<p>To deploy the system manually or prepare a new GCP environment, run the following commands in the <code>gcloud</code> CLI shell:</p>
+<h4 id="step-a-configure-project-apis">Step A: Configure Project &amp; APIs</h4>
+<p>Ensure the correct project is selected and enable necessary service APIs:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>gcloud<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>project<span class="w"> </span>&lt;GCP_PROJECT_ID&gt;
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>gcloud<span class="w"> </span>services<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>run.googleapis.com<span class="w"> </span>artifactregistry.googleapis.com<span class="w"> </span>bigquery.googleapis.com
+</span></code></pre></div></p>
+<h4 id="step-b-create-artifact-registry">Step B: Create Artifact Registry</h4>
+<p>Create a Docker repository to store application containers:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>gcloud<span class="w"> </span>artifacts<span class="w"> </span>repositories<span class="w"> </span>create<span class="w"> </span>cosmos-repo<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--repository-format<span class="o">=</span>docker<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--location<span class="o">=</span>us-central1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--description<span class="o">=</span><span class="s2">&quot;Docker Repository for The Token Cosmos&quot;</span>
+</span></code></pre></div></p>
+<h4 id="step-c-create-bigquery-telemetry-dataset">Step C: Create BigQuery Telemetry Dataset</h4>
+<p>Create a dataset to host telemetry tables, restricted to the <code>us-central1</code> region:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bq<span class="w"> </span>--location<span class="o">=</span>us-central1<span class="w"> </span>mk<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--description<span class="w"> </span><span class="s2">&quot;Telemetry performance data and friction analysis metrics&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>cosmos_telemetry
+</span></code></pre></div></p>
+<h4 id="step-d-create-partitioned-tables">Step D: Create Partitioned Tables</h4>
+<p>To contain query costs, both table structures are day-partitioned by the <code>timestamp</code> column:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Create the performance logs table</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>bq<span class="w"> </span>mk<span class="w"> </span>--table<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--schema<span class="w"> </span>timestamp:TIMESTAMP,session_id:STRING,model_id:STRING,engine:STRING,step_count:INTEGER,generation_time_ms:FLOAT,tokens_per_second:FLOAT,vram_allocated_mb:INTEGER,temperature:FLOAT,top_k:INTEGER,top_p:FLOAT,min_p:FLOAT,browser:STRING<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>--time_partitioning_field<span class="w"> </span>timestamp<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span>--time_partitioning_type<span class="w"> </span>DAY<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span>cosmos_telemetry.performance_logs
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># Create the friction points table</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>bq<span class="w"> </span>mk<span class="w"> </span>--table<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span>--schema<span class="w"> </span>timestamp:TIMESTAMP,session_id:STRING,phrase:STRING,log_prob_drop:FLOAT,previous_log_prob:FLOAT,current_log_prob:FLOAT,severity:STRING,reason:STRING<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span>--time_partitioning_field<span class="w"> </span>timestamp<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">  </span>--time_partitioning_type<span class="w"> </span>DAY<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">  </span>cosmos_telemetry.friction_points
+</span></code></pre></div></p>
+<h3 id="2-infrastructure-as-code-iac-governance">2. Infrastructure as Code (IaC) Governance</h3>
+<blockquote>
+<p>[!WARNING]
+Because resources are created manually, there is a risk of configuration drift or human error (e.g. leaving a BigQuery dataset publicly readable).</p>
+<p><strong>Audit Rules</strong>:
+- Any addition of Terraform (<code>.tf</code>), CloudFormation, or Cloud Deployment Manager scripts to this codebase <strong>must</strong> be immediately accompanied by the integration of an IaC static analysis tool (such as <code>checkov</code> or <code>tfsec</code>) into the <code>.github/workflows/docs.yml</code> validation job.
+- Public access to <code>cosmos_telemetry</code> datasets is prohibited. Access is restricted exclusively to the Cloud Run service account via IAM policies.</p>
+</blockquote>
 
 
 
