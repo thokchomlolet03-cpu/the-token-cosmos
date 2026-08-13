@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { SamplingParameters } from '../types/sampling';
 
 interface UrlStateProps {
@@ -26,9 +26,15 @@ export function useUrlState({
   ragEnabled,
   setRagEnabled,
 }: UrlStateProps) {
+  const skipInitialWrite = useRef(true);
+
   // Sync state to URL Query Params whenever state changes
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (skipInitialWrite.current) {
+      skipInitialWrite.current = false;
+      return;
+    }
 
     const query = new URLSearchParams();
     if (params.temperature !== 0.7) query.set('temp', params.temperature.toString());
@@ -37,13 +43,14 @@ export function useUrlState({
     if (params.minP !== 0.02) query.set('minp', params.minP.toString());
     if (params.frequencyPenalty !== 0.1) query.set('freq', params.frequencyPenalty.toString());
     if (params.presencePenalty !== 0.1) query.set('pres', params.presencePenalty.toString());
-    if (ragEnabled) query.set('rag', '1');
-    if (systemPrompt.trim()) query.set('sys', encodeURIComponent(systemPrompt.trim()));
-    if (prompt.trim()) query.set('prompt', encodeURIComponent(prompt.trim()));
+    query.set('rag', ragEnabled ? '1' : '0');
+    if (systemPrompt.trim()) query.set('sys', systemPrompt.trim());
+    if (prompt.trim()) query.set('prompt', prompt.trim());
+    if (ragContext.trim()) query.set('ragctx', ragContext.trim());
 
     const newUrl = `${window.location.pathname}?${query.toString()}${window.location.hash}`;
     window.history.replaceState(null, '', newUrl);
-  }, [params, prompt, systemPrompt, ragEnabled]);
+  }, [params, prompt, systemPrompt, ragContext, ragEnabled]);
 
   // Load state from URL Query Params on initial mount
   useEffect(() => {
@@ -59,6 +66,7 @@ export function useUrlState({
     const rag = query.get('rag');
     const sys = query.get('sys');
     const p = query.get('prompt');
+    const ragctx = query.get('ragctx');
 
     if (temp || topk || topp || minp || freq || pres) {
       setParams(prev => ({
@@ -72,9 +80,10 @@ export function useUrlState({
       }));
     }
 
-    if (rag === '1') setRagEnabled(true);
-    if (sys) setSystemPrompt(decodeURIComponent(sys));
-    if (p) setPrompt(decodeURIComponent(p));
+    if (rag !== null) setRagEnabled(rag === '1');
+    if (sys) setSystemPrompt(sys);
+    if (p) setPrompt(p);
+    if (ragctx) setRagContext(ragctx);
   }, []);
 
   const copySetupLink = useCallback(() => {

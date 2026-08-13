@@ -636,9 +636,9 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             </div>
             <input
               id="minp-slider"
-              aria-label="Adjust Min-P threshold slider from 1% to 50%"
+              aria-label="Adjust Min-P threshold slider from 0% to 50%"
               type="range"
-              min="0.01"
+              min="0.0"
               max="0.5"
               step="0.01"
               value={params.minP}

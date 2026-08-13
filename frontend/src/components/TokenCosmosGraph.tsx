@@ -214,6 +214,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
           params={params}
           ragTokenIds={ragEnabled ? candidates.filter(c => c.is_rag_grounded).map(c => c.token_id) : []}
           isThinking={isThinking}
+          candidates={candidates}
         />
         
         {/* Floating Top 10 Overlay */}

@@ -28,7 +28,7 @@ export const ModelLoadingOverlay: React.FC<ModelLoadingOverlayProps> = ({
   if (state.status === 'generating') return null;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#050714]/90 backdrop-blur-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050714]/90 backdrop-blur-lg">
       <div className="w-full max-w-md mx-4">
         {/* Header */}
         <div className="text-center mb-6">
@@ -151,10 +151,16 @@ export const ModelLoadingOverlay: React.FC<ModelLoadingOverlayProps> = ({
         {/* Skip / Use Sample Data */}
         <div className="mt-4 text-center">
           <button
-            onClick={() => onSelectModel('__SAMPLE_DATA__')}
+            onClick={() => onSelectModel('__CLOUD_API__')}
             className="text-xs text-gray-500 hover:text-gray-300 transition-colors font-mono underline underline-offset-4"
           >
-            Skip — use pre-computed sample data instead
+            Continue with Cloud Run candidate API
+          </button>
+          <button
+            onClick={() => onSelectModel('__SAMPLE_DATA__')}
+            className="mt-2 block w-full text-xs text-gray-600 hover:text-gray-300 transition-colors font-mono underline underline-offset-4"
+          >
+            Use generated sample data instead
           </button>
         </div>
         </>

@@ -5,25 +5,26 @@
  * The Token Cosmos v4.0
  * ───────────────────────────────────────────────────────────────────── */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getCachedCoordinates, setCachedCoordinates } from './coordinateCache';
 
 // ─── Known Pre-computed Asset Paths ─────────────────────────────────
 
 const PRECOMPUTED_ASSETS: Record<string, string> = {
   'SmolLM2-135M-Instruct-q4f16_1-MLC': '/terrain/smollm2-135m-umap.bin',
+  'SmolLM2-135M-Instruct-q0f16-MLC': '/terrain/smollm2-135m-umap.bin',
   'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin',
   'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin', // Shares vocab
-  'DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin', // Shares Qwen2 vocab
 };
 
 // ─── Known Vocab Sizes ──────────────────────────────────────────────
 
 const MODEL_VOCAB_SIZES: Record<string, number> = {
   'SmolLM2-135M-Instruct-q4f16_1-MLC': 49152,
+  'SmolLM2-135M-Instruct-q0f16-MLC': 49152,
   'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': 151936,
   'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': 151936,
-  'DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC': 151936,
+  '__SAMPLE_FALLBACK__': 49152, // Procedural terrain for sample data mode
 };
 
 // ─── Return Type ────────────────────────────────────────────────────
@@ -33,6 +34,7 @@ export interface TerrainCoordinates {
   isLoading: boolean;
   isLoaded: boolean;
   error: string | null;
+  loadedModelId: string | null;
   vocabSize: number;
 
   // Data: raw interleaved [x0, y0, x1, y1, ...] for vertex shader
@@ -59,9 +61,19 @@ async function loadBinaryCoordinates(url: string): Promise<{
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to load coordinates: ${response.status}`);
 
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('text/html')) {
+    throw new Error('Coordinate asset resolved to HTML instead of binary data');
+  }
+
   const buffer = await response.arrayBuffer();
+  if (buffer.byteLength < 8) throw new Error('Coordinate asset is missing its binary header');
   const header = new Uint32Array(buffer, 0, 2);
   const vocabSize = header[0];
+  const expectedLength = 8 + vocabSize * 2 * Float32Array.BYTES_PER_ELEMENT;
+  if (vocabSize === 0 || expectedLength !== buffer.byteLength) {
+    throw new Error('Coordinate asset has an invalid binary length');
+  }
   // const version = header[1]; // Reserved for future use
 
   const coordinates = new Float32Array(buffer, 8, vocabSize * 2);
@@ -161,20 +173,30 @@ export function useTerrainCoordinates(initialModelId?: string): TerrainCoordinat
   const [error, setError] = useState<string | null>(null);
   const [vocabSize, setVocabSize] = useState(0);
   const [rawCoordinates, setRawCoordinates] = useState<Float32Array | null>(null);
-  const [currentModelId, setCurrentModelId] = useState<string | null>(initialModelId || null);
+  const [loadedModelId, setLoadedModelId] = useState<string | null>(null);
+  const loadRequestRef = useRef(0);
 
   const loadForModel = useCallback(async (modelId: string) => {
-    setCurrentModelId(modelId);
+    const requestId = ++loadRequestRef.current;
     setIsLoading(true);
     setError(null);
+    setRawCoordinates(null);
+    setVocabSize(0);
+
+    const applyCoordinates = (coordinates: Float32Array, size: number) => {
+      if (requestId !== loadRequestRef.current) return false;
+      setRawCoordinates(coordinates);
+      setVocabSize(size);
+      setLoadedModelId(modelId);
+      setIsLoading(false);
+      return true;
+    };
 
     try {
       // 1. Check IndexedDB cache first
       const cached = await getCachedCoordinates(modelId);
       if (cached) {
-        setRawCoordinates(cached.coordinates);
-        setVocabSize(cached.vocabSize);
-        setIsLoading(false);
+        if (!applyCoordinates(cached.coordinates, cached.vocabSize)) return;
         console.log(`[Terrain] Loaded cached coordinates for ${modelId} (${cached.vocabSize} tokens)`);
         return;
       }
@@ -184,9 +206,7 @@ export function useTerrainCoordinates(initialModelId?: string): TerrainCoordinat
       if (assetPath) {
         try {
           const { vocabSize: vs, coordinates } = await loadBinaryCoordinates(assetPath);
-          setRawCoordinates(coordinates);
-          setVocabSize(vs);
-          setIsLoading(false);
+          if (!applyCoordinates(coordinates, vs)) return;
 
           // Cache for next time
           await setCachedCoordinates({
@@ -208,13 +228,12 @@ export function useTerrainCoordinates(initialModelId?: string): TerrainCoordinat
       // (clusters are procedural, not semantically meaningful, but visually correct)
       const fallbackSize = MODEL_VOCAB_SIZES[modelId] || 151936;
       const fallbackCoords = generateFallbackCoordinates(fallbackSize);
-      setRawCoordinates(fallbackCoords);
-      setVocabSize(fallbackSize);
-      setIsLoading(false);
+      if (!applyCoordinates(fallbackCoords, fallbackSize)) return;
 
       console.log(`[Terrain] Generated procedural terrain coordinates for ${modelId} (${fallbackSize} tokens)`);
 
     } catch (err) {
+      if (requestId !== loadRequestRef.current) return;
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
       setIsLoading(false);
@@ -243,6 +262,7 @@ export function useTerrainCoordinates(initialModelId?: string): TerrainCoordinat
     isLoading,
     isLoaded: rawCoordinates !== null && rawCoordinates.length > 0,
     error,
+    loadedModelId,
     vocabSize,
     rawCoordinates,
     getPosition,

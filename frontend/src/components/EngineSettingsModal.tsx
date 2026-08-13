@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, X, Server, Key, CheckCircle2, RotateCcw, ShieldCheck, Cpu } from 'lucide-react';
 
-export type ProviderType = 'default' | 'openai' | 'gemini' | 'custom';
+export type ProviderType = 'default' | 'openai' | 'custom';
 
 interface EngineSettingsModalProps {
   isOpen: boolean;
@@ -42,16 +42,13 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
     if (p === 'openai') {
       setUrlInput('https://api.openai.com/v1');
       if (!modelInput) setModelInput('gpt-4o');
-    } else if (p === 'gemini') {
-      setUrlInput('https://generativelanguage.googleapis.com/v1beta');
-      if (!modelInput) setModelInput('gemini-1.5-pro');
     } else if (p === 'custom' && !urlInput) {
       setUrlInput('http://localhost:1234/v1');
       if (!modelInput) setModelInput('local-model');
     } else if (p === 'default') {
       setUrlInput('');
       setKeyInput('');
-      setModelInput('Qwen2.5-0.5B');
+      setModelInput('Cloud Run candidate demo');
     }
   };
 
@@ -68,8 +65,8 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
     setProviderInput('default');
     setUrlInput('');
     setKeyInput('');
-    setModelInput('Qwen2.5-0.5B');
-    onSave('default', '', '', 'Qwen2.5-0.5B');
+    setModelInput('Cloud Run candidate demo');
+    onSave('default', '', '', 'Cloud Run candidate demo');
     setSavedSuccess(true);
     setTimeout(() => {
       setSavedSuccess(false);
@@ -123,9 +120,8 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
               onChange={e => handleProviderChange(e.target.value as ProviderType)}
               className="w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-cyan-300 font-semibold focus:border-cyan-400 focus:outline-none"
             >
-              <option value="default">Default ($0.00 Cloud Run - Qwen2.5-0.5B)</option>
+              <option value="default">Default (Cloud Run candidate demo)</option>
               <option value="openai">OpenAI (GPT-4o / GPT-3.5)</option>
-              <option value="gemini">Google Gemini API</option>
               <option value="custom">Custom / Local (vLLM / LM Studio / Ollama)</option>
             </select>
           </div>
@@ -149,7 +145,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
           )}
 
           {/* Custom Base URL */}
-          {(providerInput === 'custom' || providerInput === 'openai' || providerInput === 'gemini') && (
+          {(providerInput === 'custom' || providerInput === 'openai') && (
             <div>
               <label htmlFor="custom-url-input" className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center space-x-1.5">
                 <Server className="h-3.5 w-3.5 text-cyan-400" />

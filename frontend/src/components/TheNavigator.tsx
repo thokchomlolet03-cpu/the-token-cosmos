@@ -84,6 +84,24 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
     },
   ]);
 
+  useEffect(() => {
+    const placeMobileLauncher = () => {
+      if (window.innerWidth < 640 && !isOpen) {
+        setPosition({ x: window.innerWidth - 60, y: window.innerHeight - 60 });
+      }
+    };
+
+    placeMobileLauncher();
+    window.addEventListener('resize', placeMobileLauncher);
+    return () => window.removeEventListener('resize', placeMobileLauncher);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 640) {
+      setPosition({ x: 16, y: 16 });
+    }
+  }, [isOpen]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -176,8 +194,10 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
       
-      const newX = Math.max(10, Math.min(window.innerWidth - 380, posStartRef.current.x + dx));
-      const newY = Math.max(10, Math.min(window.innerHeight - 500, posStartRef.current.y + dy));
+      const panelWidth = isOpen ? Math.min(400, window.innerWidth - 32) : window.innerWidth < 640 ? 48 : 180;
+      const panelHeight = isOpen ? Math.min(540, window.innerHeight - 32) : 48;
+      const newX = Math.max(10, Math.min(window.innerWidth - panelWidth - 10, posStartRef.current.x + dx));
+      const newY = Math.max(10, Math.min(window.innerHeight - panelHeight - 10, posStartRef.current.y + dy));
 
       setPosition({ x: newX, y: newY });
     };
@@ -195,7 +215,7 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, isOpen]);
 
   // Construct silent state snapshot payload for deep awareness
   const getUIStateSnapshot = () => {
@@ -339,13 +359,13 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
           onClick={() => setIsOpen(true)}
           onMouseDown={handleMouseDown}
           aria-label="Open The Navigator Tourist Guide Chatbot (Draggable)"
-          className="group flex items-center space-x-2 rounded-xl bg-[#0A0A0A] border border-white/10 px-3.5 py-2 shadow-lg transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[1px] hover:border-white/20 transform-gpu cursor-grab active:cursor-grabbing"
+          className="group flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[#0A0A0A] p-0 shadow-lg transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[1px] hover:border-white/20 transform-gpu cursor-grab active:cursor-grabbing sm:h-auto sm:w-auto sm:justify-start sm:space-x-2 sm:rounded-xl sm:px-3.5 sm:py-2"
         >
-          <Move className="h-3.5 w-3.5 text-gray-400 opacity-60 group-hover:opacity-100" />
+          <Move className="hidden h-3.5 w-3.5 text-gray-400 opacity-60 group-hover:opacity-100 sm:block" />
           <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/10 text-white border border-white/20">
             <Compass className="h-3.5 w-3.5" />
           </div>
-          <div className="text-left">
+          <div className="hidden text-left sm:block">
             <span className="block text-xs font-bold text-white tracking-tight group-hover:text-gray-200">
               The Navigator
             </span>
@@ -356,7 +376,7 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
         </button>
       ) : (
         // Free-Floating Draggable Glassmorphic Chat Console
-        <div className="flex flex-col w-[360px] sm:w-[400px] h-[540px] rounded-xl bg-[#0A0A0A] border border-white/10 shadow-2xl overflow-hidden">
+        <div className="flex h-[calc(100vh-32px)] w-[calc(100vw-32px)] max-h-[540px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#0A0A0A] shadow-2xl sm:h-[540px] sm:w-[400px]">
           {/* Header Bar (Draggable Drag Handle) */}
           <div
             onMouseDown={handleMouseDown}

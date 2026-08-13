@@ -2,13 +2,13 @@ import os
 import time
 import math
 import random
+import re
 from typing import List, Optional
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 app = FastAPI(
     title="The Token Cosmos API",
@@ -20,17 +20,25 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_browser_isolation_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Embedder-Policy"] = "credentialless"
+    return response
 
 # Pydantic Schemas
 class LogitRequest(BaseModel):
     prompt: str
     system_prompt: Optional[str] = None
     rag_context: Optional[str] = None
-    top_n: Optional[int] = 50
+    top_n: int = Field(default=50, ge=1, le=200)
 
 class TokenCandidate(BaseModel):
     token_id: int
@@ -48,7 +56,10 @@ class LogitResponse(BaseModel):
 
 # Optional llama.cpp initialization
 LLAMA_MODEL = None
-MODEL_PATH = os.getenv("MODEL_PATH", "models/qwen2.5-0.5b-instruct-q4_k_m.gguf")
+MODEL_PATH = os.getenv(
+    "MODEL_PATH",
+    str(Path(__file__).parent / "models" / "qwen2.5-0.5b-instruct-q4_k_m.gguf"),
+)
 
 if os.path.exists(MODEL_PATH):
     try:
@@ -85,13 +96,34 @@ def api_health():
         "engine": "llama-cpp" if LLAMA_MODEL else "synthetic-cosmos-engine",
     }
 
+
+def _candidate_words(prompt: str, rag_context: Optional[str], system_prompt: Optional[str]) -> List[str]:
+    if system_prompt and ("sql" in system_prompt.lower() or "dba" in system_prompt.lower()):
+        return [" SELECT", " FROM", " WHERE", " JOIN", " GROUP", " BY", " ORDER", " LIMIT", " COUNT", " MAX"]
+
+    source_text = " ".join(part for part in [rag_context or "", prompt] if part)
+    words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'-]*", source_text)
+    unique_words: List[str] = []
+    seen = set()
+    for word in words:
+        normalized = word.lower()
+        if len(normalized) < 3 or normalized in seen:
+            continue
+        seen.add(normalized)
+        unique_words.append(f" {word}")
+
+    return unique_words or [
+        " answer", " analysis", " context", " result", " response", " detail",
+        " explanation", " model", " token", " probability",
+    ]
+
 @app.post("/api/logits", response_model=LogitResponse)
 def get_logits(req: LogitRequest):
     start_time = time.time()
     prompt = req.prompt or "What is the capital of France?"
     system_prompt = req.system_prompt
     rag_context = req.rag_context
-    top_n = req.top_n or 50
+    top_n = req.top_n
     rag_enabled = bool(rag_context and rag_context.strip())
 
     candidates: List[TokenCandidate] = []
@@ -148,16 +180,7 @@ def get_logits(req: LogitRequest):
         seed = sum(ord(c) for c in seed_str)
         random.seed(seed)
 
-        # Baseline common English words / candidates
-        base_words = [
-            " Paris", " France", " Eiffel", " Tower", " capital", " city", " population",
-            " historic", " famous", " European", " London", " Berlin", " Rome", " Madrid",
-            " Tokyo", " Washington", " vibrant", " beautiful", " located", " country",
-            " landmark", " museum", " cultural", " center", " region", " tourism"
-        ]
-
-        if system_prompt and ("sql" in system_prompt.lower() or "dba" in system_prompt.lower()):
-            base_words = [" SELECT", " FROM", " WHERE", " JOIN", " GROUP", " BY", " ORDER", " LIMIT", " COUNT", " MAX"]
+        base_words = _candidate_words(prompt, rag_context, system_prompt)
 
         # Extract keywords from RAG context for grounding
         rag_keywords = []
@@ -209,12 +232,11 @@ def get_logits(req: LogitRequest):
 STATIC_DIR = Path(__file__).parent / "static"
 
 if STATIC_DIR.exists() and (STATIC_DIR / "index.html").exists():
-    # Serve static assets (JS, CSS, images) from /assets/
-    app.mount("/assets", StaticFiles(directory=str(STATIC_DIR / "assets")), name="static-assets")
-
     # SPA catch-all: serve index.html for all non-API routes
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
+        if full_path == "api" or full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="API route not found")
         # Check if the requested file exists in static directory
         file_path = STATIC_DIR / full_path
         if full_path and file_path.exists() and file_path.is_file():
@@ -225,4 +247,3 @@ if STATIC_DIR.exists() and (STATIC_DIR / "index.html").exists():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

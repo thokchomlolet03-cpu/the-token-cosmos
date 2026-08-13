@@ -23,7 +23,7 @@ export interface SamplingParameters {
   temperature: number; // 0.01 to 2.0
   topK: number; // 1 to 50
   topP: number; // 0.05 to 1.0
-  minP: number; // 0.01 to 0.5
+  minP: number; // 0.0 to 0.5
   frequencyPenalty: number; // 0.0 to 1.5
   presencePenalty: number; // 0.0 to 1.5
   stopSequences: string[];

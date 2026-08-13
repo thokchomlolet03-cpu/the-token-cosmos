@@ -12,6 +12,7 @@ import type {
   WorkerOutbound,
   LogitSnapshot,
   ModelOption,
+  DecodedTokenCandidate,
 } from './types';
 import { AVAILABLE_MODELS } from './types';
 import type { RawTokenCandidate } from '../types/sampling';
@@ -42,6 +43,7 @@ export interface InferenceEngine {
   // Data
   latestLogits: Float32Array | null;
   latestSnapshot: LogitSnapshot | null;
+  latestCandidates: DecodedTokenCandidate[];
   generatedTokens: Array<{ tokenStr: string; stepIndex: number }>;
 
   // Conversion: raw Float32Array logits → RawTokenCandidate[] for existing math pipeline
@@ -66,6 +68,7 @@ export function useInferenceEngine(): InferenceEngine {
 
   const [latestLogits, setLatestLogits] = useState<Float32Array | null>(null);
   const [latestSnapshot, setLatestSnapshot] = useState<LogitSnapshot | null>(null);
+  const [latestCandidates, setLatestCandidates] = useState<DecodedTokenCandidate[]>([]);
   const [generatedTokens, setGeneratedTokens] = useState<Array<{ tokenStr: string; stepIndex: number }>>([]);
 
   // Tokenizer vocabulary cache (token_id → string mapping)
@@ -114,6 +117,10 @@ export function useInferenceEngine(): InferenceEngine {
           }));
           break;
 
+        case 'VOCAB_LOADED':
+          vocabMapRef.current = msg.vocabList;
+          break;
+
         case 'LOGITS_READY': {
           const logits = new Float32Array(msg.snapshot.rawLogitsBuffer);
           setLatestLogits(logits);
@@ -125,7 +132,9 @@ export function useInferenceEngine(): InferenceEngine {
             prompt: msg.snapshot.prompt,
             isThinking: msg.snapshot.isThinking,
             timestamp: msg.snapshot.timestamp,
+            topCandidates: msg.snapshot.topCandidates,
           });
+          setLatestCandidates(msg.snapshot.topCandidates);
           break;
         }
 
@@ -179,6 +188,7 @@ export function useInferenceEngine(): InferenceEngine {
   const loadModel = useCallback((modelId: string) => {
     setLatestLogits(null);
     setLatestSnapshot(null);
+    setLatestCandidates([]);
     setGeneratedTokens([]);
     vocabMapRef.current = null;
     send({ type: 'LOAD_MODEL', modelId });
@@ -201,6 +211,7 @@ export function useInferenceEngine(): InferenceEngine {
   const unload = useCallback(() => {
     setLatestLogits(null);
     setLatestSnapshot(null);
+    setLatestCandidates([]);
     setGeneratedTokens([]);
     vocabMapRef.current = null;
     send({ type: 'UNLOAD' });
@@ -214,8 +225,8 @@ export function useInferenceEngine(): InferenceEngine {
     (logits: Float32Array, ragTokens?: Set<string>): RawTokenCandidate[] => {
       const candidates: RawTokenCandidate[] = [];
 
-      // For now, use numeric token IDs as token_str
-      // until we have a proper tokenizer vocab map
+      // Full vocab logits are retained for terrain rendering. The decoded top
+      // candidates provided by WebLLM are used for readable labels in the UI.
       for (let i = 0; i < logits.length; i++) {
         const logit = logits[i];
 
@@ -223,13 +234,13 @@ export function useInferenceEngine(): InferenceEngine {
         if (!isFinite(logit) || logit < -1e6) continue;
 
         // Use vocab map if available, otherwise fall back to index
-        const tokenStr = vocabMapRef.current?.[i] ?? `<tok_${i}>`;
+        const tokenStr = vocabMapRef.current?.[i] ?? `Token #${i}`;
 
         candidates.push({
           token_id: i,
           token_str: tokenStr,
           raw_logit: logit,
-          is_rag_grounded: ragTokens?.has(tokenStr) ?? false,
+          is_rag_grounded: ragTokens?.has(tokenStr.toLowerCase()) ?? false,
         });
       }
 
@@ -256,6 +267,7 @@ export function useInferenceEngine(): InferenceEngine {
 
     latestLogits,
     latestSnapshot,
+    latestCandidates,
     generatedTokens,
 
     logitsToRawCandidates,

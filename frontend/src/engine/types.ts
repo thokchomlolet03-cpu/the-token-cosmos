@@ -22,6 +22,13 @@ export interface LogitSnapshot {
   prompt: string;             // Prompt at this step
   isThinking: boolean;        // True if inside <think> block
   timestamp: number;
+  topCandidates: DecodedTokenCandidate[];
+}
+
+export interface DecodedTokenCandidate {
+  tokenId: number;
+  tokenStr: string;
+  rawLogit: number;
 }
 
 // ─── Inference State Machine ─────────────────────────────────────────
@@ -56,6 +63,7 @@ export type WorkerInbound =
 export type WorkerOutbound =
   | { type: 'STATUS'; status: InferenceStatus; progress: number; text: string }
   | { type: 'MODEL_LOADED'; modelId: string; vocabSize: number }
+  | { type: 'VOCAB_LOADED'; modelId: string; vocabList: string[] }
   | { type: 'LOGITS_READY'; snapshot: LogitSnapshotTransfer }
   | { type: 'TOKEN_GENERATED'; tokenId: number; tokenStr: string; stepIndex: number }
   | { type: 'GENERATION_COMPLETE'; totalSteps: number }
@@ -70,6 +78,7 @@ export interface LogitSnapshotTransfer {
   prompt: string;
   isThinking: boolean;
   timestamp: number;
+  topCandidates: DecodedTokenCandidate[];
 }
 
 // ─── Available Models ────────────────────────────────────────────────
@@ -86,20 +95,19 @@ export interface ModelOption {
 
 export const AVAILABLE_MODELS: ModelOption[] = [
   {
-    id: 'DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC',
-    label: 'DeepSeek R1 1.5B (Reasoning)',
-    size: '~1.1GB',
-    vocabSize: 151936,
-    description: 'Reasoning model. Watch the "Thinking Phase" wander the latent space before answering.',
-    tier: 'standard',
-    isReasoning: true,
-  },
-  {
     id: 'SmolLM2-135M-Instruct-q4f16_1-MLC',
-    label: 'SmolLM2 135M',
+    label: 'SmolLM2 135M (q4f16)',
     size: '~180MB',
     vocabSize: 49152,
-    description: 'Ultra-light default. Fast cold-start, basic reasoning.',
+    description: 'Ultra-light local model for compatible WebGPU devices.',
+    tier: 'light',
+  },
+  {
+    id: 'SmolLM2-135M-Instruct-q0f16-MLC',
+    label: 'SmolLM2 135M (q0f16)',
+    size: '~360MB',
+    vocabSize: 49152,
+    description: 'Ultra-light unquantized float16 variant from WebLLM catalog.',
     tier: 'light',
   },
   {

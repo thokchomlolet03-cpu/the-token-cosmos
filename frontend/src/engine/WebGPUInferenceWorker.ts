@@ -19,6 +19,29 @@ import type {
   LogitSnapshotTransfer,
 } from './types';
 
+// ─── Custom Model Registration ──────────────────────────────────────
+
+const EXTRA_MODELS: AppConfig['model_list'] = [
+  {
+    model: "https://huggingface.co/mlc-ai/SmolLM2-135M-Instruct-q4f16_1-MLC/",
+    model_id: "SmolLM2-135M-Instruct-q4f16_1-MLC",
+    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/SmolLM2-135M-Instruct-q4f16_1_cs1k-webgpu.wasm",
+    vram_required_MB: 180,
+    low_resource_required: true,
+    required_features: ["shader-f16"],
+    overrides: { context_window_size: 4096 },
+  },
+];
+
+const CUSTOM_APP_CONFIG: AppConfig = {
+  model_list: [
+    ...prebuiltAppConfig.model_list,
+    ...EXTRA_MODELS.filter(
+      (customModel) => !prebuiltAppConfig.model_list.some((model) => model.model_id === customModel.model_id),
+    ),
+  ],
+};
+
 // ─── State ───────────────────────────────────────────────────────────
 
 let engine: MLCEngine | null = null;
@@ -66,33 +89,34 @@ function post(msg: WorkerOutbound, transfer?: Transferable[]) {
   }
 }
 
+function decodeTopCandidates(
+  topLogprobs: Array<{ token: string; logprob: number }> | null | undefined,
+): Array<{ tokenId: number; tokenStr: string; rawLogit: number }> {
+  return (topLogprobs ?? []).map((candidate, index) => ({
+    // WebLLM exposes text and logprob here but not the internal token ID.
+    // Negative IDs keep these presentation candidates out of terrain lookups.
+    tokenId: -1 - index,
+    tokenStr: candidate.token,
+    rawLogit: candidate.logprob,
+  }));
+}
+
 // ─── Model Loading ──────────────────────────────────────────────────
 
 async function loadModel(modelId: string) {
   try {
     post({ type: 'STATUS', status: 'downloading', progress: 0, text: `Downloading ${modelId}...` });
 
-    // If engine exists with different model, unload first
-    if (engine && currentModelId !== modelId) {
-      await engine.unload();
+    // Always unload any previous engine instance cleanly
+    if (engine) {
+      try {
+        await engine.unload();
+      } catch (_ignored) {}
       engine = null;
       currentModelId = null;
     }
 
     const logitProcessor = new CosmosLogitProcessor();
-
-    const CUSTOM_APP_CONFIG: AppConfig = {
-      model_list: [
-        ...prebuiltAppConfig.model_list,
-        {
-          model: "https://huggingface.co/mlc-ai/DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC/",
-          model_id: "DeepSeek-R1-Distill-Qwen-1.5B-q4f16_1-MLC",
-          model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/Qwen2-1.5B-Instruct-q4f16_1_cs1k-webgpu.wasm",
-          vram_required_MB: 1100,
-          low_resource_required: true,
-        },
-      ],
-    };
 
     engine = new MLCEngine({
       appConfig: CUSTOM_APP_CONFIG,
@@ -113,6 +137,38 @@ async function loadModel(modelId: string) {
 
     await engine.reload(modelId);
     currentModelId = modelId;
+
+    // Extract vocabulary list from the tokenizer
+    let vocabList: string[] = [];
+    try {
+      const pipeline = (engine as any).loadedModelIdToPipeline.get(modelId);
+      if (pipeline && pipeline.tokenizer) {
+        const tokenizer = pipeline.tokenizer;
+        const size = tokenizer.getVocabSize();
+        vocabList = new Array(size);
+        for (let i = 0; i < size; i++) {
+          let token = '';
+          try {
+            token = tokenizer.decode(new Int32Array([i]));
+          } catch (_e) {
+            token = tokenizer.idToToken(i) || '';
+          }
+          // Clean up standard space tokens
+          token = token.replace(/Ġ/g, ' ').replace(/ /g, ' ');
+          vocabList[i] = token || `Token #${i}`;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to extract vocab list from tokenizer:", e);
+    }
+
+    if (vocabList.length > 0) {
+      post({
+        type: 'VOCAB_LOADED',
+        modelId,
+        vocabList,
+      });
+    }
 
     // Probe vocab size by generating a single dummy token
     // The logit processor will capture the full array
@@ -165,6 +221,8 @@ async function getFullLogits(prompt: string) {
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1,
       temperature: 1.0, // Temperature doesn't affect raw logits, only sampling
+      logprobs: true,
+      top_logprobs: 5,
     });
 
     if (!capturedLogits) {
@@ -188,6 +246,7 @@ async function getFullLogits(prompt: string) {
       prompt,
       isThinking: false, // Initial token is never inside <think>
       timestamp: Date.now(),
+      topCandidates: decodeTopCandidates(response.choices?.[0]?.logprobs?.content?.[0]?.top_logprobs),
     };
 
     post(
@@ -233,6 +292,8 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
       messages: currentMessages as any,
       max_tokens: maxTokens,
       temperature: 1.0,
+      logprobs: true,
+      top_logprobs: 5,
       stream: true,
     });
 
@@ -263,6 +324,7 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
             prompt,
             isThinking,
             timestamp: Date.now(),
+            topCandidates: decodeTopCandidates(chunk.choices?.[0]?.logprobs?.content?.[0]?.top_logprobs),
           };
 
           post(
@@ -303,6 +365,8 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
               messages: currentMessages as any,
               max_tokens: maxTokens - capturedStepIndex,
               temperature: 1.0,
+              logprobs: true,
+              top_logprobs: 5,
               stream: true,
           });
           continue;
@@ -346,6 +410,7 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
 
     case 'ABORT':
       abortController?.abort();
+      if (engine) await engine.interruptGenerate();
       break;
 
     case 'UNLOAD':

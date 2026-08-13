@@ -504,7 +504,7 @@ export async function analyzeFriction(
 
 /**
  * Data Normalization Adapter for External OpenAI-compatible / BYOE logprobs responses.
- * Converts API response shapes (OpenAI v1, vLLM, LM Studio, Ollama, Gemini) into standardized RawTokenCandidate[] array.
+ * Converts OpenAI-compatible API response shapes into standardized RawTokenCandidate[] arrays.
  */
 export function normalizeOpenAILogprobs(responseJson: any, ragContextText?: string): RawTokenCandidate[] {
   if (!responseJson) return [];

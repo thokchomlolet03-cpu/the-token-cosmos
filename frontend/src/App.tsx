@@ -15,6 +15,23 @@ import { calculateTokenProbabilities, normalizeOpenAILogprobs } from './utils/sa
 import { useUrlState } from './utils/useUrlState';
 import { useInferenceEngine } from './engine/useInferenceEngine';
 
+function markRagGrounding(
+  candidates: RawTokenCandidate[],
+  ragEnabled: boolean,
+  ragContext: string,
+): RawTokenCandidate[] {
+  if (!ragEnabled || !ragContext.trim()) {
+    return candidates.map(candidate => ({ ...candidate, is_rag_grounded: false }));
+  }
+
+  const contextWords = new Set((ragContext.toLowerCase().match(/[a-z0-9'-]+/g) || []).filter(word => word.length > 2));
+  return candidates.map(candidate => {
+    const tokenWords = candidate.token_str.toLowerCase().match(/[a-z0-9'-]+/g) || [];
+    const isGrounded = tokenWords.some(word => word.length > 2 && contextWords.has(word));
+    return { ...candidate, is_rag_grounded: isGrounded };
+  });
+}
+
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'learn' | 'experiment' | 'export'>('experiment');
   const [splitView, setSplitView] = useState<boolean>(false);
@@ -22,6 +39,9 @@ export const App: React.FC = () => {
   // ─── WebGPU Inference Engine (v4.0) ─────────────────────────────
   const inferenceEngine = useInferenceEngine();
   const [useSampleData, setUseSampleData] = useState<boolean>(false);
+  const [skipModelLoading, setSkipModelLoading] = useState<boolean>(false);
+  const [dataSource, setDataSource] = useState('Sample data');
+  const [sourceError, setSourceError] = useState<string | null>(null);
 
   // isCodeExportOpen is removed, replaced by activeTab === 'export'
 
@@ -31,7 +51,8 @@ export const App: React.FC = () => {
   // BYOE Engine Settings Modal state
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [provider, setProvider] = useState<ProviderType>(() => {
-    return (localStorage.getItem('token_cosmos_provider') as ProviderType) || 'default';
+    const storedProvider = localStorage.getItem('token_cosmos_provider');
+    return storedProvider === 'openai' || storedProvider === 'custom' ? storedProvider : 'default';
   });
   const [customUrl, setCustomUrl] = useState<string>(() => {
     return localStorage.getItem('token_cosmos_custom_url') || '';
@@ -40,7 +61,7 @@ export const App: React.FC = () => {
     return localStorage.getItem('token_cosmos_custom_key') || '';
   });
   const [modelName, setModelName] = useState<string>(() => {
-    return localStorage.getItem('token_cosmos_model_name') || 'Qwen2.5-0.5B';
+    return localStorage.getItem('token_cosmos_model_name') || 'Cloud Run candidate demo';
   });
 
   // Default Primary Sampling Parameters (Universe A)
@@ -102,31 +123,53 @@ export const App: React.FC = () => {
   // ─── Bridge: WebGPU logits → existing RawTokenCandidate pipeline ──
   useEffect(() => {
     if (inferenceEngine.latestLogits && inferenceEngine.isModelLoaded) {
-      // Extract RAG keywords for grounding detection
-      const ragTokens = new Set<string>();
-      if (ragEnabled && ragContext.trim()) {
-        ragContext.split(/\s+/).filter(w => w.length > 3).forEach(w => ragTokens.add(w.toLowerCase()));
-      }
-
-      const candidates = inferenceEngine.logitsToRawCandidates(
-        inferenceEngine.latestLogits,
-        ragTokens,
-      );
+      const candidates = inferenceEngine.logitsToRawCandidates(inferenceEngine.latestLogits);
 
       if (candidates.length > 0) {
-        setBaselineRawLogits(candidates);
-        setRagRawLogits(candidates);
+        setBaselineRawLogits(markRagGrounding(candidates, false, ''));
+        setRagRawLogits(markRagGrounding(candidates, ragEnabled, ragContext));
+        setDataSource(`Local WebGPU - ${inferenceEngine.state.modelId}`);
+        setSourceError(null);
       }
     }
-  }, [inferenceEngine.latestLogits, inferenceEngine.isModelLoaded, ragEnabled, ragContext, inferenceEngine.logitsToRawCandidates]);
+  }, [
+    inferenceEngine.latestLogits,
+    inferenceEngine.latestCandidates,
+    inferenceEngine.isModelLoaded,
+    inferenceEngine.logitsToRawCandidates,
+    inferenceEngine.state.modelId,
+    ragEnabled,
+    ragContext,
+  ]);
+
+  useEffect(() => {
+    if (inferenceEngine.state.error) {
+      setSourceError(inferenceEngine.state.error);
+    }
+  }, [inferenceEngine.state.error]);
 
   // Handle model selection from the loading overlay
   const handleSelectModel = (modelId: string) => {
     if (modelId === '__SAMPLE_DATA__') {
+      inferenceEngine.unload();
       setUseSampleData(true);
+      setSkipModelLoading(true);
+      setDataSource('Sample data');
+      setSourceError(null);
+      return;
+    }
+    if (modelId === '__CLOUD_API__') {
+      inferenceEngine.unload();
+      setUseSampleData(false);
+      setSkipModelLoading(true);
+      setDataSource('Cloud Run candidate API');
+      setSourceError(null);
       return;
     }
     setUseSampleData(false);
+    setSkipModelLoading(false);
+    setDataSource(`Loading local WebGPU - ${modelId}`);
+    setSourceError(null);
     inferenceEngine.loadModel(modelId);
   };
 
@@ -224,9 +267,10 @@ export const App: React.FC = () => {
   };
 
   // Launch Prompt Evaluation Endpoint
-  // Priority: WebGPU local model → BYOE API → Cloud backend → Synthetic fallback
+  // Priority: WebGPU local model → BYOE API → Cloud backend → Sample data
   const handleLaunchPrompt = async () => {
     setIsFetchingLogits(true);
+    setSourceError(null);
     try {
       // Route 1: WebGPU local model (full vocab logits or stream)
       if (inferenceEngine.isModelLoaded) {
@@ -244,14 +288,22 @@ export const App: React.FC = () => {
             // Standard models just evaluate a single pass
             inferenceEngine.getLogits(fullPrompt);
         }
-        
-        setIsFetchingLogits(false);
+        setDataSource(`Local WebGPU - ${inferenceEngine.state.modelId}`);
         return;
       }
-      if (provider !== 'default' && (customApiKey || provider === 'custom')) {
-        const endpointUrl = customUrl
-          ? `${customUrl.replace(/\/$/, '')}/chat/completions`
-          : 'https://api.openai.com/v1/chat/completions';
+
+      // Route 2: BYOE external API
+      if (provider !== 'default') {
+        if (provider === 'openai' && !customApiKey) {
+          throw new Error('An OpenAI API key is required for BYOE inference.');
+        }
+
+        const baseUrl = customUrl || (provider === 'openai' ? 'https://api.openai.com/v1' : '');
+        if (!baseUrl) throw new Error('A base URL is required for a custom OpenAI-compatible endpoint.');
+        const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+        const endpointUrl = normalizedBaseUrl.endsWith('/chat/completions')
+          ? normalizedBaseUrl
+          : `${normalizedBaseUrl}/chat/completions`;
 
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
@@ -285,42 +337,70 @@ export const App: React.FC = () => {
           body: JSON.stringify(bodyPayload),
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          const parsedCandidates = normalizeOpenAILogprobs(data, ragEnabled ? ragContext : undefined);
-          if (parsedCandidates.length > 0) {
-            setBaselineRawLogits(parsedCandidates);
-            setRagRawLogits(parsedCandidates);
-            return;
-          }
-        }
-      }
+        if (!res.ok) throw new Error(`BYOE endpoint returned ${res.status}.`);
 
-      // Default Route to Cloud Run Python Backend
-      const res = await fetch('/api/logits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          system_prompt: systemPrompt || null,
-          rag_context: ragEnabled ? ragContext : null,
-          top_n: 50,
-        }),
-      });
-
-      if (res.ok) {
         const data = await res.json();
-        if (data.candidates && Array.isArray(data.candidates)) {
-          setBaselineRawLogits(data.candidates);
-          setRagRawLogits(data.candidates);
+        const parsedCandidates = normalizeOpenAILogprobs(data, ragEnabled ? ragContext : undefined);
+        if (parsedCandidates.length === 0) {
+          throw new Error('BYOE endpoint returned no token logprobs. Choose an OpenAI-compatible endpoint with logprobs support.');
         }
-      } else {
-        throw new Error('Endpoint offline');
+
+        setBaselineRawLogits(markRagGrounding(parsedCandidates, false, ''));
+        setRagRawLogits(markRagGrounding(parsedCandidates, ragEnabled, ragContext));
+        setDataSource(`BYOE - ${modelName || provider}`);
+        return;
       }
-    } catch (e) {
+
+      // Route 3: If in sample data mode (no model loaded, no BYOE),
+      // go straight to synthetic fallback — don't waste time hitting a backend that may not exist.
+      if (useSampleData) {
+        const synthetic = generateSyntheticLogits(prompt, ragContext, ragEnabled, systemPrompt);
+        setBaselineRawLogits(synthetic.baseline);
+        setRagRawLogits(synthetic.rag);
+        setDataSource('Sample data');
+        return;
+      }
+
+      // Route 4: Cloud Run Python Backend (with 5s timeout)
+      const abortCtrl = new AbortController();
+      const timeoutId = setTimeout(() => abortCtrl.abort(), 5000);
+
+      try {
+        const res = await fetch('/api/logits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            system_prompt: systemPrompt || null,
+            rag_context: ragEnabled ? ragContext : null,
+            top_n: 50,
+          }),
+          signal: abortCtrl.signal,
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok || !contentType.includes('application/json')) {
+          throw new Error(`Cloud Run candidate API is unavailable (${res.status}).`);
+        }
+
+        const data = await res.json();
+        if (!Array.isArray(data.candidates) || data.candidates.length === 0) {
+          throw new Error('Cloud Run candidate API returned no candidates.');
+        }
+
+        setBaselineRawLogits(markRagGrounding(data.candidates, false, ''));
+        setRagRawLogits(markRagGrounding(data.candidates, ragEnabled, ragContext));
+        setDataSource(`Cloud Run - ${data.engine || 'candidate API'}`);
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    } catch (error) {
       const synthetic = generateSyntheticLogits(prompt, ragContext, ragEnabled, systemPrompt);
       setBaselineRawLogits(synthetic.baseline);
       setRagRawLogits(synthetic.rag);
+      const message = error instanceof Error ? error.message : 'Unknown inference error';
+      setDataSource('Sample data (fallback)');
+      setSourceError(`${message} Showing generated sample candidates instead.`);
     } finally {
       setIsFetchingLogits(false);
     }
@@ -457,10 +537,15 @@ export const App: React.FC = () => {
     }
   };
 
+  const shouldShowModelOverlay = !skipModelLoading
+    && inferenceEngine.isWebGPUAvailable
+    && ['idle', 'downloading', 'loading', 'error'].includes(inferenceEngine.state.status);
+  const isInferencePending = isFetchingLogits || inferenceEngine.state.status === 'generating';
+
   return (
     <div className="flex flex-col min-h-screen bg-[#050714] text-gray-100 font-sans selection:bg-pink-500/30 selection:text-white select-text">
       {/* WebGPU Model Loading Overlay (Also acts as WebGPU Guardrail) */}
-      {(!useSampleData || !inferenceEngine.isWebGPUAvailable) && (
+      {shouldShowModelOverlay && (
         <ModelLoadingOverlay
           state={inferenceEngine.state}
           isWebGPUAvailable={inferenceEngine.isWebGPUAvailable}
@@ -469,9 +554,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Bypass App Initialization if WebGPU is missing */}
-      {inferenceEngine.isWebGPUAvailable && (
-        <>
+      <>
           {/* Header Bar */}
           <Header
             activeTab={activeTab}
@@ -489,6 +572,12 @@ export const App: React.FC = () => {
           <>
             {/* Split-Reality Educational Hero Banner */}
             <HeroBanner />
+
+            {sourceError && (
+              <div role="status" className="border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+                {sourceError}
+              </div>
+            )}
 
             {/* Top Workspace Grid: Left Panel A (Mission Control) + Center Panel B (Starfield Canvas) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[580px]">
@@ -512,7 +601,7 @@ export const App: React.FC = () => {
                   onApplyPreset={handleApplyPreset}
                   onLaunchPrompt={handleLaunchPrompt}
                   onInteractFeature={notice => setActiveNotice(notice)}
-                  isFetchingLogits={isFetchingLogits}
+                  isFetchingLogits={isInferencePending}
                   rawLogits={activeRawLogits}
                   isReasoningModel={inferenceEngine.availableModels.find(m => m.id === inferenceEngine.state.modelId)?.isReasoning}
                 />
@@ -535,7 +624,7 @@ export const App: React.FC = () => {
                       leftSubtitle={`Primary Sampling Config • Top-K ${params.topK}`}
                       rightTitle={
                         provider !== 'default'
-                          ? `Universe B [Cloud Run Qwen]`
+                          ? `Universe B [${dataSource}]`
                           : `Universe B (Temp = ${duelParams.temperature.toFixed(2)})`
                       }
                       rightSubtitle={`Secondary A/B Config • Top-K ${duelParams.topK}`}
@@ -554,9 +643,7 @@ export const App: React.FC = () => {
                       onSelectToken={handleSelectToken}
                       title="The Token Cosmos"
                       subtitle={
-                        provider !== 'default'
-                          ? `BYOE [${provider.toUpperCase()}] • ${modelName}`
-                          : '3D Topographic Terrain'
+                        `${dataSource} • 3D Topographic Terrain`
                       }
                       steps={steps}
                       currentStepIndex={currentStepIndex}
@@ -626,8 +713,7 @@ export const App: React.FC = () => {
         customApiKey={customApiKey}
         modelName={modelName}
       />
-        </>
-      )}
+      </>
     </div>
   );
 };

@@ -56,10 +56,10 @@ void main() {
     gl_Position = projectionMatrix * mvPosition;
 
     // Dynamic point sizing
-    float baseSize = 1.0;
-    float activeSize = smoothstep(0.01, 1.0, max(activeProb, baseProb)) * 12.0;
-    float ragSize = isRagGrounded * 8.0;
-    float anchorSize = vIsGreedyAnchor * 20.0; // Huge pillar for the north star
+    float baseSize = 2.5;
+    float activeSize = smoothstep(0.01, 1.0, max(activeProb, baseProb)) * 15.0;
+    float ragSize = isRagGrounded * 10.0;
+    float anchorSize = vIsGreedyAnchor * 25.0; // Huge pillar for the north star
     
     // Attenuate with distance
     gl_PointSize = (baseSize + activeSize + ragSize + anchorSize) * (300.0 / -mvPosition.z);
@@ -85,11 +85,11 @@ void main() {
     if (r > 1.0) discard;
 
     // Colors
-    vec3 fringeColor = vec3(0.2, 0.2, 0.22);       // #333338
+    vec3 fringeColor = vec3(0.3, 0.3, 0.35);       // Slightly brighter gray for background stars
     vec3 candidateColor = vec3(0.85, 0.27, 0.94);  // #D946EF (Magenta)
     vec3 winnerColor = vec3(0.06, 0.72, 0.51);     // #10B981 (Emerald)
     vec3 ragColor = vec3(0.23, 0.51, 0.96);        // #3B82F6 (Blue)
-    vec3 ghostColor = vec3(0.1, 0.3, 0.4);         // Ghostly blue-grey for lowered probability
+    vec3 ghostColor = vec3(0.15, 0.35, 0.45);      // Slightly brighter ghost blue
 
     // Topographic Contour Lines
     // Using a step function on fract(elevation) to draw thin lines
@@ -127,8 +127,8 @@ void main() {
     }
 
     // Alpha intensity
-    float baseAlpha = 0.1;
-    float activeAlpha = smoothstep(0.001, 1.0, max(vActiveProb, vBaseProb)) * 0.8;
+    float baseAlpha = 0.25;
+    float activeAlpha = smoothstep(0.001, 1.0, max(vActiveProb, vBaseProb)) * 0.85;
     float alpha = baseAlpha + activeAlpha;
     
     // Ghost shell makes it more transparent

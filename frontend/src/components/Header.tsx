@@ -30,18 +30,18 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#1c1c21]/95 border-b border-white/5 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:flex-nowrap sm:px-6 sm:py-3">
         {/* Brand logo & title */}
-        <div className="flex items-center space-x-3">
+        <div className="flex min-w-0 flex-1 items-center space-x-3 sm:flex-none">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-pink-500/10 border border-pink-500/30">
             <Orbit className="h-4 w-4 text-pink-400" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h1 className="text-white font-bold tracking-tight text-lg sm:text-xl">
+              <h1 className="whitespace-nowrap text-base font-bold text-white sm:text-xl">
                 The Token Cosmos
               </h1>
-              <span className="rounded-full bg-pink-500/20 px-2.5 py-0.5 text-[10px] font-mono text-pink-300 border border-pink-500/30">
+              <span className="hidden rounded-full border border-pink-500/30 bg-pink-500/20 px-2.5 py-0.5 font-mono text-[10px] text-pink-300 sm:inline">
                 v4.0
               </span>
             </div>
@@ -52,12 +52,12 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Floating Pill Action Controls & Navigation */}
-        <div className="flex items-center space-x-2">
+        <div className="flex w-full items-center justify-between gap-1 overflow-x-auto sm:ml-auto sm:w-auto sm:justify-end sm:gap-2">
           {/* A/B Duel Mode Toggle (Only in EXPERIMENT mode) */}
           <button
             onClick={handleCopy}
             aria-label="Copy current parameter setup link to clipboard"
-            className="btn-secondary-matte rounded-full px-3.5 py-1.5 text-xs flex items-center space-x-1.5"
+            className="btn-secondary-matte flex shrink-0 items-center space-x-1.5 rounded-full p-2 text-xs sm:px-3.5 sm:py-1.5"
             title="Copy Setup Link to Clipboard"
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5" />}
@@ -68,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onOpenSettings}
             aria-label="Open Bring Your Own Engine configuration settings modal"
-            className="btn-secondary-matte rounded-full p-2 text-xs"
+            className="btn-secondary-matte shrink-0 rounded-full p-2 text-xs"
             title="Bring Your Own Engine (BYOE) Settings"
           >
             <Settings className="h-4 w-4" />
@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => setSplitView(!splitView)}
               aria-label={splitView ? 'Disable A/B Duel Mode' : 'Enable side-by-side A/B Duel Mode'}
-              className={`flex items-center space-x-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+              className={`flex shrink-0 items-center space-x-2 rounded-full p-2 text-xs font-medium transition-all sm:px-3.5 sm:py-1.5 ${
                 splitView
                   ? 'bg-pink-500 text-white border border-pink-400 shadow-sm'
                   : 'btn-secondary-matte'
@@ -92,13 +92,13 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Floating Pill Navigation Tabs */}
-          <div className="flex rounded-full bg-[#232329] p-1 border border-white/10" role="tablist">
+          <div className="flex shrink-0 rounded-full border border-white/10 bg-[#232329] p-1" role="tablist">
             <button
               onClick={() => setActiveTab('learn')}
               role="tab"
               aria-selected={activeTab === 'learn'}
               aria-label="Switch to LEARN mode"
-              className={`flex items-center space-x-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-all ${
+              className={`flex items-center space-x-1.5 rounded-full p-2 text-xs font-medium transition-all sm:px-3.5 sm:py-1 ${
                 activeTab === 'learn'
                   ? 'bg-pink-500 text-white font-semibold shadow-sm'
                   : 'text-gray-400 hover:text-white'
@@ -112,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
               role="tab"
               aria-selected={activeTab === 'experiment'}
               aria-label="Switch to EXPERIMENT mode"
-              className={`flex items-center space-x-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-all ${
+              className={`flex items-center space-x-1.5 rounded-full p-2 text-xs font-medium transition-all sm:px-3.5 sm:py-1 ${
                 activeTab === 'experiment'
                   ? 'bg-pink-500 text-white font-semibold shadow-sm'
                   : 'text-gray-400 hover:text-white'
@@ -126,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
               role="tab"
               aria-selected={activeTab === 'export'}
               aria-label="Switch to EXPORT mode"
-              className={`flex items-center space-x-1.5 rounded-full px-3.5 py-1 text-xs font-medium transition-all ${
+              className={`flex items-center space-x-1.5 rounded-full p-2 text-xs font-medium transition-all sm:px-3.5 sm:py-1 ${
                 activeTab === 'export'
                   ? 'bg-pink-500 text-white font-semibold shadow-sm'
                   : 'text-gray-400 hover:text-white'
@@ -143,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Open The Token Cosmos GitHub repository"
-            className="btn-secondary-matte rounded-full p-2 text-xs"
+            className="btn-secondary-matte shrink-0 rounded-full p-2 text-xs"
             title="GitHub Repository"
           >
             <Github className="h-4 w-4" />

@@ -17,10 +17,10 @@
                        (1 HTTP Request per Prompt / Step)
                                          v
 +-----------------------------------------------------------------------------------+
-|              BACKEND: GOOGLE CLOUD RUN CPU (FastAPI + llama-cpp-python)           |
+|             CLOUD RUN: FastAPI API + COMPILED REACT SPA (one container)           |
 |  - Min-instances: 0 (Scales to $0.00 cost when idle)                              |
 |  - Serves POST /api/logits returning raw candidate logits                         |
-|  - Enabled with GCP Cloud Run `--cpu-boost` for instant cold-start model load      |
+|  - Uses a local GGUF model only when one is explicitly mounted at MODEL_PATH       |
 +-----------------------------------------------------------------------------------+
 ```
 
@@ -52,28 +52,72 @@ The client math pipeline executes in browser memory at 60 FPS without API re-fet
 ### Frontend Setup (React + Vite)
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+Vite proxies `/api` requests to the backend at port `8000`.
 
 ### Backend Setup (FastAPI)
 ```bash
 cd backend
-pip install -r requirements.txt
-python main.py
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
 ```
 Serves [http://localhost:8000](http://localhost:8000) (`POST /api/logits`).
+
+Without a GGUF file at `backend/models/qwen2.5-0.5b-instruct-q4_k_m.gguf` (or a
+`MODEL_PATH` override), the API intentionally reports `synthetic-cosmos-engine` and
+returns prompt- and RAG-aware demonstration candidates. The UI labels this source
+instead of presenting it as a deployed Qwen model.
 
 ---
 
 ## 5. Production Cloud Run Deployment
 
-Deploy to Google Cloud Run with `$0.00` idle cost and cold start acceleration:
+The root `Dockerfile` builds the frontend and serves it with the FastAPI API from one
+Cloud Run container. Test that production shape locally with Docker:
+
+```bash
+docker build -t the-token-cosmos .
+docker run --rm -p 8080:8080 the-token-cosmos
+```
+
+Open [http://localhost:8080](http://localhost:8080) and check
+`http://localhost:8080/api/health`.
+
+### GitHub Actions deployment
+
+The workflow always builds the frontend and runs backend tests. It deploys only after
+these repository variables are configured:
+
+```text
+GCP_PROJECT_ID=<your-project-id>
+GCP_WORKLOAD_IDENTITY_PROVIDER=projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>
+GCP_SERVICE_ACCOUNT=<deployer-service-account>@<your-project-id>.iam.gserviceaccount.com
+```
+
+Configure a GitHub OIDC Workload Identity Provider that trusts this repository and
+grant the service account permission to push to Artifact Registry and deploy Cloud
+Run services. Create the configured Artifact Registry repository before the first
+deployment:
+
+```bash
+gcloud artifacts repositories create cosmos-repo \
+  --repository-format=docker \
+  --location=us-central1 \
+  --project=<your-project-id>
+```
+
+Once those variables and cloud permissions exist, a push to `main` or `master` builds
+and deploys the root image:
 
 ```bash
 gcloud run deploy the-token-cosmos \
-  --source ./backend \
+  --image us-central1-docker.pkg.dev/<your-project-id>/cosmos-repo/the-token-cosmos:<image-tag> \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \

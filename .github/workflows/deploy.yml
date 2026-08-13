@@ -5,14 +5,62 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch:
 
 env:
   GCP_REGION: us-central1
   SERVICE_NAME: the-token-cosmos
+  ARTIFACT_REPOSITORY: cosmos-repo
 
 jobs:
-  build-and-deploy:
+  verify:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Test backend
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m unittest discover -s . -p 'test_*.py'
+
+      - name: Report deployment configuration
+        run: |
+          if [ -z "${{ vars.GCP_PROJECT_ID }}" ] || [ -z "${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}" ] || [ -z "${{ vars.GCP_SERVICE_ACCOUNT }}" ]; then
+            echo "::notice::Cloud Run deployment skipped until GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER, and GCP_SERVICE_ACCOUNT repository variables are configured."
+          fi
+
+  deploy:
+    needs: verify
+    if: ${{ vars.GCP_PROJECT_ID != '' && vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && vars.GCP_SERVICE_ACCOUNT != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
@@ -20,28 +68,29 @@ jobs:
       - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for GCP Artifact Registry
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
       - name: Build Unified Docker Container Image (Frontend + Backend)
         run: |
           docker build \
-            -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cosmos-repo/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             -f Dockerfile .
 
       - name: Push Container Image to GCP Artifact Registry
         run: |
-          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cosmos-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
       - name: Deploy Service to Google Cloud Run (Scale-to-Zero)
         run: |
           gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cosmos-repo/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             --platform managed \
             --region ${{ env.GCP_REGION }} \
             --allow-unauthenticated \

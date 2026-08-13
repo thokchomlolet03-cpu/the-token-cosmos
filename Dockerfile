@@ -16,17 +16,21 @@ COPY frontend/ ./
 # Build the application
 RUN npm run build
 
-# Stage 2: Serve the application with Nginx
-FROM nginx:alpine
+# Stage 2: Run the API and serve the compiled SPA from one Cloud Run container.
+FROM python:3.11-slim
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy built assets from builder stage
-COPY --from=builder /app/frontend/dist /usr/share/nginx/html
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080
 
-# Expose Cloud Run default port
+COPY backend/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY backend/main.py ./main.py
+COPY --from=builder /app/frontend/dist ./static
+
 EXPOSE 8080
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
