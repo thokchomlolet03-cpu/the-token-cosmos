@@ -138,8 +138,16 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
 
     const spread = 250.0;
     for (let i = 0; i < vocabSize; i++) {
-        const x = rawCoordinates[i * 2];
-        const y = rawCoordinates[i * 2 + 1];
+        let x = rawCoordinates[i * 2];
+        let y = rawCoordinates[i * 2 + 1];
+        
+        // Add a tiny deterministic jitter based on index to separate overlapping/very close points
+        // visually and break raycast overlap
+        const angle = (i * 0.17) % (Math.PI * 2); // pseudo-random but deterministic angle
+        const radius = 0.0015 * (1.0 + (i % 5) * 0.2); // tiny offset in normalized coordinates
+        x += Math.cos(angle) * radius;
+        y += Math.sin(angle) * radius;
+
         positionArray[i * 3] = x * spread;
         positionArray[i * 3 + 1] = 0;
         positionArray[i * 3 + 2] = y * spread;
@@ -352,11 +360,38 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         raycaster.setFromCamera(mouse, cameraRef.current);
         const intersects = raycaster.intersectObject(pointsRef.current);
         if (intersects.length > 0) {
-            const idx = intersects[0].index;
+            const material = pointsRef.current.material as THREE.ShaderMaterial;
+            const texture = material.uniforms.probabilityTexture.value as THREE.DataTexture;
+            const probData = texture.image.data as Float32Array;
+
+            let bestIdx = intersects[0].index;
+            let highestProb = -1;
+            let bestCandidate: any = null;
+
+            // Iterate through intersects to find the one with highest visual probability
+            for (let k = 0; k < Math.min(intersects.length, 15); k++) {
+                const idx = intersects[k].index;
+                if (idx !== undefined && idx >= 0 && idx < vocabSize) {
+                    const activeProb = probData[idx * 2];
+                    const candidate = candidatesRef.current?.find(c => c.token_id === idx);
+                    
+                    if (candidate) {
+                        if (candidate.probability > highestProb) {
+                            highestProb = candidate.probability;
+                            bestIdx = idx;
+                            bestCandidate = candidate;
+                        }
+                    } else {
+                        if (activeProb > highestProb && !bestCandidate) {
+                            highestProb = activeProb;
+                            bestIdx = idx;
+                        }
+                    }
+                }
+            }
+
+            const idx = bestIdx !== undefined ? bestIdx : intersects[0].index;
             if (idx !== undefined && idx >= 0 && idx < vocabSize) {
-                const material = pointsRef.current.material as THREE.ShaderMaterial;
-                const texture = material.uniforms.probabilityTexture.value as THREE.DataTexture;
-                const probData = texture.image.data as Float32Array;
                 const activeProb = probData[idx * 2];
                 const candidate = candidatesRef.current?.find(c => c.token_id === idx);
                 const tooltipX = event.clientX - rect.left + 15;
