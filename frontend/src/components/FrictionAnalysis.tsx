@@ -19,6 +19,7 @@ import {
   FileWarning,
   Gauge,
   Play,
+  Check,
 } from 'lucide-react';
 
 interface FrictionAnalysisProps {
@@ -340,8 +341,9 @@ export const FrictionAnalysis: React.FC<FrictionAnalysisProps> = ({
                             <span className="text-red-300">{fp.currentLogProb}</span>
                           </div>
                         </div>
-                        <div className="text-[10px] text-slate-300 leading-relaxed italic">
-                          💡 {fp.reason}
+                        <div className="text-[10px] text-slate-300 leading-relaxed italic flex items-start space-x-1.5">
+                          <Info className="h-3.5 w-3.5 text-slate-500 shrink-0 mt-0.5" />
+                          <span>{fp.reason}</span>
                         </div>
                       </div>
                     )}
@@ -350,9 +352,10 @@ export const FrictionAnalysis: React.FC<FrictionAnalysisProps> = ({
               })}
             </div>
           ) : (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-center">
+            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-center flex items-center justify-center space-x-2">
+              <Check className="h-4 w-4 text-emerald-400" />
               <span className="text-xs text-emerald-300 font-medium">
-                ✅ No significant friction points detected at current sensitivity level
+                No significant friction points detected at current sensitivity level
               </span>
             </div>
           )}

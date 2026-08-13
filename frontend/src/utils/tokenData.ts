@@ -3,10 +3,10 @@ import { PresetScenario, RawTokenCandidate } from '../types/sampling';
 export const PRESET_SCENARIOS: PresetScenario[] = [
   {
     id: 'factual-roboticist',
-    name: '⚖️ Legal & Contract Extraction',
+    name: 'Legal & Contract Extraction',
     subtitle: 'Temp: 0.05 • Min-P: 0.05 • RAG: ON',
     description: 'Ultra-deterministic factual extraction with strict context anchoring. Eliminates creative guesswork for legal clauses.',
-    icon: 'ShieldCheck',
+    icon: 'FileText',
     params: {
       temperature: 0.05,
       topK: 5,
@@ -23,10 +23,10 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
   },
   {
     id: 'strict-guardrail',
-    name: '💻 Code & SQL Generator',
+    name: 'Code & SQL Generator',
     subtitle: 'Temp: 0.01 • Schema: ON • Stop: \\n\\n',
     description: 'Zero-temperature greedy mode with stop sequences for structured JSON, SQL queries, and code syntax generation.',
-    icon: 'Bot',
+    icon: 'Code',
     params: {
       temperature: 0.01,
       topK: 50,
@@ -46,10 +46,10 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
   },
   {
     id: 'balanced-navigator',
-    name: '🩺 Medical Record Summarizer',
+    name: 'Medical Record Summarizer',
     subtitle: 'Temp: 0.10 • Top-K: 10 • RAG: ON',
     description: 'High precision medical QA mode. Tethered strictly to clinical notes to prevent hallucinated medical advice.',
-    icon: 'Compass',
+    icon: 'Clipboard',
     params: {
       temperature: 0.10,
       topK: 10,
@@ -66,10 +66,10 @@ export const PRESET_SCENARIOS: PresetScenario[] = [
   },
   {
     id: 'wild-storyteller',
-    name: '🎮 Creative & Game Dialogue',
+    name: 'Creative & Game Dialogue',
     subtitle: 'Temp: 1.30 • Top-P: 0.95 • Freq Pen: 0.8',
     description: 'High entropy nucleus sampling for NPC dialogue, creative world-building, and unconstrained brainstorming.',
-    icon: 'Sparkles',
+    icon: 'MessageSquare',
     params: {
       temperature: 1.30,
       topK: 50,

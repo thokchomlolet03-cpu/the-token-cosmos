@@ -163,7 +163,7 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
     }
     lastNoticeTimeRef.current = activeInteractionNotice.timestamp;
 
-    const formattedText = `💡 ${activeInteractionNotice.feature.toUpperCase()}\n\n• WHAT IT IS: ${activeInteractionNotice.whatItIs}\n• WHY IT EXISTS: ${activeInteractionNotice.whyItIs}\n• HOW IT IMPACTS: ${activeInteractionNotice.impact}\n• GUIDANCE: ${activeInteractionNotice.guidance}`;
+    const formattedText = `${activeInteractionNotice.feature.toUpperCase()}\n\n• WHAT IT IS: ${activeInteractionNotice.whatItIs}\n• WHY IT EXISTS: ${activeInteractionNotice.whyItIs}\n• HOW IT IMPACTS: ${activeInteractionNotice.impact}\n• GUIDANCE: ${activeInteractionNotice.guidance}`;
 
     const newMsg: ChatMessage = {
       id: `notice-${Date.now()}`,
@@ -450,7 +450,7 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
               >
                 {msg.badge && (
                   <span className="mb-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-mono font-bold text-blue-300 border border-blue-500/20">
-                    ⚡ {msg.badge}
+                    {msg.badge}
                   </span>
                 )}
                 <div

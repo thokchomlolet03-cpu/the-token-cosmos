@@ -25,6 +25,11 @@ import {
   UserCheck,
   Code2,
   Search,
+  Code,
+  Clipboard,
+  MessageSquare,
+  SlidersHorizontal,
+  Play,
 } from 'lucide-react';
 
 interface MissionControlProps {
@@ -150,17 +155,18 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   };
 
   const getPresetIcon = (iconName: string) => {
+    const className = "h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors duration-200";
     switch (iconName) {
-      case 'Bot':
-        return <Bot className="h-4 w-4 text-slate-400" />;
-      case 'Sparkles':
-        return <Sparkles className="h-4 w-4 text-slate-400" />;
-      case 'Compass':
-        return <Compass className="h-4 w-4 text-slate-400" />;
-      case 'ShieldCheck':
-        return <ShieldCheck className="h-4 w-4 text-slate-400" />;
+      case 'FileText':
+        return <FileText className={className} />;
+      case 'Code':
+        return <Code className={className} />;
+      case 'Clipboard':
+        return <Clipboard className={className} />;
+      case 'MessageSquare':
+        return <MessageSquare className={className} />;
       default:
-        return <Sliders className="h-4 w-4 text-slate-400" />;
+        return <Sliders className={className} />;
     }
   };
 
@@ -169,7 +175,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
       {/* Header with Tab Switching */}
       <div className="flex items-center justify-between border-b border-white/10 bg-[#1c1c21] px-5 py-3">
         <div className="flex items-center space-x-2">
-          <Sliders className="h-4 w-4 text-blue-400" />
+          <SlidersHorizontal className="h-4 w-4 text-slate-400" />
           <h2 className="text-sm font-bold text-white tracking-tight hidden sm:block">Mission Control</h2>
         </div>
 
@@ -208,7 +214,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             {/* Preset Scenarios ("Vibe Buttons") */}
             <div>
             <label className="text-[11px] font-mono uppercase tracking-wider text-gray-400 flex items-center space-x-1.5 mb-1">
-              <Sparkles className="h-3.5 w-3.5 text-gray-300" />
+              <Sparkles className="h-3.5 w-3.5 text-slate-400" />
               <span>Example Tasks</span>
             </label>
             <p className="text-[10px] text-gray-500 mb-2.5">Click one to see how the AI handles different jobs.</p>
@@ -251,7 +257,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-gray-200 hover:bg-white/5 transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <UserCheck className={`h-4 w-4 ${systemPrompt.trim() ? 'text-white' : 'text-gray-500'}`} />
+              <UserCheck className={`h-4 w-4 transition-colors duration-200 ${systemPrompt.trim() ? 'text-blue-500' : 'text-slate-400'}`} />
               <span className="font-semibold text-white tracking-tight">AI Personality & Role</span>
               <span
                 className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-medium ${
@@ -331,14 +337,14 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-gray-200 hover:bg-white/5 transition-colors"
             >
               <div className="flex items-center space-x-2">
-                <Anchor className={`h-4 w-4 ${ragEnabled ? 'text-white' : 'text-gray-500'}`} />
+                <Anchor className={`h-4 w-4 transition-colors duration-200 ${ragEnabled ? 'text-blue-500' : 'text-slate-400'}`} />
                 <span className="font-semibold text-white tracking-tight">Provide Reference Facts</span>
                 <span
                   className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-medium ${
                     ragEnabled ? 'bg-white/10 text-white border border-white/15' : 'bg-black text-gray-400 border border-white/10'
                   }`}
                 >
-                  {ragEnabled ? 'ON • Grounded' : 'OFF'}
+                  {ragEnabled ? 'Grounded' : 'OFF'}
                 </span>
               </div>
               {isRagExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
@@ -382,7 +388,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-white/5 transition-colors"
             >
               <div className="flex items-center space-x-2">
-                <Code2 className={`h-4 w-4 ${jsonSchemaEnabled ? 'text-blue-400' : 'text-slate-500'}`} />
+                <Code2 className={`h-4 w-4 transition-colors duration-200 ${jsonSchemaEnabled ? 'text-blue-500' : 'text-slate-400'}`} />
                 <span className="font-semibold text-slate-100">Force Strict Formatting</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
@@ -426,7 +432,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               </>
             ) : (
               <>
-                <Rocket className="h-4 w-4 fill-white text-white" />
+                <Play className="h-4 w-4 text-white" />
                 <span>Map the AI's Thoughts</span>
               </>
             )}
@@ -439,7 +445,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
         {/* Sampling Sliders (60 FPS Interactive) */}
         <div className="space-y-4 pt-2 border-t border-slate-800">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-            <Flame className="h-3.5 w-3.5 text-amber-400" />
+            <Flame className="h-3.5 w-3.5 text-slate-400" />
             <span>Brain Controls (How it Picks Words)</span>
           </h3>
 
@@ -529,16 +535,16 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               {params.temperature <= 0.2 ? (
                 <span className="rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 text-[10px] font-mono font-bold flex items-center space-x-1">
                   <ShieldCheck className="h-3 w-3 text-blue-400" />
-                  <span>🟢 Factual Precision (Legal / Medical / Code)</span>
+                  <span>Factual Precision (Legal / Medical / Code)</span>
                 </span>
               ) : params.temperature >= 1.2 ? (
                 <span className="rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 text-[10px] font-mono font-bold flex items-center space-x-1">
                   <Flame className="h-3 w-3 text-rose-400" />
-                  <span>🔴 High Entropy (Creative Fiction / Dialogue)</span>
+                  <span>High Entropy (Creative Fiction / Dialogue)</span>
                 </span>
               ) : (
                 <span className="rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 text-[10px] font-mono font-medium">
-                  🔵 Balanced Assistant Mode (General Q&A)
+                  Balanced Assistant Mode (General Q&A)
                 </span>
               )}
             </div>
@@ -672,7 +678,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-gray-200 hover:bg-white/5 transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <Shield className={`h-4 w-4 ${params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0 ? 'text-blue-400' : 'text-gray-500'}`} />
+              <Shield className={`h-4 w-4 transition-colors duration-200 ${params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0 ? 'text-blue-500' : 'text-slate-400'}`} />
               <span className="font-semibold text-white tracking-tight">Repetition Blockers (Penalties)</span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
@@ -755,7 +761,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               <div className="space-y-2">
                 <label htmlFor="bias-word-input" className="text-xs font-medium text-slate-200 flex items-center justify-between">
                   <span className="flex items-center space-x-1">
-                    <Magnet className="h-3.5 w-3.5 text-blue-400" />
+                    <Magnet className="h-3.5 w-3.5 text-slate-400" />
                     <span>Magnet / Black Hole (Logit Bias)</span>
                   </span>
                 </label>
@@ -819,7 +825,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               {/* Stop Sequences Tag Input */}
               <div className="space-y-2">
                 <label htmlFor="stop-seq-input" className="text-xs font-medium text-slate-200 flex items-center space-x-1">
-                  <CircleDot className="h-3.5 w-3.5 text-blue-400" />
+                  <CircleDot className="h-3.5 w-3.5 text-slate-400" />
                   <span>Emergency Brake (Stop Sequences)</span>
                 </label>
                 <div className="flex flex-wrap gap-1.5">
