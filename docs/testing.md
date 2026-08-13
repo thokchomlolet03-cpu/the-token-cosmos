@@ -76,3 +76,68 @@ Validate Python backend security structure:
 ```bash
 bandit -r backend/
 ```
+
+---
+
+## 4. Load & Performance Testing (SLA Verification)
+
+To prove that the hosted API handles real-world concurrency loads without breaching the response thresholds defined in `sla.md`, we conduct automated load testing using **k6**.
+
+### SLA Success Criteria
+- **Throughput**: 100 concurrent Virtual Users (VUs).
+- **Latency Target**: Average response latency < 50ms (p95 < 100ms) for synthetic logits.
+- **Error Budget**: Zero `5xx` errors allowed (success rate > 99.9%).
+
+### k6 Load Testing Script (`tests/load_test.js`)
+Copy the following Javascript file to execute a load test via k6:
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '30s', target: 50 },  // Ramp-up to 50 users
+    { duration: '1m', target: 100 },  // Sustained load at 100 users
+    { duration: '30s', target: 0 },   // Cool-down to 0 users
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.001'],   // Error rate must be less than 0.1%
+    http_req_duration: ['p95<100'],    // 95% of requests must complete under 100ms
+  },
+};
+
+export default function () {
+  const url = 'https://the-token-cosmos.run.app/api/logits';
+  const payload = JSON.stringify({
+    prompt: 'Define gravity in a sentence.',
+    system_prompt: 'Be concise.',
+    top_n: 50
+  });
+
+  const params = {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
+  const res = http.post(url, payload, params);
+  
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'has candidates': (r) => JSON.parse(r.body).candidates.length > 0,
+  });
+
+  sleep(0.5); // 500ms delay between consecutive requests per user
+}
+```
+
+### Running the Load Test
+1. Install k6 on your workstation:
+   - *Mac*: `brew install k6`
+   - *Windows*: `choco install k6`
+2. Execute the test against your target instance:
+   ```bash
+   k6 run tests/load_test.js
+   ```
+

@@ -16,22 +16,29 @@ def install_pre_commit_hook():
     pre_commit_path = hooks_dir / "pre-commit"
     
     hook_content = """#!/bin/sh
-# Programmatic Git Pre-Commit Hook for The Token Cosmos Documentation Linter
-# Runs verify_docs.py before allowing a commit to ensure no broken relative links are pushed.
+# Programmatic Git Pre-Commit Hook for The Token Cosmos Linter Suite
+# Runs detect_secrets.py and verify_docs.py before allowing a commit.
+
+echo "🔍 Running pre-commit secrets check..."
+python3 scripts/detect_secrets.py
+SECRETS_RESULT=$?
+
+if [ $SECRETS_RESULT -ne 0 ]; then
+  echo "❌ Error: Hardcoded secrets or credentials detected. Commit aborted."
+  exit 1
+fi
 
 echo "🔍 Running pre-commit documentation check..."
-
-# Run the verify_docs script from the project root
 python3 scripts/verify_docs.py
-RESULT=$?
+DOCS_RESULT=$?
 
-if [ $RESULT -ne 0 ]; then
+if [ $DOCS_RESULT -ne 0 ]; then
   echo "❌ Error: Documentation link check failed. Commit aborted."
   echo "Please repair the broken relative links or missing files under /docs before committing."
   exit 1
 fi
 
-echo "✅ Documentation check passed successfully."
+echo "✅ All pre-commit checks passed successfully."
 exit 0
 """
     

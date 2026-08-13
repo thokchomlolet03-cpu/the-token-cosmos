@@ -66,3 +66,37 @@ To ensure security vulnerabilities are caught early, the repository integrates t
   - Node dependencies are checked with `npm audit` during development build tests.
   - Python dependencies can be checked using `safety check -r requirements.txt`.
 - **Stateless Runtime**: Because the Cloud Run backend has no database or disk storage, it is extremely resilient to remote code execution (RCE) attacks; restarting a container wipes any modifications to the ephemeral runtime layer.
+
+---
+
+## 5. Secrets & Credentials Management Strategy
+
+To prevent credential leakage and comply with enterprise security auditing, The Token Cosmos implements a strict **Zero-Key Policy**.
+
+```
+                   SECRET INGESTION FLOW
+                   
+   Local Workspace          GitHub Actions          GCP Runtime (Production)
+   ┌───────────────┐       ┌───────────────┐       ┌────────────────────────┐
+   │ pre-commit    │ ────> │ detect-secrets│ ────> │ GCP Secret Manager     │
+   │ secrets check │       │  action run   │       │ (Mounted via IAM role) │
+   └───────────────┘       └───────────────┘       └────────────────────────┘
+```
+
+### 1. Automated Detection (Pre-Commit & CI)
+- **Local Git Hooks**: The git pre-commit hook (installed via `scripts/install_hooks.py`) runs `python3 scripts/detect_secrets.py` on every commit. If a developer accidentally hardcodes an API key, the commit is blocked.
+- **CI/CD Gates**: The GitHub Actions runner executes `detect_secrets.py` on all branch pushes and pull requests. If a leak bypasses local hooks, the CI build fails immediately and prevents deployment.
+
+### 2. Runtime Secrets Resolution (GCP Secret Manager)
+If the backend is scaled to connect to external systems requiring authentication (e.g., relational databases, private reasoning endpoints):
+- **No Env File Commits**: The `.env` file is explicitly included in `.gitignore` and is never checked into git.
+- **Secret Manager Mounting**: Secrets are stored securely in **Google Cloud Secret Manager**.
+- **IAM Access Integration**: The Cloud Run container is granted the `Secret Manager Secret Accessor` (`roles/secretmanager.secretAccessor`) role. The environment variables are populated at runtime dynamically using GCP's native secret mounting:
+  ```bash
+  gcloud run deploy the-token-cosmos \
+    --update-secrets=API_KEY=my-secret-key:latest
+  ```
+
+### 3. CI/CD Environment Credentials
+Deployment authentication variables (`GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`) are stored as **GitHub Repository Variables**, rather than Secrets. Because Workload Identity Federation uses temporary OIDC tokens, these variables are completely safe to expose to developers in the repository settings.
+

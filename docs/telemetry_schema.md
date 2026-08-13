@@ -67,3 +67,34 @@ No static BigQuery API keys or passwords are saved inside the application. Acces
    # Client automatically retrieves OAuth tokens from GCP metadata service
    client = bigquery.Client()
    ```
+
+---
+
+## 5. Friction Hunter Ingestion & Synchronization Pipeline
+
+The **Friction Hunter** is a diagnostic bridge that analyzes the logical flow of text sequences. It monitors points where the mathematical transition probability drops abruptly between consecutive phrases.
+
+### Ingestion Flow & Buffering
+1. **Calculation**: The client-side logic calculates consecutive log-probability differences $D_i$ at 60 FPS.
+2. **Detection**: Friction points are flagged if $D_i$ exceeds the $\sigma$-based sensitivity threshold (formula: $D_i > \mu + \theta_\sigma \times \sigma \times 0.5$).
+3. **Buffering**: To prevent spamming HTTP connections, the client buffers these events in memory. When the buffer reaches 5 events, or the user navigates away, the client streams the payload via `POST /api/telemetry/friction`.
+4. **Backend Routing**: FastAPI receives the JSON payload, validates it, and streams the events into BigQuery.
+
+### BigQuery Friction Schema (`cosmos_telemetry.friction_points`)
+
+| Column Name | Type | Constraint | Description |
+| :--- | :---: | :---: | :--- |
+| `timestamp` | `TIMESTAMP` | Required | Ingestion date/time. |
+| `session_id` | `STRING` | Required | Unique session UUID (PII-free). |
+| `phrase` | `STRING` | Required | The text fragment that caused the drop (e.g. "Select * from"). |
+| `log_prob_drop` | `FLOAT` | Required | The logit difference $D_i$. |
+| `previous_log_prob`| `FLOAT` | Required | Probability before the drop. |
+| `current_log_prob` | `FLOAT` | Required | Probability after the drop. |
+| `severity` | `STRING` | Required | Severity rating: `critical`, `warning`, or `info`. |
+| `reason` | `STRING` | Required | Structured text reason string indicating why the drop occurred. |
+
+### BigQuery Partitioning & Cost Controls
+To minimize analysis costs, the `friction_points` table is partitioned by day using the `timestamp` field:
+- **Partition Filter**: All analytical queries must include a filter on `timestamp` (e.g. `WHERE timestamp > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)`).
+- **Clustering**: Rows are clustered by `severity` and `model_id` to speed up filtering on critical failures.
+
