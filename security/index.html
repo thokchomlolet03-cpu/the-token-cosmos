@@ -481,6 +481,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../subprocessors/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Third-Party Subprocessors
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../changelog/" class="md-tabs__link">
         
   
@@ -918,6 +937,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#7-external-audits-penetration-testing-calendar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. External Audits &amp; Penetration Testing Calendar
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. External Audits &amp; Penetration Testing Calendar">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-annual-penetration-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Annual Penetration Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-letters-of-attestation-loa-reports-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Letters of Attestation (LoA) &amp; Reports Access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1130,6 +1188,33 @@
     
   
     Compliance & Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subprocessors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Third-Party Subprocessors
   
 
     
@@ -1409,6 +1494,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#7-external-audits-penetration-testing-calendar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. External Audits &amp; Penetration Testing Calendar
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. External Audits &amp; Penetration Testing Calendar">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-annual-penetration-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Annual Penetration Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-letters-of-attestation-loa-reports-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Letters of Attestation (LoA) &amp; Reports Access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1519,6 +1643,21 @@ The configuration uses <code>allow_credentials=False</code> because the wild-car
 - <strong>Signed Commits Enforced</strong>: All commits must be cryptographically signed using GPG or SSH keys. Unsigned commits are blocked by the gateway.</p>
 <h3 id="2-two-factor-authentication-2fa">2. Two-Factor Authentication (2FA)</h3>
 <p>All contributors, organization members, and external collaborators are required to enable Two-Factor Authentication (2FA) on their GitHub profiles. Contributors without 2FA active are automatically stripped of repository access.</p>
+<hr />
+<h2 id="7-external-audits-penetration-testing-calendar">7. External Audits &amp; Penetration Testing Calendar</h2>
+<p>To satisfy SOC 2 Type II and ISO 27001 compliance standards, internal security linting is supplemented by independent, external validation.</p>
+<h3 id="1-annual-penetration-testing">1. Annual Penetration Testing</h3>
+<p>The Token Cosmos contracts independent, CREST-accredited security auditing firms once per calendar year to perform comprehensive <strong>Black-Box and Grey-Box Penetration Testing</strong> on the hosted Cloud Run endpoints and public API infrastructure.
+- <strong>Scope</strong>: Includes application-layer logic checks (OWASP Top 10, cross-site scripting, prototype pollution), container breakout audits, and GCP IAM privilege escalation attempts.
+- <strong>Remediation</strong>: All identified vulnerabilities are logged in internal trackers and must be resolved according to our standard patch response SLAs:
+  - <em>Critical/High severity issues</em>: remediated within 14 business days.
+  - <em>Medium severity issues</em>: remediated within 30 business days.</p>
+<h3 id="2-letters-of-attestation-loa-reports-access">2. Letters of Attestation (LoA) &amp; Reports Access</h3>
+<p>Audited compliance summaries are stored securely in GCP Cloud Storage. Enterprise clients, legal teams, and stakeholders can request:
+- <strong>SOC 2 Type II Reports</strong> (updated annually).
+- <strong>Penetration Test Executive Summary &amp; Letters of Attestation (LoA)</strong>.
+- <strong>Software Bill of Materials (SBOM)</strong> exports.
+- <em>Request Procedure</em>: Contact <code>security@the-token-cosmos.com</code>. All requests require an active Mutual Non-Disclosure Agreement (NDA) and approval from the Chief Information Security Officer (CISO).</p>
 
 
 
