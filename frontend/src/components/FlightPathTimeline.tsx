@@ -138,7 +138,7 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
       {/* Flight Control Bar */}
       <div className="flex items-center justify-between border-b border-white/10 pb-3">
         <div className="flex items-center space-x-2">
-          <Orbit className="h-4 w-4 text-pink-400" />
+          <Orbit className="h-4 w-4 text-blue-400" />
           <div>
             <h3 className="text-sm font-bold text-white tracking-tight">Sentence Flight Path Trajectory</h3>
             <p className="text-xs text-gray-400 font-mono">
@@ -165,10 +165,10 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
                 aria-label={isPlaying ? 'Pause timeline playback' : 'Play interactive timeline scrubber'}
-                className="flex items-center space-x-1 rounded-full bg-pink-500/20 border border-pink-500/40 text-pink-300 px-2.5 py-1 text-xs font-mono font-bold hover:bg-pink-500/30 transition-colors"
+                className="flex items-center space-x-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 px-2.5 py-1 text-xs font-mono font-bold hover:bg-blue-500/20 transition-colors"
                 title="Auto Play/Pause Timeline Scrubber"
               >
-                <Play className={`h-3 w-3 ${isPlaying ? 'fill-pink-300' : ''}`} />
+                <Play className={`h-3 w-3 ${isPlaying ? 'fill-blue-300' : ''}`} />
                 <span>{isPlaying ? 'Pause' : 'Scrub'}</span>
               </button>
             )}
@@ -183,7 +183,7 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
               <ChevronLeft className="h-4 w-4" />
             </button>
 
-            <span className="text-xs font-mono font-bold text-pink-400 px-2">
+            <span className="text-xs font-mono font-bold text-blue-400 px-2">
               Step {currentStepIndex + 1} of {steps.length}
             </span>
 
@@ -325,11 +325,11 @@ export const FlightPathTimeline: React.FC<FlightPathTimelineProps> = ({
             <div className="space-y-1 text-[10px] font-mono">
               <div className="flex justify-between">
                 <span className="text-slate-400">Probability</span>
-                <span className="text-cyan-300 font-bold">{(tooltip.probability * 100).toFixed(2)}%</span>
+                <span className="text-blue-300 font-bold">{(tooltip.probability * 100).toFixed(2)}%</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Rank</span>
-                <span className="text-purple-300">#{tooltip.rank}</span>
+                <span className="text-slate-300">#{tooltip.rank}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Raw Logit</span>

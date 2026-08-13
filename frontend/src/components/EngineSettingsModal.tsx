@@ -76,11 +76,11 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-md rounded-2xl glass-panel border border-cyan-500/30 shadow-2xl p-6 space-y-5 bg-slate-950/90">
+      <div className="w-full max-w-md rounded-2xl glass-panel border border-slate-800 shadow-2xl p-6 space-y-5 bg-slate-950/90">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center space-x-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
               <Settings className="h-5 w-5 animate-spin-slow" />
             </div>
             <div>
@@ -98,8 +98,8 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
         </div>
 
         {/* Security Alert Badge */}
-        <div className="flex items-start space-x-2.5 rounded-xl bg-emerald-950/40 p-3 border border-emerald-500/30 text-xs text-emerald-200">
-          <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+        <div className="flex items-start space-x-2.5 rounded-xl bg-slate-900 p-3 border border-slate-800 text-xs text-slate-300">
+          <ShieldCheck className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             API Keys and Custom URLs are stored <strong>100% locally in your browser (localStorage)</strong>. They bypass our backend and are never sent to our servers.
           </p>
@@ -110,7 +110,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
           {/* Provider Select */}
           <div>
             <label htmlFor="provider-select" className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center space-x-1.5">
-              <Cpu className="h-3.5 w-3.5 text-cyan-400" />
+              <Cpu className="h-3.5 w-3.5 text-blue-400" />
               <span>Select AI Provider Engine</span>
             </label>
             <select
@@ -118,7 +118,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
               aria-label="Select AI Provider Engine"
               value={providerInput}
               onChange={e => handleProviderChange(e.target.value as ProviderType)}
-              className="w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-cyan-300 font-semibold focus:border-cyan-400 focus:outline-none"
+              className="w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-slate-200 font-semibold focus:border-blue-500 focus:outline-none"
             >
               <option value="default">Default (Cloud Run candidate demo)</option>
               <option value="openai">OpenAI (GPT-4o / GPT-3.5)</option>
@@ -139,7 +139,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
                 value={modelInput}
                 onChange={e => setModelInput(e.target.value)}
                 placeholder="e.g. gpt-4o, gemini-1.5-pro, local-model"
-                className="w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
+                className="w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:border-blue-500 focus:outline-none font-mono"
               />
             </div>
           )}
@@ -148,7 +148,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
           {(providerInput === 'custom' || providerInput === 'openai') && (
             <div>
               <label htmlFor="custom-url-input" className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center space-x-1.5">
-                <Server className="h-3.5 w-3.5 text-cyan-400" />
+                <Server className="h-3.5 w-3.5 text-blue-400" />
                 <span>Base API Endpoint URL</span>
               </label>
               <input
@@ -158,10 +158,10 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
                 value={urlInput}
                 onChange={e => setUrlInput(e.target.value)}
                 placeholder="e.g. https://api.openai.com/v1 or http://localhost:1234/v1"
-                className="w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-cyan-200 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
+                className="w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:border-blue-500 focus:outline-none font-mono"
               />
               <p className="text-[11px] text-slate-400 mt-1">
-                Must support <code className="font-mono text-cyan-300">logprobs: true</code> to render token probability distribution.
+                Must support <code className="font-mono text-blue-400">logprobs: true</code> to render token probability distribution.
               </p>
             </div>
           )}
@@ -170,7 +170,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
           {providerInput !== 'default' && (
             <div>
               <label htmlFor="custom-key-input" className="block text-xs font-semibold text-slate-200 mb-1.5 flex items-center space-x-1.5">
-                <Key className="h-3.5 w-3.5 text-purple-400" />
+                <Key className="h-3.5 w-3.5 text-blue-400" />
                 <span>API Key (Stored in local browser storage)</span>
               </label>
               <input
@@ -180,7 +180,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
                 value={keyInput}
                 onChange={e => setKeyInput(e.target.value)}
                 placeholder="sk-..."
-                className="w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
+                className="w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:border-blue-500 focus:outline-none font-mono"
               />
             </div>
           )}

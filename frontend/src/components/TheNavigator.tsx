@@ -415,12 +415,12 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
                 aria-label={isMuted ? 'Unmute Web Speech API voice assistant' : 'Mute voice assistant'}
                 className={`p-1.5 rounded-lg transition-colors ${
                   !isMuted
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-neon-cyan'
+                    ? 'bg-blue-500/10 text-blue-300 border border-blue-500/30 shadow-md'
                     : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
                 }`}
                 title={isMuted ? 'Unmute Voice Assistant (Web Speech API)' : 'Mute Voice Assistant'}
               >
-                {!isMuted ? <Volume2 className="h-4 w-4 text-cyan-400 animate-pulse" /> : <VolumeX className="h-4 w-4 text-slate-500" />}
+                {!isMuted ? <Volume2 className="h-4 w-4 text-blue-400 animate-pulse" /> : <VolumeX className="h-4 w-4 text-slate-500" />}
               </button>
 
               <button
@@ -435,8 +435,8 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
 
           {/* Live State Snapshot Indicator Badge */}
           <div className="flex items-center justify-between bg-slate-900/90 px-4 py-1.5 border-b border-slate-800 text-[10px] font-mono text-slate-300">
-            <span>Temp: <strong className="text-amber-400">{params.temperature.toFixed(2)}</strong></span>
-            <span>Top-K: <strong className="text-cyan-400">{params.topK}</strong></span>
+            <span>Temp: <strong className="text-blue-400">{params.temperature.toFixed(2)}</strong></span>
+            <span>Top-K: <strong className="text-blue-400">{params.topK}</strong></span>
             <span>RAG: <strong className={ragEnabled ? 'text-blue-400' : 'text-slate-400'}>{ragEnabled ? 'ON' : 'OFF'}</strong></span>
             <span>Voice: <strong className={!isMuted ? 'text-blue-300' : 'text-slate-500'}>{!isMuted ? 'ON' : 'MUTED'}</strong></span>
           </div>
@@ -480,43 +480,43 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
 
           {/* Interactive Tour Stop Chips (Action Callbacks) */}
           <div className="border-t border-slate-800 bg-slate-950/80 p-2 space-y-1.5">
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-cyan-400 px-1">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-blue-400 px-1">
               Interactive Tour Stops (Action Callbacks)
             </span>
             <div className="flex flex-wrap gap-1">
               <button
                 onClick={handleTourStop1_Hallucination}
                 aria-label="Tour Stop: Show me how an AI hallucinates"
-                className="flex items-center space-x-1 rounded-lg bg-slate-900 border border-amber-500/30 px-2 py-1 text-[10px] text-amber-300 hover:bg-amber-950/40 transition-colors"
+                className="flex items-center space-x-1 rounded-lg bg-slate-900 border border-slate-700 px-2 py-1 text-[10px] text-slate-300 hover:bg-slate-800 transition-colors"
               >
-                <Flame className="h-3 w-3 text-amber-400" />
+                <Flame className="h-3 w-3 text-slate-400" />
                 <span>1. Hallucination Demo</span>
               </button>
 
               <button
                 onClick={handleTourStop2_RAGTruth}
                 aria-label="Tour Stop: Force AI to tell the truth with RAG"
-                className="flex items-center space-x-1 rounded-lg bg-slate-900 border border-cyan-500/30 px-2 py-1 text-[10px] text-cyan-300 hover:bg-cyan-950/40 transition-colors"
+                className="flex items-center space-x-1 rounded-lg bg-slate-900 border border-slate-700 px-2 py-1 text-[10px] text-slate-300 hover:bg-slate-800 transition-colors"
               >
-                <Anchor className="h-3 w-3 text-cyan-400" />
+                <Anchor className="h-3 w-3 text-slate-400" />
                 <span>2. RAG Fact Anchor</span>
               </button>
 
               <button
                 onClick={handleTourStop3_BlackHoleBan}
                 aria-label="Tour Stop: Ban annoying words with Black Hole Logit Bias"
-                className="flex items-center space-x-1 rounded-lg bg-slate-900 border border-rose-500/30 px-2 py-1 text-[10px] text-rose-300 hover:bg-rose-950/40 transition-colors"
+                className="flex items-center space-x-1 rounded-lg bg-slate-900 border border-slate-700 px-2 py-1 text-[10px] text-slate-300 hover:bg-slate-800 transition-colors"
               >
-                <Ban className="h-3 w-3 text-rose-400" />
+                <Ban className="h-3 w-3 text-slate-400" />
                 <span>3. Black Hole Ban</span>
               </button>
 
               <button
                 onClick={handleTourStop4_FrequencyExhaustion}
                 aria-label="Tour Stop: Fix word repetition with Exhaustion Meter"
-                className="flex items-center space-x-1 rounded-lg bg-slate-900 border border-emerald-500/30 px-2 py-1 text-[10px] text-emerald-300 hover:bg-emerald-950/40 transition-colors"
+                className="flex items-center space-x-1 rounded-lg bg-slate-900 border border-slate-700 px-2 py-1 text-[10px] text-slate-300 hover:bg-slate-800 transition-colors"
               >
-                <ShieldAlert className="h-3 w-3 text-emerald-400" />
+                <ShieldAlert className="h-3 w-3 text-slate-400" />
                 <span>4. Fix Repetition</span>
               </button>
             </div>
@@ -531,12 +531,12 @@ export const TheNavigator: React.FC<TheNavigatorProps> = ({
               onChange={e => setInputMessage(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
               placeholder="Ask The Navigator about the dashboard..."
-              className="flex-1 rounded-xl bg-slate-900 border border-slate-800 px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
+              className="flex-1 rounded-xl bg-slate-900 border border-slate-800 px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
             />
             <button
               onClick={() => handleSendMessage()}
               aria-label="Send message to The Navigator"
-              className="rounded-xl bg-cyan-500 p-2 text-slate-950 font-bold hover:bg-cyan-400 transition-colors"
+              className="rounded-xl bg-blue-600 p-2 text-white font-bold hover:bg-blue-700 transition-colors"
             >
               <Send className="h-3.5 w-3.5" />
             </button>

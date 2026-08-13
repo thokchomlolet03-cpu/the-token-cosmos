@@ -152,15 +152,15 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   const getPresetIcon = (iconName: string) => {
     switch (iconName) {
       case 'Bot':
-        return <Bot className="h-4 w-4 text-cyan-400" />;
+        return <Bot className="h-4 w-4 text-slate-400" />;
       case 'Sparkles':
-        return <Sparkles className="h-4 w-4 text-purple-400" />;
+        return <Sparkles className="h-4 w-4 text-slate-400" />;
       case 'Compass':
-        return <Compass className="h-4 w-4 text-sky-400" />;
+        return <Compass className="h-4 w-4 text-slate-400" />;
       case 'ShieldCheck':
-        return <ShieldCheck className="h-4 w-4 text-emerald-400" />;
+        return <ShieldCheck className="h-4 w-4 text-slate-400" />;
       default:
-        return <Sliders className="h-4 w-4 text-cyan-400" />;
+        return <Sliders className="h-4 w-4 text-slate-400" />;
     }
   };
 
@@ -169,7 +169,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
       {/* Header with Tab Switching */}
       <div className="flex items-center justify-between border-b border-white/10 bg-[#1c1c21] px-5 py-3">
         <div className="flex items-center space-x-2">
-          <Sliders className="h-4 w-4 text-pink-400" />
+          <Sliders className="h-4 w-4 text-blue-400" />
           <h2 className="text-sm font-bold text-white tracking-tight hidden sm:block">Mission Control</h2>
         </div>
 
@@ -179,7 +179,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             onClick={() => setActiveTab('sampling')}
             className={`flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
               activeTab === 'sampling'
-                ? 'bg-pink-500 text-white font-semibold shadow-sm'
+                ? 'bg-blue-600 text-white font-semibold shadow-sm'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -190,7 +190,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             onClick={() => setActiveTab('friction')}
             className={`flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
               activeTab === 'friction'
-                ? 'bg-pink-500 text-white font-semibold shadow-sm'
+                ? 'bg-blue-600 text-white font-semibold shadow-sm'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -355,7 +355,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                   value={ragContext}
                   onChange={e => setRagContext(e.target.value)}
                   rows={2}
-                  className="w-full rounded-lg bg-slate-900 border border-cyan-500/20 px-2.5 py-1.5 text-xs text-cyan-100 placeholder-slate-600 focus:border-cyan-400 focus:outline-none font-mono"
+                  className="w-full rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:border-blue-500 focus:outline-none font-mono"
                   placeholder="Example: Employees must be in the office Tuesday through Thursday. Monday and Friday are remote."
                 />
               </div>
@@ -363,7 +363,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
           </div>
 
           {/* Feature 4: Structured Output "Orbital Track" JSON Schema Accordion */}
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 overflow-hidden">
+          <div className="rounded-xl border border-white/10 bg-[#111111] overflow-hidden">
             <button
               onClick={() => {
                 const nextState = !jsonSchemaEnabled;
@@ -379,14 +379,14 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               }}
               aria-label={jsonSchemaEnabled ? 'Turn Structured Output JSON Schema OFF' : 'Turn Structured Output JSON Schema ON'}
               aria-expanded={isSchemaExpanded}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-emerald-900/20 transition-colors"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-white/5 transition-colors"
             >
               <div className="flex items-center space-x-2">
-                <Code2 className={`h-4 w-4 ${jsonSchemaEnabled ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`} />
+                <Code2 className={`h-4 w-4 ${jsonSchemaEnabled ? 'text-blue-400' : 'text-slate-500'}`} />
                 <span className="font-semibold text-slate-100">Force Strict Formatting</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    jsonSchemaEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-slate-800 text-slate-400'
+                    jsonSchemaEnabled ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30' : 'bg-slate-800 text-slate-400'
                   }`}
                 >
                   {jsonSchemaEnabled ? 'ACTIVE' : 'OFF'}
@@ -396,8 +396,8 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             </button>
 
             {isSchemaExpanded && (
-              <div className="p-3 border-t border-emerald-500/15 space-y-2 bg-slate-950/40">
-                <p className="text-[11px] text-emerald-200/80 leading-relaxed">
+              <div className="p-3 border-t border-white/10 space-y-2 bg-[#0A0A0A]">
+                <p className="text-[11px] text-slate-300 leading-relaxed">
                   Forces the AI to answer in a rigid data format instead of a paragraph.
                 </p>
                 <textarea
@@ -405,7 +405,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                   value={jsonSchema}
                   onChange={e => setJsonSchema(e.target.value)}
                   rows={2}
-                  className="w-full rounded-lg bg-slate-900 border border-emerald-500/20 px-2.5 py-1.5 text-xs text-emerald-100 placeholder-slate-600 focus:border-emerald-400 focus:outline-none font-mono"
+                  className="w-full rounded-lg bg-slate-900 border border-slate-800 px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:border-blue-500 focus:outline-none font-mono"
                   placeholder='{ "type": "object", "properties": { "result": { "type": "string" } } }'
                 />
               </div>
@@ -471,7 +471,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                     step="50"
                     value={params.maxThinkingTokens || 2048}
                     onChange={e => setParams(prev => ({ ...prev, maxThinkingTokens: parseInt(e.target.value) }))}
-                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500 hover:accent-purple-400 transition-all"
+                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
                   />
                   <div className="flex justify-between text-[9px] font-mono text-slate-500 px-1 pt-1">
                     <span>50 (Fractured)</span>
@@ -527,8 +527,8 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             </p>
             <div className="flex items-center space-x-1.5 mt-1">
               {params.temperature <= 0.2 ? (
-                <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono font-bold flex items-center space-x-1">
-                  <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                <span className="rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 text-[10px] font-mono font-bold flex items-center space-x-1">
+                  <ShieldCheck className="h-3 w-3 text-blue-400" />
                   <span>🟢 Factual Precision (Legal / Medical / Code)</span>
                 </span>
               ) : params.temperature >= 1.2 ? (
@@ -537,7 +537,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                   <span>🔴 High Entropy (Creative Fiction / Dialogue)</span>
                 </span>
               ) : (
-                <span className="rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 px-2 py-0.5 text-[10px] font-mono font-medium">
+                <span className="rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 text-[10px] font-mono font-medium">
                   🔵 Balanced Assistant Mode (General Q&A)
                 </span>
               )}
@@ -550,7 +550,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               <label htmlFor="topk-slider" className="font-medium text-slate-200 flex items-center space-x-1">
                 <span>Word Limit (Top-K)</span>
               </label>
-              <span className="font-mono font-bold text-cyan-400">{params.topK}</span>
+              <span className="font-mono font-bold text-blue-400">{params.topK}</span>
             </div>
             <input
               id="topk-slider"
@@ -595,7 +595,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               <label htmlFor="topp-slider" className="font-medium text-slate-200 flex items-center space-x-1">
                 <span>Confidence Cutoff (Top-P)</span>
               </label>
-              <span className="font-mono font-bold text-purple-400">{(params.topP * 100).toFixed(0)}%</span>
+              <span className="font-mono font-bold text-blue-400">{(params.topP * 100).toFixed(0)}%</span>
             </div>
             <input
               id="topp-slider"
@@ -631,7 +631,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               <label htmlFor="minp-slider" className="font-medium text-slate-200 flex items-center space-x-1">
                 <span>Ignore Wild Guesses (Min-P)</span>
               </label>
-              <span className="font-mono font-bold text-pink-400">{(params.minP * 100).toFixed(1)}%</span>
+              <span className="font-mono font-bold text-blue-400">{(params.minP * 100).toFixed(1)}%</span>
             </div>
             <input
               id="minp-slider"
@@ -672,12 +672,12 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-gray-200 hover:bg-white/5 transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <Shield className={`h-4 w-4 ${params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0 ? 'text-emerald-400 animate-pulse' : 'text-gray-500'}`} />
+              <Shield className={`h-4 w-4 ${params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0 ? 'text-blue-400' : 'text-gray-500'}`} />
               <span className="font-semibold text-white tracking-tight">Repetition Blockers (Penalties)</span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                   params.frequencyPenalty > 0 || params.presencePenalty > 0 || Object.keys(params.logitBiases).length > 0 || params.stopSequences.length > 0
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                    ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
                     : 'bg-slate-800 text-slate-400'
                 }`}
               >
@@ -693,7 +693,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
                   <label htmlFor="freq-penalty-slider" className="font-medium text-slate-200">Exhaustion Meter (Frequency Penalty)</label>
-                  <span className="font-mono font-bold text-emerald-400">{params.frequencyPenalty.toFixed(2)}</span>
+                  <span className="font-mono font-bold text-blue-400">{params.frequencyPenalty.toFixed(2)}</span>
                 </div>
                 <input
                   id="freq-penalty-slider"
@@ -716,7 +716,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                       guidance: 'Increase >0.5 to stop the model from repeating words.',
                     });
                   }}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 hover:accent-emerald-400 transition-all"
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
                 />
               </div>
 
@@ -724,7 +724,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
                   <label htmlFor="presence-penalty-slider" className="font-medium text-slate-200">Horizon Booster (Presence Penalty)</label>
-                  <span className="font-mono font-bold text-sky-400">{params.presencePenalty.toFixed(2)}</span>
+                  <span className="font-mono font-bold text-blue-400">{params.presencePenalty.toFixed(2)}</span>
                 </div>
                 <input
                   id="presence-penalty-slider"
@@ -747,7 +747,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                       guidance: 'Increase >0.5 to encourage diverse topic exploration.',
                     });
                   }}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500 hover:accent-sky-400 transition-all"
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
                 />
               </div>
 
@@ -755,7 +755,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               <div className="space-y-2">
                 <label htmlFor="bias-word-input" className="text-xs font-medium text-slate-200 flex items-center justify-between">
                   <span className="flex items-center space-x-1">
-                    <Magnet className="h-3.5 w-3.5 text-pink-400" />
+                    <Magnet className="h-3.5 w-3.5 text-blue-400" />
                     <span>Magnet / Black Hole (Logit Bias)</span>
                   </span>
                 </label>
@@ -766,8 +766,8 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                       key={word}
                       className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-mono border ${
                         bias < 0
-                          ? 'bg-rose-950/60 text-rose-300 border-rose-800'
-                          : 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
+                          ? 'bg-slate-900 text-slate-300 border border-slate-700'
+                          : 'bg-blue-950/60 text-blue-300 border border-blue-800/50'
                       }`}
                     >
                       <span>'{word}':</span>
@@ -809,7 +809,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                     type="button"
                     onClick={handleAddBias}
                     aria-label="Add logit bias word"
-                    className="rounded-lg bg-cyan-500/20 p-1.5 text-cyan-300 border border-cyan-400/40 hover:bg-cyan-500/30"
+                    className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white p-1.5 shadow-md transition-colors"
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </button>
@@ -819,7 +819,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               {/* Stop Sequences Tag Input */}
               <div className="space-y-2">
                 <label htmlFor="stop-seq-input" className="text-xs font-medium text-slate-200 flex items-center space-x-1">
-                  <CircleDot className="h-3.5 w-3.5 text-amber-400" />
+                  <CircleDot className="h-3.5 w-3.5 text-blue-400" />
                   <span>Emergency Brake (Stop Sequences)</span>
                 </label>
                 <div className="flex flex-wrap gap-1.5">

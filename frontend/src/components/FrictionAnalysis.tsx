@@ -222,15 +222,15 @@ export const FrictionAnalysis: React.FC<FrictionAnalysisProps> = ({
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-lg bg-slate-950/80 border border-slate-800 p-2 text-center">
               <div className="text-[10px] text-slate-400 font-mono uppercase">Joint Log-Prob</div>
-              <div className="text-sm font-bold text-cyan-300 font-mono">{report.totalJointLogProb.toFixed(1)}</div>
+              <div className="text-sm font-bold text-blue-300 font-mono">{report.totalJointLogProb.toFixed(1)}</div>
             </div>
             <div className="rounded-lg bg-slate-950/80 border border-slate-800 p-2 text-center">
               <div className="text-[10px] text-slate-400 font-mono uppercase">Avg Score</div>
-              <div className="text-sm font-bold text-purple-300 font-mono">{report.averageLogProb.toFixed(2)}</div>
+              <div className="text-sm font-bold text-blue-300 font-mono">{report.averageLogProb.toFixed(2)}</div>
             </div>
             <div className="rounded-lg bg-slate-950/80 border border-slate-800 p-2 text-center">
               <div className="text-[10px] text-slate-400 font-mono uppercase">Analysis</div>
-              <div className="text-sm font-bold text-amber-300 font-mono">{report.analysisTimeMs}ms</div>
+              <div className="text-sm font-bold text-blue-300 font-mono">{report.analysisTimeMs}ms</div>
             </div>
           </div>
 

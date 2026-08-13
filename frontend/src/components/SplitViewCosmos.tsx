@@ -89,7 +89,7 @@ export const SplitViewCosmos: React.FC<SplitViewCosmosProps> = ({
             </div>
             <div className="hidden sm:flex items-center space-x-1">
               <span className="text-slate-400">Top-5 Overlap:</span>
-              <span className="text-cyan-300 font-bold">{divergenceMetric.overlapPct}%</span>
+              <span className="text-blue-300 font-bold">{divergenceMetric.overlapPct}%</span>
             </div>
           </div>
         )}
@@ -98,7 +98,7 @@ export const SplitViewCosmos: React.FC<SplitViewCosmosProps> = ({
       {/* Dual Starfield Canvas Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-[440px]">
         {/* Left Universe (Primary Config) */}
-        <div className="relative w-full h-full border border-cyan-500/30 rounded-2xl overflow-hidden shadow-neon-cyan">
+        <div className="relative w-full h-full border border-blue-500/30 rounded-2xl overflow-hidden shadow-md">
           <TokenCosmosGraph
             candidates={leftCandidates}
             params={leftParams}
@@ -111,7 +111,7 @@ export const SplitViewCosmos: React.FC<SplitViewCosmosProps> = ({
         </div>
 
         {/* Right Universe (A/B Secondary Config) */}
-        <div className="relative w-full h-full border border-purple-500/30 rounded-2xl overflow-hidden shadow-lg">
+        <div className="relative w-full h-full border border-slate-800 rounded-2xl overflow-hidden shadow-md">
           <TokenCosmosGraph
             candidates={rightCandidates}
             params={rightParams}

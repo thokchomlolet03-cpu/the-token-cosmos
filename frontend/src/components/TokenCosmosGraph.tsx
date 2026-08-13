@@ -218,15 +218,15 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
       {/* ─── Top Action Bar ─── */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
         <div className="flex items-center space-x-3">
-          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#06B6D4]" />
+          <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse shadow-md" />
           <div>
             <h3 className="text-xs font-bold text-white tracking-tight">{title}</h3>
-            <p className="text-[10px] text-cyan-400/80 font-mono">{subtitle}</p>
+            <p className="text-[10px] text-blue-400/80 font-mono">{subtitle}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-1.5 bg-white/5 rounded-lg px-2 py-1">
-            <Search className="h-3 w-3 text-cyan-400/70" />
+            <Search className="h-3 w-3 text-slate-500" />
             <input
               type="text"
               value={searchQuery}
@@ -240,8 +240,8 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
 
       {/* ─── Telemetry Strip ─── */}
       <div className="flex items-center space-x-6 px-4 py-1.5 border-b border-white/5 text-[10px] font-mono text-gray-400">
-        <span><Zap className="inline h-3 w-3 text-cyan-400 mr-1" />Top: <strong className="text-white">{topToken?.token_str.trim() || '—'}</strong> ({topToken ? (topToken.probability * 100).toFixed(1) : 0}%)</span>
-        <span><Activity className="inline h-3 w-3 text-pink-400 mr-1" />Uncertainty: <strong className="text-white">{entropy.toFixed(2)} bits</strong></span>
+        <span><Zap className="inline h-3 w-3 text-blue-400 mr-1" />Top: <strong className="text-white">{topToken?.token_str.trim() || '—'}</strong> ({topToken ? (topToken.probability * 100).toFixed(1) : 0}%)</span>
+        <span><Activity className="inline h-3 w-3 text-blue-400 mr-1" />Uncertainty: <strong className="text-white">{entropy.toFixed(2)} bits</strong></span>
         <span><Anchor className="inline h-3 w-3 text-blue-400 mr-1" />RAG: <strong className="text-white">{ragEnabled ? `${groundedCount} grounded` : 'OFF'}</strong></span>
         <span>Candidates: <strong className="text-white">{candidates.filter(c => !c.isFiltered).length}</strong> / {candidates.length}</span>
       </div>
@@ -265,7 +265,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
               onClick={() => setHeightMode('linear')}
               className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
                 heightMode === 'linear'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
+                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow'
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
@@ -275,7 +275,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
               onClick={() => setHeightMode('log')}
               className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
                 heightMode === 'log'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
+                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow'
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
@@ -285,7 +285,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
               onClick={() => setHeightMode('logit')}
               className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
                 heightMode === 'logit'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
+                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow'
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
@@ -341,7 +341,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
         <div className="border-t border-white/5 px-4 py-2 flex items-center space-x-3">
           <button
             onClick={togglePlay}
-            className="h-7 w-7 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-cyan-400 transition-colors"
+            className="h-7 w-7 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-blue-400 transition-colors"
           >
             {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
           </button>
@@ -364,7 +364,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
                   onClick={() => onSelectStep(idx)}
                   className={`flex-shrink-0 h-5 px-1.5 rounded text-[9px] font-mono transition-all ${
                     idx === currentStepIndex
-                      ? 'ring-1 ring-cyan-400 scale-110 text-white'
+                      ? 'ring-1 ring-blue-500 scale-110 text-white'
                       : 'text-gray-500 hover:text-white'
                   }`}
                   style={{ backgroundColor: bgColor }}
