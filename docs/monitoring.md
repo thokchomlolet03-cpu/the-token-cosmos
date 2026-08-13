@@ -64,3 +64,50 @@ The API exposes a healthcheck endpoint that verifies the engine status:
   }
   ```
 The uptime monitor (e.g. Google Cloud Monitoring Uptime Check) polls `/api/health` every 60 seconds to assert a `200 OK` status.
+
+---
+
+## 4. Production Error Aggregation & Alert Routing
+
+To ensure client-side WebGPU failures or backend uncaught exceptions do not go unnoticed, The Token Cosmos implements an automated runtime error tracking and alert dispatching flow.
+
+```
+                     ERROR AGGREGATION & ALERTS
+                     
+   Client / Browser Errors             Backend API Errors
+   (WebGPU Crash, Device Lost)         (500 Exceptions, OOM)
+              │                                  │
+              ▼                                  ▼
+   ┌─────────────────────────────────────────────────────────┐
+   │         Sentry / GCP Error Ingestion Gateway            │
+   └─────────────────────────────────────────────────────────┘
+                                │
+               ┌────────────────┴────────────────┐
+               ▼                                 ▼
+       [P1: Critical Outage]             [P2: Degradation]
+      (Healthcheck failure)             (WebGPU OOM > 10%)
+               │                                 │
+               ▼                                 ▼
+         PagerDuty Alert                    Slack Alert
+      (SLA: Ack < 15 mins)            (#cosmos-degradation)
+```
+
+### 1. Client & Server Error Aggregation
+- **Client-Side Exception Capture**: Sentry is initialized in the React client and the `WebGPUInferenceWorker.ts`. It intercepts unhandled runtime exceptions and WebGPU device lost events (`device.lost`). Every client-side event payload is enriched with:
+  - User-Agent details (OS, Browser version).
+  - WebGPU Adapter metadata (vendor name, device architecture, driver version if available).
+  - Selected model tier during the crash.
+- **Server-Side Exception Capture**: Unhandled HTTP 500 exceptions, database timeout conditions, or startup faults in FastAPI are intercepted by the Sentry middleware and GCP Error Reporting.
+
+### 2. Alert Escalation & Routing Rules
+Alerts are classified based on severity to prevent alert fatigue:
+
+- **P1: Critical Outages**
+  - *Triggers*: `/api/health` uptime checks fail for 2 consecutive cycles, or unhandled exception volume exceeds 10 per minute.
+  - *Escalation Route*: Pushed directly to **PagerDuty** for immediate pager notifications.
+  - *Response SLA*: On-call engineer must acknowledge within **15 minutes**. Unacknowledged alerts automatically escalate to the secondary manager pool after 10 minutes.
+- **P2: Performance Degradation**
+  - *Triggers*: WebGPU initialization failure or forced WASM/Synthetic mode fallback exceeds 10% of active sessions in a 5-minute window.
+  - *Escalation Route*: Posted to the `#cosmos-degradation` Slack channel.
+  - *Response SLA*: Checked and addressed during standard business hours (next business day).
+

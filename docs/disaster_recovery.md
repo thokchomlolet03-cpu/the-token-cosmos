@@ -79,7 +79,7 @@ flowchart TD
 ```
 
 1. **Verify Outage**: Attempt to curl the health endpoint: `curl -I https://the-token-cosmos.run.app/api/health`.
-2. **Shift Traffic**: If the health check fails or returns an error, execute a rollback to the last stable revision using Method A or B.
+2. **Shift Status**: If the health check fails or returns an error, execute a rollback to the last stable revision using Method A or B.
 3. **Analyze Stacktrace**: Check the Google Cloud Log Explorer to view the FastAPI logs and identify the bug.
 4. **Local Reproduction**: Rebuild the image locally using the Docker command:
    ```bash
@@ -87,3 +87,48 @@ flowchart TD
    docker run -p 8080:8080 the-token-cosmos-test
    ```
 5. **Publish Hotfix**: Push the fix to `main` to trigger the automated CI/CD pipeline.
+
+---
+
+## 4. Disaster Recovery Operational Metrics (RTO & RPO)
+
+To maintain platform compliance, the engineering team adheres to strict operational limits during outages.
+
+### 1. Recovery Objectives
+
+| Metric | Target | System Mitigation & Fail-Safe Mechanics |
+| :--- | :---: | :--- |
+| **RTO (Recovery Time Objective)** | **< 15 minutes** | - Cloud Run container image revisions are cached. Shifting traffic takes **< 1 minute**.<br>- Multi-region backups: DNS nameserver configurations can route requests to standby GCP regions within 10 minutes. |
+| **RPO (Recovery Point Objective)** | **< 1 hour** | - Telemetry logs are buffered locally in the browser memory for up to 5 minutes.<br>- **Backend Ingestion Fail-Safe**: If BigQuery becomes unreachable, the FastAPI backend automatically diverts the incoming telemetry payloads into a local, temporary SQLite file buffer on ephemeral storage. These logs are re-flushed to BigQuery once connection health is restored, maintaining an actual RPO of **0 minutes** during DB downtime. |
+
+### 2. BigQuery Data Restoration & Verification Drills
+
+BigQuery datasets utilize daily snapshots with a 30-day retention policy. Once per quarter, engineers must execute the following data recovery drills to verify backup integrity.
+
+#### Drill A: Validate Time-Travel Access
+Run a SQL validation check in the BigQuery Console to verify that historical data remains queryable using BigQuery's native time-travel features:
+```sql
+-- Query rows exactly as they existed 1 hour ago
+SELECT COUNT(*) 
+FROM `cosmos_telemetry.friction_points`
+FOR SYSTEM_TIME AS OF TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR);
+```
+
+#### Drill B: Snapshot Restoration Validation
+1. Create a verification dataset target:
+   ```bash
+   bq mk cosmos_telemetry_drill_restore
+   ```
+2. Restore the daily snapshot into the verification dataset:
+   ```bash
+   bq cp cosmos_telemetry.friction_points@1723536000 cosmos_telemetry_drill_restore.friction_points_restored
+   ```
+3. Run count checks against the restored table:
+   ```sql
+   SELECT COUNT(*) FROM `cosmos_telemetry_drill_restore.friction_points_restored`;
+   ```
+4. Delete the temporary verification dataset after completing the drill:
+   ```bash
+   bq rm -r -f cosmos_telemetry_drill_restore
+   ```
+
