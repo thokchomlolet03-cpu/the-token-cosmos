@@ -17,15 +17,20 @@ def install_pre_commit_hook():
     
     hook_content = """#!/bin/sh
 # Programmatic Git Pre-Commit Hook for The Token Cosmos Linter Suite
-# Runs detect_secrets.py and verify_docs.py before allowing a commit.
+# Runs gitleaks protect and verify_docs.py before allowing a commit.
 
-echo "🔍 Running pre-commit secrets check..."
-python3 scripts/detect_secrets.py
-SECRETS_RESULT=$?
+echo "🔍 Running pre-commit secrets check (Gitleaks)..."
 
-if [ $SECRETS_RESULT -ne 0 ]; then
-  echo "❌ Error: Hardcoded secrets or credentials detected. Commit aborted."
-  exit 1
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --verbose
+  SECRETS_RESULT=$?
+  if [ $SECRETS_RESULT -ne 0 ]; then
+    echo "❌ Error: Hardcoded secrets or credentials detected by Gitleaks. Commit aborted."
+    exit 1
+  fi
+else
+  echo "⚠️ Warning: Gitleaks binary not found on local PATH."
+  echo "Please install Gitleaks (e.g., 'brew install gitleaks') to enable local pre-commit secrets protection."
 fi
 
 echo "🔍 Running pre-commit documentation check..."

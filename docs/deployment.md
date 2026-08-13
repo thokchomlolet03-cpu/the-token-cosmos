@@ -108,3 +108,63 @@ Before the deployment pipeline will run, the following variables must be configu
 - `GCP_PROJECT_ID`: The unique ID of your Google Cloud Platform project.
 - `GCP_WORKLOAD_IDENTITY_PROVIDER`: The resource identifier for your Workload Identity Pool Provider (e.g. `projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>`).
 - `GCP_SERVICE_ACCOUNT`: The service account email with permissions to push to Artifact Registry and deploy services (e.g. `deployer@<project-id>.iam.gserviceaccount.com`).
+
+---
+
+## 5. Infrastructure Provisioning & Cloud Governance (Manual Setup)
+
+As of current operations, **The Token Cosmos** manages its Google Cloud Platform resources manually via the Google Cloud Console and `gcloud` CLI (no Terraform or other Infrastructure as Code scripts are active in the source repository).
+
+### 1. Initial GCP Resource Setup Commands
+To deploy the system manually or prepare a new GCP environment, run the following commands in the `gcloud` CLI shell:
+
+#### Step A: Configure Project & APIs
+Ensure the correct project is selected and enable necessary service APIs:
+```bash
+gcloud config set project <GCP_PROJECT_ID>
+gcloud services enable run.googleapis.com artifactregistry.googleapis.com bigquery.googleapis.com
+```
+
+#### Step B: Create Artifact Registry
+Create a Docker repository to store application containers:
+```bash
+gcloud artifacts repositories create cosmos-repo \
+  --repository-format=docker \
+  --location=us-central1 \
+  --description="Docker Repository for The Token Cosmos"
+```
+
+#### Step C: Create BigQuery Telemetry Dataset
+Create a dataset to host telemetry tables, restricted to the `us-central1` region:
+```bash
+bq --location=us-central1 mk -d \
+  --description "Telemetry performance data and friction analysis metrics" \
+  cosmos_telemetry
+```
+
+#### Step D: Create Partitioned Tables
+To contain query costs, both table structures are day-partitioned by the `timestamp` column:
+```bash
+# Create the performance logs table
+bq mk --table \
+  --schema timestamp:TIMESTAMP,session_id:STRING,model_id:STRING,engine:STRING,step_count:INTEGER,generation_time_ms:FLOAT,tokens_per_second:FLOAT,vram_allocated_mb:INTEGER,temperature:FLOAT,top_k:INTEGER,top_p:FLOAT,min_p:FLOAT,browser:STRING \
+  --time_partitioning_field timestamp \
+  --time_partitioning_type DAY \
+  cosmos_telemetry.performance_logs
+
+# Create the friction points table
+bq mk --table \
+  --schema timestamp:TIMESTAMP,session_id:STRING,phrase:STRING,log_prob_drop:FLOAT,previous_log_prob:FLOAT,current_log_prob:FLOAT,severity:STRING,reason:STRING \
+  --time_partitioning_field timestamp \
+  --time_partitioning_type DAY \
+  cosmos_telemetry.friction_points
+```
+
+### 2. Infrastructure as Code (IaC) Governance
+> [!WARNING]
+> Because resources are created manually, there is a risk of configuration drift or human error (e.g. leaving a BigQuery dataset publicly readable).
+> 
+> **Audit Rules**:
+> - Any addition of Terraform (`.tf`), CloudFormation, or Cloud Deployment Manager scripts to this codebase **must** be immediately accompanied by the integration of an IaC static analysis tool (such as `checkov` or `tfsec`) into the `.github/workflows/docs.yml` validation job.
+> - Public access to `cosmos_telemetry` datasets is prohibited. Access is restricted exclusively to the Cloud Run service account via IAM policies.
+

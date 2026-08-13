@@ -49,13 +49,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          python -m pip install bandit
+          python -m pip install bandit pip-audit
           bandit -r .
+          pip-audit -r requirements.txt
           python -m unittest discover -s . -p 'test_*.py'
 
-      - name: Run Hardcoded Secrets Detection Scan
-        run: |
-          python scripts/detect_secrets.py
+      - name: Run GitLeaks Secrets Detection Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Audit Container Dockerfile (Hadolint)
         uses: hadolint/hadolint-action@v3.1.0

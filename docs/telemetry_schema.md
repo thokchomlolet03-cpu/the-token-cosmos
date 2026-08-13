@@ -72,7 +72,7 @@ No static BigQuery API keys or passwords are saved inside the application. Acces
 
 ## 5. Friction Hunter Ingestion & Synchronization Pipeline
 
-The **Friction Hunter** is a diagnostic bridge that analyzes the logical flow of text sequences. It monitors points where the mathematical transition probability drops abruptly between consecutive phrases.
+The **Friction Hunter** is a diagnostic bridge that analyzes the logical flow of text sequences. It monitors points where the mathematical transition probability drops abruptly between consecutive phrases. This pipeline, including the client-side buffers and the BigQuery synchronization script backend, was deployed in **August 2026** alongside the version `v4.1.0` release.
 
 ### Ingestion Flow & Buffering
 1. **Calculation**: The client-side logic calculates consecutive log-probability differences $D_i$ at 60 FPS.
