@@ -53,18 +53,31 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   useEffect(() => {
     candidatesRef.current = candidates;
   }, [candidates]);
-
+  
   const thresholdRef = useRef<number>(6.0);
 
   const [isLoaded, setIsLoaded] = useState(false);
   const { vocabSize, rawCoordinates, loadForModel } = useTerrainCoordinates(modelId || undefined);
 
+  // Targets for smooth animation interpolation
+  const targetActiveProbsRef = useRef<Float32Array | null>(null);
+  const targetBaseProbsRef = useRef<Float32Array | null>(null);
+
+  useEffect(() => {
+    if (vocabSize) {
+      targetActiveProbsRef.current = new Float32Array(vocabSize);
+      targetBaseProbsRef.current = new Float32Array(vocabSize);
+    }
+  }, [vocabSize]);
+
+  // Trigger coordinate load on model change
   useEffect(() => {
     if (modelId) {
       loadForModel(modelId);
     }
   }, [modelId, loadForModel]);
 
+  // Set loaded state when coordinates are available
   useEffect(() => {
     if (rawCoordinates && rawCoordinates.length > 0) {
       setIsLoaded(true);
@@ -196,7 +209,58 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         }
       }
       if (rendererRef.current && composerRef.current && sceneRef.current && cameraRef.current && pointsRef.current) {
-        (pointsRef.current.material as THREE.ShaderMaterial).uniforms.time.value = (performance.now() - startTime) / 1000;
+        const points = pointsRef.current;
+        const material = points.material as THREE.ShaderMaterial;
+        
+        // Decoupled dynamic lerping of star heights and colors
+        if (targetActiveProbsRef.current && targetBaseProbsRef.current) {
+            const texture = material.uniforms.probabilityTexture.value as THREE.DataTexture;
+            const data = texture.image.data as Float32Array;
+            const tokenCount = Math.min(vocabSize, data.length / 2);
+            
+            let needsTextureUpdate = false;
+            const lerpFactor = 0.15; // Smooth morphing speed (15% per frame)
+            
+            for (let i = 0; i < tokenCount; i++) {
+                const targetActive = targetActiveProbsRef.current[i];
+                const diffActive = targetActive - data[i * 2];
+                if (Math.abs(diffActive) > 0.0001) {
+                    data[i * 2] += diffActive * lerpFactor;
+                    needsTextureUpdate = true;
+                }
+                
+                const targetBase = targetBaseProbsRef.current[i];
+                const diffBase = targetBase - data[i * 2 + 1];
+                if (Math.abs(diffBase) > 0.0001) {
+                    data[i * 2 + 1] += diffBase * lerpFactor;
+                    needsTextureUpdate = true;
+                }
+            }
+            
+            if (needsTextureUpdate) {
+                texture.needsUpdate = true;
+                
+                const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
+                const positions = positionsAttr.array as Float32Array;
+                const maxHeight = 150.0;
+                
+                const smoothStep = (e0: number, e1: number, x: number) => {
+                  const t = Math.max(0.0, Math.min(1.0, (x - e0) / (e1 - e0)));
+                  return t * t * (3.0 - 2.0 * t);
+                };
+                
+                for (let i = 0; i < tokenCount; i++) {
+                    const activeProb = data[i * 2];
+                    const elevation = smoothStep(0.001, 0.1, activeProb) * (maxHeight * 0.3) + 
+                                      smoothStep(0.1, 1.0, activeProb) * (maxHeight * 0.7);
+                    
+                    positions[i * 3 + 1] += (elevation - positions[i * 3 + 1]) * lerpFactor;
+                }
+                positionsAttr.needsUpdate = true;
+            }
+        }
+        
+        material.uniforms.time.value = (performance.now() - startTime) / 1000;
         composerRef.current.render();
       }
       animationFrameId = requestAnimationFrame(trackCamera);
@@ -236,7 +300,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                     setHoveredToken({
                         id: idx,
                         tokenStr: candidate.token_str,
-                        probability: activeProb,
+                        probability: candidate.probability, // Use actual probability from state instead of visual texture heights
                         rank: candidate.rank,
                         rawLogit: candidate.raw_logit,
                         isFiltered: candidate.isFiltered,
@@ -297,6 +361,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '')) return;
       if (e.code === 'Space') {
         e.preventDefault();
         focusOnGreedyAnchor();
@@ -323,81 +388,78 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     isRagAttr.needsUpdate = true;
   }, [ragTokenIds, isLoaded]);
 
+  // Set targets for animation loop
   useEffect(() => {
-    if (!latestLogits || !pointsRef.current || !isLoaded) return;
+    if (!latestLogits || !pointsRef.current || !isLoaded || !targetActiveProbsRef.current || !targetBaseProbsRef.current) return;
+    
     const points = pointsRef.current;
     const material = points.material as THREE.ShaderMaterial;
-    const texture = material.uniforms.probabilityTexture.value as THREE.DataTexture;
-    const data = texture.image.data as Float32Array;
+    
     const filterMap = new Map<number, boolean>();
     const activeProbMap = new Map<number, number>();
     for (const c of candidates) {
         filterMap.set(c.token_id, c.isFiltered);
         activeProbMap.set(c.token_id, c.probability);
     }
+    
     let maxLogit = -Infinity;
     let argmaxIndex = -1;
-    const tokenCount = Math.min(latestLogits.length, vocabSize, data.length / 2);
+    const tokenCount = Math.min(latestLogits.length, vocabSize, targetActiveProbsRef.current.length);
+
     for (let i = 0; i < tokenCount; i++) {
         if (latestLogits[i] > maxLogit) {
             maxLogit = latestLogits[i];
             argmaxIndex = i;
         }
     }
+    
     let minLogit = maxLogit - 12.0;
     const activeCandidates = candidates.filter(c => !c.isFiltered);
     if (activeCandidates.length > 1) {
         const activeLogits = activeCandidates.map(c => latestLogits[c.token_id]).filter(isFinite);
-        if (activeLogits.length > 0) minLogit = Math.min(...activeLogits);
+        if (activeLogits.length > 0) {
+            minLogit = Math.min(...activeLogits);
+        }
     }
     const logitRange = Math.max(1.0, maxLogit - minLogit);
+    
     let sumExpBase = 0;
     const baseTemp = 1.0;
+    
     for (let i = 0; i < tokenCount; i++) {
         const isFiltered = filterMap.has(i) ? filterMap.get(i) : true;
-        if (isFiltered) {
-            data[i * 2] = 0.0;
-        } else {
+        let actProb = 0.0;
+        if (!isFiltered) {
             if (heightMode === 'logit') {
                 const logitVal = latestLogits[i];
                 const normLogit = Math.max(0.0, Math.min(1.0, (logitVal - minLogit) / logitRange));
-                data[i * 2] = 0.1 + normLogit * 0.9;
+                actProb = 0.1 + normLogit * 0.9;
             } else if (heightMode === 'log') {
                 const prob = activeProbMap.get(i) ?? 0.0;
                 if (prob > 0.0) {
                     const logVal = Math.log10(prob);
                     const normLog = Math.max(0.0, Math.min(1.0, (logVal + 4.0) / 4.0));
-                    data[i * 2] = 0.1 + normLog * 0.9;
-                } else {
-                    data[i * 2] = 0.0;
+                    actProb = 0.1 + normLog * 0.9;
                 }
             } else {
-                data[i * 2] = activeProbMap.get(i) ?? 0.0;
+                actProb = activeProbMap.get(i) ?? 0.0;
             }
         }
+        
+        targetActiveProbsRef.current[i] = actProb;
+        
         const valBase = Math.exp((latestLogits[i] - maxLogit) / baseTemp);
-        data[i * 2 + 1] = valBase;
+        targetBaseProbsRef.current[i] = valBase;
         sumExpBase += valBase;
     }
-    for (let i = 0; i < tokenCount; i++) { data[i * 2 + 1] /= sumExpBase; }
-    const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
-    const positions = positionsAttr.array as Float32Array;
-    const maxHeight = 150.0;
-    const smoothStep = (e0: number, e1: number, x: number) => {
-      const t = Math.max(0.0, Math.min(1.0, (x - e0) / (e1 - e0)));
-      return t * t * (3.0 - 2.0 * t);
-    };
+    
     for (let i = 0; i < tokenCount; i++) {
-        const activeProb = data[i * 2];
-        const elevation = smoothStep(0.001, 0.1, activeProb) * (maxHeight * 0.3) + 
-                          smoothStep(0.1, 1.0, activeProb) * (maxHeight * 0.7);
-        positions[i * 3 + 1] = elevation;
+        targetBaseProbsRef.current[i] /= sumExpBase;
     }
-    positionsAttr.needsUpdate = true;
+    
     argmaxIndexRef.current = argmaxIndex;
     material.uniforms.greedyAnchorIndex.value = argmaxIndex;
     material.uniforms.uIsThinking.value = isThinking ? 1.0 : 0.0;
-    texture.needsUpdate = true;
   }, [latestLogits, isLoaded, candidates, isThinking, vocabSize, heightMode]);
 
   return (
