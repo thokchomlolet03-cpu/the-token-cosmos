@@ -38,6 +38,8 @@ interface TokenCosmosGraphProps {
   modelId?: string | null;
   latestLogits?: Float32Array | null;
   isThinking?: boolean;
+  isPlaying?: boolean;
+  onTogglePlay?: () => void;
 }
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -126,10 +128,21 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
   modelId = null,
   latestLogits = null,
   isThinking = false,
+  isPlaying: isPlayingProp,
+  onTogglePlay: onTogglePlayProp,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [localIsPlaying, setLocalIsPlaying] = useState(false);
   const [heightMode, setHeightMode] = useState<'linear' | 'log' | 'logit'>('log');
+
+  const isPlaying = isPlayingProp !== undefined ? isPlayingProp : localIsPlaying;
+  const togglePlay = () => {
+    if (onTogglePlayProp) {
+      onTogglePlayProp();
+    } else {
+      setLocalIsPlaying(!localIsPlaying);
+    }
+  };
 
   // Compute telemetry
   const entropy = useMemo(() => {
@@ -160,14 +173,15 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
     });
   }, [steps, allCandidatesByStep]);
 
-  // Auto-play timeline scrubber
+  // Auto-play timeline scrubber (only if parent-controlled generation is inactive)
   useEffect(() => {
+    if (onTogglePlayProp) return;
     if (!isPlaying || steps.length <= 1 || !onSelectStep) return;
     const interval = setInterval(() => {
       onSelectStep((currentStepIndex + 1) % steps.length);
     }, 900);
     return () => clearInterval(interval);
-  }, [isPlaying, currentStepIndex, steps.length, onSelectStep]);
+  }, [isPlaying, currentStepIndex, steps.length, onSelectStep, onTogglePlayProp]);
 
   return (
     <div
@@ -286,7 +300,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
       {steps.length > 0 && onSelectStep && (
         <div className="border-t border-white/5 px-4 py-2 flex items-center space-x-3">
           <button
-            onClick={() => setIsPlaying(!isPlaying)}
+            onClick={togglePlay}
             className="h-7 w-7 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-cyan-400 transition-colors"
           >
             {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}

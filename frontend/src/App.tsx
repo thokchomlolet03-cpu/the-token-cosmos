@@ -177,6 +177,7 @@ export const App: React.FC = () => {
   const [steps, setSteps] = useState<FlightStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   // Save BYOE Settings locally in browser localStorage
   const handleSaveEngineSettings = (
@@ -268,15 +269,23 @@ export const App: React.FC = () => {
 
   // Launch Prompt Evaluation Endpoint
   // Priority: WebGPU local model → BYOE API → Cloud backend → Sample data
-  const handleLaunchPrompt = async () => {
+  const handleLaunchPrompt = async (promptOverride?: string) => {
+    const activePrompt = promptOverride !== undefined ? promptOverride : prompt;
+    
+    // Reset timeline only if we are starting a completely new evaluation
+    if (promptOverride === undefined) {
+      setSteps([]);
+      setCurrentStepIndex(0);
+    }
+
     setIsFetchingLogits(true);
     setSourceError(null);
     try {
       // Route 1: WebGPU local model (full vocab logits or stream)
       if (inferenceEngine.isModelLoaded) {
         const fullPrompt = ragEnabled && ragContext.trim()
-          ? `Context: ${ragContext}\n\nQuestion: ${prompt}`
-          : prompt;
+          ? `Context: ${ragContext}\n\nQuestion: ${activePrompt}`
+          : activePrompt;
         
         const isReasoning = inferenceEngine.availableModels.find(m => m.id === inferenceEngine.state.modelId)?.isReasoning;
         
@@ -316,9 +325,9 @@ export const App: React.FC = () => {
         if (systemPrompt.trim()) {
           messages.push({ role: 'system', content: systemPrompt.trim() });
         }
-        let userContent = prompt;
+        let userContent = activePrompt;
         if (ragEnabled && ragContext.trim()) {
-          userContent = `Retrieved Context: ${ragContext}\n\nUser Question: ${prompt}`;
+          userContent = `Retrieved Context: ${ragContext}\n\nUser Question: ${activePrompt}`;
         }
         messages.push({ role: 'user', content: userContent });
 
@@ -354,7 +363,7 @@ export const App: React.FC = () => {
       // Route 3: If in sample data mode (no model loaded, no BYOE),
       // go straight to synthetic fallback — don't waste time hitting a backend that may not exist.
       if (useSampleData) {
-        const synthetic = generateSyntheticLogits(prompt, ragContext, ragEnabled, systemPrompt);
+        const synthetic = generateSyntheticLogits(activePrompt, ragContext, ragEnabled, systemPrompt);
         setBaselineRawLogits(synthetic.baseline);
         setRagRawLogits(synthetic.rag);
         setDataSource('Sample data');
@@ -370,7 +379,7 @@ export const App: React.FC = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt,
+            prompt: activePrompt,
             system_prompt: systemPrompt || null,
             rag_context: ragEnabled ? ragContext : null,
             top_n: 50,
@@ -474,21 +483,32 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (processedCandidates.length > 0) {
-      const topToken = processedCandidates[0];
-      const initialStep: FlightStep = {
-        stepIndex: 0,
-        selectedToken: topToken,
-        promptSnippet: prompt,
-        rawLogits: activeRawLogits,
-        params,
-        ragEnabled,
-      };
-      setSteps([initialStep]);
-      setCurrentStepIndex(0);
+      setSteps(prev => {
+        if (prev.length === 0) {
+          const topToken = processedCandidates[0];
+          const initialStep: FlightStep = {
+            stepIndex: 0,
+            selectedToken: topToken,
+            promptSnippet: prompt,
+            rawLogits: activeRawLogits,
+            params,
+            ragEnabled,
+          };
+          return [initialStep];
+        }
+        return prev;
+      });
+      setCurrentStepIndex(prev => {
+        if (steps.length === 0) return 0;
+        return prev;
+      });
     }
-  }, [baselineRawLogits, ragRawLogits]);
+  }, [baselineRawLogits, ragRawLogits, processedCandidates]);
 
-  const handleSelectToken = (token: ProcessedTokenCandidate) => {
+  const handleSelectToken = async (token: ProcessedTokenCandidate) => {
+    const updatedPrompt = prompt + token.token_str;
+    setPrompt(updatedPrompt);
+    
     const newStep: FlightStep = {
       stepIndex: steps.length,
       selectedToken: token,
@@ -509,7 +529,26 @@ export const App: React.FC = () => {
       guidance: `Click any orbiting candidate star to force the LLM down a specific sentence path!`,
       timestamp: Date.now(),
     });
+
+    await handleLaunchPrompt(updatedPrompt);
   };
+
+  // Continuous auto-play loop for generation
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    const isPending = isFetchingLogits || inferenceEngine.state.status === 'generating';
+    if (isPlaying && !isPending && processedCandidates.length > 0) {
+      timer = setTimeout(() => {
+        const chosen = processedCandidates.find(c => !c.isFiltered) || processedCandidates[0];
+        if (chosen) {
+          handleSelectToken(chosen);
+        } else {
+          setIsPlaying(false);
+        }
+      }, 950);
+    }
+    return () => clearTimeout(timer);
+  }, [isPlaying, isFetchingLogits, inferenceEngine.state.status, processedCandidates, handleSelectToken]);
 
   const handleGenerateNextStep = () => {
     if (processedCandidates.length === 0) return;
@@ -656,6 +695,8 @@ export const App: React.FC = () => {
                       modelId={inferenceEngine.state.modelId}
                       latestLogits={inferenceEngine.latestLogits}
                       isThinking={inferenceEngine.latestSnapshot?.isThinking}
+                      isPlaying={isPlaying}
+                      onTogglePlay={() => setIsPlaying(!isPlaying)}
                     />
                   )}
                 </div>
