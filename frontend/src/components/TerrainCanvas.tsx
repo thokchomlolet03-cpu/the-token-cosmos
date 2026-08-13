@@ -15,6 +15,7 @@ interface TerrainCanvasProps {
   ragTokenIds?: number[];
   isThinking?: boolean;
   candidates?: ProcessedTokenCandidate[];
+  heightMode?: 'linear' | 'log' | 'logit';
 }
 
 export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({ 
@@ -24,6 +25,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   ragTokenIds = [], 
   isThinking = false,
   candidates = [],
+  heightMode = 'log',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -51,101 +53,100 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   useEffect(() => {
     candidatesRef.current = candidates;
   }, [candidates]);
-  
-  const { isLoaded, loadedModelId, vocabSize, rawCoordinates, loadForModel } = useTerrainCoordinates();
+
+  const thresholdRef = useRef<number>(6.0);
+
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { vocabSize, rawCoordinates, loadForModel } = useTerrainCoordinates(modelId || undefined);
 
   useEffect(() => {
-    // If no model is selected (sample data mode), load a fallback "sample" terrain
-    // so the canvas isn't stuck on "Loading Terrain Coordinates..." forever.
-    const targetId = modelId || '__SAMPLE_FALLBACK__';
-    if (loadedModelId !== targetId) {
-      loadForModel(targetId);
+    if (modelId) {
+      loadForModel(modelId);
     }
-  }, [modelId, loadedModelId, loadForModel]);
+  }, [modelId, loadForModel]);
 
-  // Initialization
+  useEffect(() => {
+    if (rawCoordinates && rawCoordinates.length > 0) {
+      setIsLoaded(true);
+    }
+  }, [rawCoordinates]);
+
   useEffect(() => {
     if (!containerRef.current || !isLoaded || !rawCoordinates) return;
 
-    // Set up scene
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
+
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050714);
-    scene.fog = new THREE.FogExp2(0x050714, 0.002);
+    scene.fog = new THREE.FogExp2(0x050714, 0.0015);
     sceneRef.current = scene;
 
-    // Set up camera
-    const camera = new THREE.PerspectiveCamera(60, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 1, 15000);
     camera.position.set(0, 150, 250);
     cameraRef.current = camera;
 
-    // Set up renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true }); // Antialiasing can conflict with EffectComposer in some cases
-    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
-    
-    // Enable HDR Tone Mapping
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
-    
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x050714);
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Set up Post-Processing Composer (Selective Bloom via HDR)
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    controls.minDistance = 30;
+    controls.maxDistance = 800;
+    controlsRef.current = controls;
+
     const renderScene = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(containerRef.current.clientWidth, containerRef.current.clientHeight),
-        1.5,   // bloom strength
-        0.4,   // bloom radius
-        1.0    // bloom threshold (only blooms pixels > 1.0)
+        new THREE.Vector2(width, height),
+        1.5,
+        0.4,
+        0.85
     );
     const composer = new EffectComposer(renderer);
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
     composerRef.current = composer;
 
-    // Controls
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.maxDistance = 600;
-    controls.minDistance = 10;
-    controls.maxPolarAngle = Math.PI / 2 + 0.2; // allow slightly below horizon
-    controlsRef.current = controls;
+    const gridHelper = new THREE.GridHelper(600, 60, 0x1e293b, 0x0f172a);
+    gridHelper.position.y = -0.5;
+    scene.add(gridHelper);
 
-    // ─── Geometry ───
     const geometry = new THREE.BufferGeometry();
-    
-    // Position (x,y,z) — set coordinates on CPU so Raycaster works correctly
-    const positions = new Float32Array(vocabSize * 3);
-    const tokenIndices = new Float32Array(vocabSize);
-    const isRagGrounded = new Float32Array(vocabSize);
-    const spread = 250.0;
+    const positionArray = new Float32Array(vocabSize * 3);
+    const umapArray = new Float32Array(vocabSize * 2);
+    const isRagArray = new Float32Array(vocabSize);
+    const tokenIndexArray = new Float32Array(vocabSize);
 
+    const spread = 250.0;
     for (let i = 0; i < vocabSize; i++) {
-        positions[i * 3] = rawCoordinates[i * 2] * spread;
-        positions[i * 3 + 1] = 0.0;
-        positions[i * 3 + 2] = rawCoordinates[i * 2 + 1] * spread;
-        
-        tokenIndices[i] = i;
-        isRagGrounded[i] = 0;
+        const x = rawCoordinates[i * 2];
+        const y = rawCoordinates[i * 2 + 1];
+        positionArray[i * 3] = x * spread;
+        positionArray[i * 3 + 1] = 0;
+        positionArray[i * 3 + 2] = y * spread;
+        umapArray[i * 2] = x;
+        umapArray[i * 2 + 1] = y;
+        isRagArray[i] = 0.0;
+        tokenIndexArray[i] = i;
     }
 
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('umapCoord', new THREE.BufferAttribute(rawCoordinates, 2));
-    geometry.setAttribute('tokenIndex', new THREE.BufferAttribute(tokenIndices, 1));
-    geometry.setAttribute('isRagGrounded', new THREE.BufferAttribute(isRagGrounded, 1));
+    geometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
+    geometry.setAttribute('umapCoord', new THREE.BufferAttribute(umapArray, 2));
+    geometry.setAttribute('isRagGrounded', new THREE.BufferAttribute(isRagArray, 1));
+    geometry.setAttribute('tokenIndex', new THREE.BufferAttribute(tokenIndexArray, 1));
 
-    // ─── Texture ───
-    // Calculate square texture size
     const texSize = Math.ceil(Math.sqrt(vocabSize));
     const dataSize = texSize * texSize;
-    // RGFormat uses 2 floats per pixel: R = active prob, G = base prob
     const probabilityData = new Float32Array(dataSize * 2);
-    // Initialize with visible base probability so terrain geography is
-    // visible as a dim ground-level landscape before the first logit pass.
-    for(let i=0; i<probabilityData.length; i+=2) {
-        probabilityData[i] = 0.005;   // R — active (visible ground level)
-        probabilityData[i+1] = 0.005; // G — base
+
+    for (let i = 0; i < probabilityData.length; i += 2) {
+        probabilityData[i] = 0.0;
+        probabilityData[i + 1] = 0.005;
     }
 
     const probabilityTexture = new THREE.DataTexture(
@@ -157,7 +158,6 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     );
     probabilityTexture.needsUpdate = true;
 
-    // ─── Material ───
     const uniforms = {
         time: { value: 0 },
         probabilityTexture: { value: probabilityTexture },
@@ -179,40 +179,30 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     scene.add(points);
     pointsRef.current = points;
 
-    // Animation loop
     let animationFrameId: number;
     const startTime = performance.now();
 
-    const render = () => {
-        animationFrameId = requestAnimationFrame(render);
-        controls.update();
-        if (pointsRef.current) {
-            (pointsRef.current.material as THREE.ShaderMaterial).uniforms.time.value = (performance.now() - startTime) / 1000;
+    const trackCamera = () => {
+      if (controlsRef.current) controlsRef.current.update();
+      if (targetFocusRef.current && controlsRef.current && cameraRef.current) {
+        const controls = controlsRef.current;
+        const cam = cameraRef.current;
+        const targetPos = targetFocusRef.current.position;
+        const targetLook = targetFocusRef.current.lookAt;
+        cam.position.lerp(targetPos, 0.05);
+        controls.target.lerp(targetLook, 0.05);
+        if (cam.position.distanceTo(targetPos) < 1.0 && controls.target.distanceTo(targetLook) < 1.0) {
+            targetFocusRef.current = null;
         }
-        
-        // Handle manual Camera Interpolation (when user clicks [SPACE] button)
-        if (targetFocusRef.current && controlsRef.current && cameraRef.current) {
-            const controls = controlsRef.current;
-            const cam = cameraRef.current;
-            const targetPos = targetFocusRef.current.position;
-            const targetLook = targetFocusRef.current.lookAt;
-            
-            // Interpolate camera position
-            cam.position.lerp(targetPos, 0.05);
-            // Interpolate controls target
-            controls.target.lerp(targetLook, 0.05);
-            
-            // If close enough, release focus
-            if (cam.position.distanceTo(targetPos) < 1.0 && controls.target.distanceTo(targetLook) < 1.0) {
-                targetFocusRef.current = null;
-            }
-        }
-        
-        composer.render();
+      }
+      if (rendererRef.current && composerRef.current && sceneRef.current && cameraRef.current && pointsRef.current) {
+        (pointsRef.current.material as THREE.ShaderMaterial).uniforms.time.value = (performance.now() - startTime) / 1000;
+        composerRef.current.render();
+      }
+      animationFrameId = requestAnimationFrame(trackCamera);
     };
-    render();
+    trackCamera();
 
-    // Resize handler
     const handleResize = () => {
         if (!containerRef.current || !cameraRef.current || !rendererRef.current || !composerRef.current) return;
         cameraRef.current.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
@@ -222,40 +212,31 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     };
     window.addEventListener('resize', handleResize);
 
-    // ─── Raycast Mouse Move Listener ───
     const raycaster = new THREE.Raycaster();
-    raycaster.params.Points.threshold = 4.0; // Trigger selection radius
     const mouse = new THREE.Vector2();
-
     const onMouseMove = (event: MouseEvent) => {
         if (!containerRef.current || !cameraRef.current || !pointsRef.current) return;
-        
+        raycaster.params.Points.threshold = thresholdRef.current;
         const rect = containerRef.current.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        
         raycaster.setFromCamera(mouse, cameraRef.current);
         const intersects = raycaster.intersectObject(pointsRef.current);
-        
         if (intersects.length > 0) {
-            const intersect = intersects[0];
-            const idx = intersect.index;
+            const idx = intersects[0].index;
             if (idx !== undefined && idx >= 0 && idx < vocabSize) {
                 const material = pointsRef.current.material as THREE.ShaderMaterial;
                 const texture = material.uniforms.probabilityTexture.value as THREE.DataTexture;
                 const probData = texture.image.data as Float32Array;
-                
                 const activeProb = probData[idx * 2];
                 const candidate = candidatesRef.current?.find(c => c.token_id === idx);
-                
                 const tooltipX = event.clientX - rect.left + 15;
                 const tooltipY = event.clientY - rect.top + 15;
-                
                 if (candidate) {
                     setHoveredToken({
                         id: idx,
                         tokenStr: candidate.token_str,
-                        probability: candidate.probability,
+                        probability: activeProb,
                         rank: candidate.rank,
                         rawLogit: candidate.raw_logit,
                         isFiltered: candidate.isFiltered,
@@ -264,47 +245,37 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                         x: tooltipX,
                         y: tooltipY,
                     });
-                } else {
+                } else if (activeProb > 0.0001) {
                     setHoveredToken({
                         id: idx,
                         tokenStr: `Token #${idx}`,
                         probability: activeProb,
-                        rank: -1,
-                        rawLogit: -999.0,
+                        rank: 999,
+                        rawLogit: latestLogits ? latestLogits[idx] : 0,
                         isFiltered: true,
-                        filterReason: 'Top-K (Fringe)',
-                        isRag: false,
+                        filterReason: 'Fringe',
                         x: tooltipX,
                         y: tooltipY,
                     });
+                } else {
+                    setHoveredToken(null);
                 }
-                return;
             }
+        } else {
+            setHoveredToken(null);
         }
-        setHoveredToken(null);
     };
-
-    const onMouseLeave = () => {
-        setHoveredToken(null);
-    };
-
     containerRef.current.addEventListener('mousemove', onMouseMove);
-    containerRef.current.addEventListener('mouseleave', onMouseLeave);
 
     return () => {
+        window.removeEventListener('resize', handleResize);
         if (containerRef.current) {
             containerRef.current.removeEventListener('mousemove', onMouseMove);
-            containerRef.current.removeEventListener('mouseleave', onMouseLeave);
-        }
-        window.removeEventListener('resize', handleResize);
-        cancelAnimationFrame(animationFrameId);
-        controls.dispose();
-        if (rendererRef.current) {
-            rendererRef.current.dispose();
-            if (containerRef.current?.contains(rendererRef.current.domElement)) {
+            if (rendererRef.current && rendererRef.current.domElement) {
                 containerRef.current.removeChild(rendererRef.current.domElement);
             }
         }
+        cancelAnimationFrame(animationFrameId);
         geometry.dispose();
         material.dispose();
         probabilityTexture.dispose();
@@ -312,148 +283,126 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     };
   }, [isLoaded, rawCoordinates, vocabSize]);
 
-  // Target focus reference for interpolation
   const targetFocusRef = useRef<{position: THREE.Vector3, lookAt: THREE.Vector3} | null>(null);
 
-  // Focus Camera on Greedy Anchor (manual)
   const focusOnGreedyAnchor = () => {
     if (argmaxIndexRef.current === -1 || !rawCoordinates || !controlsRef.current || !cameraRef.current) return;
     const x = rawCoordinates[argmaxIndexRef.current * 2];
     const y = rawCoordinates[argmaxIndexRef.current * 2 + 1];
-    
-    // Spread matches shaders
     const spread = 250.0;
     const targetLook = new THREE.Vector3(x * spread, 0, y * spread);
     const targetPos = new THREE.Vector3(targetLook.x, 50, targetLook.z + 80);
-    
     targetFocusRef.current = { position: targetPos, lookAt: targetLook };
   };
 
-  // Continuous Camera Tracking during Thinking Phase
   useEffect(() => {
-    if (!isThinking || argmaxIndexRef.current === -1 || !rawCoordinates || !controlsRef.current || !cameraRef.current) return;
-    
-    let animationFrameId: number;
-    const trackCamera = () => {
-      const idx = argmaxIndexRef.current;
-      if (idx !== -1 && controlsRef.current && cameraRef.current && rawCoordinates) {
-        const x = rawCoordinates[idx * 2];
-        const y = rawCoordinates[idx * 2 + 1];
-        const spread = 250.0;
-        const targetLook = new THREE.Vector3(x * spread, 0, y * spread);
-        
-        // Slow floaty ease interpolation (lerp 0.01)
-        controlsRef.current.target.lerp(targetLook, 0.01);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        focusOnGreedyAnchor();
       }
-      animationFrameId = requestAnimationFrame(trackCamera);
     };
-    
-    trackCamera();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isThinking, rawCoordinates]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [rawCoordinates]);
 
-  // Update RAG Grounding Buffer
+  useEffect(() => {
+    if (latestLogits && isLoaded) {
+      setTimeout(focusOnGreedyAnchor, 100);
+    }
+  }, [latestLogits, isLoaded]);
+
   useEffect(() => {
     if (!pointsRef.current || !isLoaded) return;
     const geometry = pointsRef.current.geometry;
     const isRagAttr = geometry.getAttribute('isRagGrounded') as THREE.BufferAttribute;
-    
-    // Reset all to 0
-    for(let i=0; i<isRagAttr.count; i++) {
-        isRagAttr.setX(i, 0);
-    }
-    
-    // Set RAG tokens to 1
+    for(let i=0; i<isRagAttr.count; i++) { isRagAttr.setX(i, 0); }
     for(const tid of ragTokenIds) {
-        if (tid >= 0 && tid < isRagAttr.count) {
-            isRagAttr.setX(tid, 1);
-        }
+        if (tid >= 0 && tid < isRagAttr.count) { isRagAttr.setX(tid, 1); }
     }
-    
     isRagAttr.needsUpdate = true;
   }, [ragTokenIds, isLoaded]);
 
-  // Update DataTexture when logits, params, or candidates change
   useEffect(() => {
     if (!latestLogits || !pointsRef.current || !isLoaded) return;
-    
     const points = pointsRef.current;
     const material = points.material as THREE.ShaderMaterial;
     const texture = material.uniforms.probabilityTexture.value as THREE.DataTexture;
     const data = texture.image.data as Float32Array;
-    
-    // Map of candidate filters and probabilities (which have Top-K, Top-P, Min-P applied)
     const filterMap = new Map<number, boolean>();
     const activeProbMap = new Map<number, number>();
     for (const c of candidates) {
         filterMap.set(c.token_id, c.isFiltered);
         activeProbMap.set(c.token_id, c.probability);
     }
-    
-    // Convert logits to probabilities (Softmax)
     let maxLogit = -Infinity;
     let argmaxIndex = -1;
     const tokenCount = Math.min(latestLogits.length, vocabSize, data.length / 2);
-
     for (let i = 0; i < tokenCount; i++) {
         if (latestLogits[i] > maxLogit) {
             maxLogit = latestLogits[i];
             argmaxIndex = i;
         }
     }
-    
+    let minLogit = maxLogit - 12.0;
+    const activeCandidates = candidates.filter(c => !c.isFiltered);
+    if (activeCandidates.length > 1) {
+        const activeLogits = activeCandidates.map(c => latestLogits[c.token_id]).filter(isFinite);
+        if (activeLogits.length > 0) minLogit = Math.min(...activeLogits);
+    }
+    const logitRange = Math.max(1.0, maxLogit - minLogit);
     let sumExpBase = 0;
-    const baseTemp = 1.0; // Baseline temperature
-    
+    const baseTemp = 1.0;
     for (let i = 0; i < tokenCount; i++) {
-        // Active probability: if filtered or not in candidates list (fringe), it drops to 0.0
         const isFiltered = filterMap.has(i) ? filterMap.get(i) : true;
         if (isFiltered) {
             data[i * 2] = 0.0;
         } else {
-            data[i * 2] = activeProbMap.get(i) ?? 0.0;
+            if (heightMode === 'logit') {
+                const logitVal = latestLogits[i];
+                const normLogit = Math.max(0.0, Math.min(1.0, (logitVal - minLogit) / logitRange));
+                data[i * 2] = 0.1 + normLogit * 0.9;
+            } else if (heightMode === 'log') {
+                const prob = activeProbMap.get(i) ?? 0.0;
+                if (prob > 0.0) {
+                    const logVal = Math.log10(prob);
+                    const normLog = Math.max(0.0, Math.min(1.0, (logVal + 4.0) / 4.0));
+                    data[i * 2] = 0.1 + normLog * 0.9;
+                } else {
+                    data[i * 2] = 0.0;
+                }
+            } else {
+                data[i * 2] = activeProbMap.get(i) ?? 0.0;
+            }
         }
-        
-        // Base probability: raw baseline softmax
         const valBase = Math.exp((latestLogits[i] - maxLogit) / baseTemp);
         data[i * 2 + 1] = valBase;
         sumExpBase += valBase;
     }
-    
-    for (let i = 0; i < tokenCount; i++) {
-        data[i * 2 + 1] /= sumExpBase;
-    }
-    
-    // Update CPU position buffer to match elevation
+    for (let i = 0; i < tokenCount; i++) { data[i * 2 + 1] /= sumExpBase; }
     const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
     const positions = positionsAttr.array as Float32Array;
     const maxHeight = 150.0;
-    
-    const smoothStep = (edge0: number, edge1: number, x: number) => {
-      const t = Math.max(0.0, Math.min(1.0, (x - edge0) / (edge1 - edge0)));
+    const smoothStep = (e0: number, e1: number, x: number) => {
+      const t = Math.max(0.0, Math.min(1.0, (x - e0) / (e1 - e0)));
       return t * t * (3.0 - 2.0 * t);
     };
-
     for (let i = 0; i < tokenCount; i++) {
         const activeProb = data[i * 2];
         const elevation = smoothStep(0.001, 0.1, activeProb) * (maxHeight * 0.3) + 
                           smoothStep(0.1, 1.0, activeProb) * (maxHeight * 0.7);
-        
-        positions[i * 3 + 1] = elevation; // Update Y coordinate
+        positions[i * 3 + 1] = elevation;
     }
     positionsAttr.needsUpdate = true;
-    
     argmaxIndexRef.current = argmaxIndex;
     material.uniforms.greedyAnchorIndex.value = argmaxIndex;
     material.uniforms.uIsThinking.value = isThinking ? 1.0 : 0.0;
     texture.needsUpdate = true;
-  }, [latestLogits, isLoaded, candidates, isThinking, vocabSize]);
+  }, [latestLogits, isLoaded, candidates, isThinking, vocabSize, heightMode]);
 
   return (
     <div className="w-full h-full relative group">
         <div ref={containerRef} className="absolute inset-0 cursor-move" />
-
-        {/* Floating Raycaster Tooltip */}
         {hoveredToken && (
             <div 
                 className="absolute z-30 pointer-events-none bg-slate-950/90 backdrop-blur-md border border-slate-700/60 rounded-lg px-2.5 py-2 text-[10px] font-mono text-slate-200 shadow-2xl min-w-[150px]"

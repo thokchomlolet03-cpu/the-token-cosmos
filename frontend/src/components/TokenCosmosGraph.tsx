@@ -129,6 +129,7 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [heightMode, setHeightMode] = useState<'linear' | 'log' | 'logit'>('log');
 
   // Compute telemetry
   const entropy = useMemo(() => {
@@ -215,7 +216,42 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
           ragTokenIds={ragEnabled ? candidates.filter(c => c.is_rag_grounded).map(c => c.token_id) : []}
           isThinking={isThinking}
           candidates={candidates}
+          heightMode={heightMode}
         />
+        
+        {/* Floating Height Mode Controls */}
+        <div className="absolute top-4 left-4 z-10 flex bg-black/60 backdrop-blur-md rounded-lg border border-white/10 p-0.5 pointer-events-auto shadow-lg">
+          <button
+            onClick={() => setHeightMode('linear')}
+            className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
+              heightMode === 'linear'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
+                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+            }`}
+          >
+            Linear
+          </button>
+          <button
+            onClick={() => setHeightMode('log')}
+            className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
+              heightMode === 'log'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
+                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+            }`}
+          >
+            Log Scale
+          </button>
+          <button
+            onClick={() => setHeightMode('logit')}
+            className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
+              heightMode === 'logit'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow'
+                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+            }`}
+          >
+            Logits
+          </button>
+        </div>
         
         {/* Floating Top 10 Overlay */}
         <div className="absolute top-4 right-4 w-64 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 overflow-hidden pointer-events-none">
