@@ -373,7 +373,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     isRagAttr.needsUpdate = true;
   }, [ragTokenIds, isLoaded]);
 
-  // Update DataTexture when logits or params change
+  // Update DataTexture when logits, params, or candidates change
   useEffect(() => {
     if (!latestLogits || !pointsRef.current || !isLoaded) return;
     
@@ -382,9 +382,17 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     const texture = material.uniforms.probabilityTexture.value as THREE.DataTexture;
     const data = texture.image.data as Float32Array;
     
+    // Map of candidate filters and probabilities (which have Top-K, Top-P, Min-P applied)
+    const filterMap = new Map<number, boolean>();
+    const activeProbMap = new Map<number, number>();
+    for (const c of candidates) {
+        filterMap.set(c.token_id, c.isFiltered);
+        activeProbMap.set(c.token_id, c.probability);
+    }
+    
     // Convert logits to probabilities (Softmax)
     let maxLogit = -Infinity;
-    let argmaxIndex = 0;
+    let argmaxIndex = -1;
     const tokenCount = Math.min(latestLogits.length, vocabSize, data.length / 2);
 
     for (let i = 0; i < tokenCount; i++) {
@@ -394,24 +402,25 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         }
     }
     
-    let sumExpActive = 0;
     let sumExpBase = 0;
-    const temp = Math.max(params.temperature, 0.01);
     const baseTemp = 1.0; // Baseline temperature
     
     for (let i = 0; i < tokenCount; i++) {
-        const valActive = Math.exp((latestLogits[i] - maxLogit) / temp);
+        // Active probability: if filtered or not in candidates list (fringe), it drops to 0.0
+        const isFiltered = filterMap.has(i) ? filterMap.get(i) : true;
+        if (isFiltered) {
+            data[i * 2] = 0.0;
+        } else {
+            data[i * 2] = activeProbMap.get(i) ?? 0.0;
+        }
+        
+        // Base probability: raw baseline softmax
         const valBase = Math.exp((latestLogits[i] - maxLogit) / baseTemp);
-        
-        data[i * 2] = valActive;
         data[i * 2 + 1] = valBase;
-        
-        sumExpActive += valActive;
         sumExpBase += valBase;
     }
     
     for (let i = 0; i < tokenCount; i++) {
-        data[i * 2] /= sumExpActive;
         data[i * 2 + 1] /= sumExpBase;
     }
     
@@ -438,7 +447,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     material.uniforms.greedyAnchorIndex.value = argmaxIndex;
     material.uniforms.uIsThinking.value = isThinking ? 1.0 : 0.0;
     texture.needsUpdate = true;
-  }, [latestLogits, isLoaded, params.temperature, isThinking, vocabSize]);
+  }, [latestLogits, isLoaded, candidates, isThinking, vocabSize]);
 
   return (
     <div className="w-full h-full relative group">
