@@ -407,12 +407,19 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   const targetFocusRef = useRef<{position: THREE.Vector3, lookAt: THREE.Vector3} | null>(null);
 
   const focusOnGreedyAnchor = () => {
-    if (argmaxIndexRef.current === -1 || !rawCoordinates || !controlsRef.current || !cameraRef.current) return;
+    if (argmaxIndexRef.current === -1 || !rawCoordinates || !controlsRef.current || !cameraRef.current || !pointsRef.current) return;
     const x = rawCoordinates[argmaxIndexRef.current * 2];
     const y = rawCoordinates[argmaxIndexRef.current * 2 + 1];
+    
+    // Retrieve the actual dynamic elevation of the greedy anchor from the positions array
+    const points = pointsRef.current;
+    const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
+    const positions = positionsAttr.array as Float32Array;
+    const elevation = positions[argmaxIndexRef.current * 3 + 1];
+    
     const spread = 250.0;
-    const targetLook = new THREE.Vector3(x * spread, 0, y * spread);
-    const targetPos = new THREE.Vector3(targetLook.x, 50, targetLook.z + 80);
+    const targetLook = new THREE.Vector3(x * spread, elevation, y * spread);
+    const targetPos = new THREE.Vector3(targetLook.x, elevation + 50, targetLook.z + 100);
     targetFocusRef.current = { position: targetPos, lookAt: targetLook };
   };
 
@@ -574,7 +581,12 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         {/* Interactive Controls Overlay */}
         {isLoaded && argmaxIndexRef.current !== -1 && (
             <button 
-                onClick={focusOnGreedyAnchor}
+                type="button"
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    focusOnGreedyAnchor();
+                }}
                 className="absolute bottom-4 right-4 bg-white/10 hover:bg-white/20 backdrop-blur text-white text-[10px] font-mono px-3 py-1.5 rounded-full border border-white/20 shadow-lg transition-colors z-20"
             >
                 [SPACE] Focus Greedy Anchor
