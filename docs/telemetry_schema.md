@@ -49,9 +49,26 @@ The telemetry records are ingested into the BigQuery table `cosmos_telemetry.per
 
 ## 3. Data Retention & Compliance Rules
 
-- **PII Protections**: Payloads are checked at the API Gateway; if text fields are present in the telemetry endpoint payload, the gateway rejects the transmission.
-- **Raw Event Logs**: Detailed rows are preserved in BigQuery for **90 days**, after which they are automatically pruned.
-- **Aggregated Metric Tables**: Daily aggregates (e.g. average tokens/sec, support rate by browser) are computed via scheduled SQL queries and retained **indefinitely** for long-term capability trends.
+To comply with SOC 2, CCPA, and GDPR data minimization requirements, the platform enforces automated data lifecycles and complete PII segregation.
+
+### 1. BigQuery Partition Expiration (TTL)
+To avoid manual deletion scripts and guarantee database-level pruning, all telemetry tables implement **time-partitioning expiration**:
+- **TTL Limit**: 90 Days (7,776,000 seconds).
+- **Automated Drops**: BigQuery automatically purges partitioned data partitions once their partition date (calculated from the `timestamp` field) exceeds the 90-day threshold.
+- **Configuration Commands**:
+  ```bash
+  # Enforce 90-day automatic partition expiration on performance logs
+  bq update --time_partitioning_expiration 7776000 <GCP_PROJECT_ID>:cosmos_telemetry.performance_logs
+
+  # Enforce 90-day automatic partition expiration on friction points
+  bq update --time_partitioning_expiration 7776000 <GCP_PROJECT_ID>:cosmos_telemetry.friction_points
+  ```
+
+### 2. Anonymization & Session Isolation
+- **No Cookies or LocalStorage**: The `session_id` is an ephemeral UUID generated in-memory on page load via `crypto.randomUUID()`. It is never stored in persistent browser cookies, indexDB, or local storage.
+- **Volatile Lifespan**: Closing the browser tab destroys the `session_id` context. Subsequent visits generate entirely new, uncorrelated session identifier strings.
+- **PII Strip-Check**: Telemetry endpoint routes (e.g. `POST /api/telemetry`) accept only numeric indicators (tokens/second, temperature, min_p, model_id, etc.). Any string payload containing prompt inputs or generated text is rejected by schema validation filters on the FastAPI backend before reaching database storage. Because no database record maps back to user identities, the dataset is permanently anonymous.
+
 
 ---
 

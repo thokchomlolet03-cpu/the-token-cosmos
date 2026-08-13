@@ -84,8 +84,8 @@ To prevent credential leakage and comply with enterprise security auditing, The 
 ```
 
 ### 1. Automated Detection (Pre-Commit & CI)
-- **Local Git Hooks**: The git pre-commit hook (installed via `scripts/install_hooks.py`) runs `python3 scripts/detect_secrets.py` on every commit. If a developer accidentally hardcodes an API key, the commit is blocked.
-- **CI/CD Gates**: The GitHub Actions runner executes `detect_secrets.py` on all branch pushes and pull requests. If a leak bypasses local hooks, the CI build fails immediately and prevents deployment.
+- **Local Git Hooks**: The git pre-commit hook (installed via `scripts/install_hooks.py`) runs `gitleaks protect` locally on staged files. If a developer accidentally stages a secret, the commit is blocked.
+- **CI/CD Gates**: The GitHub Actions runner executes `gitleaks-action` on all branch pushes and pull requests. If a leak bypasses local hooks, the CI build fails immediately and prevents deployment.
 
 ### 2. Runtime Secrets Resolution (GCP Secret Manager)
 If the backend is scaled to connect to external systems requiring authentication (e.g., relational databases, private reasoning endpoints):
@@ -99,4 +99,25 @@ If the backend is scaled to connect to external systems requiring authentication
 
 ### 3. CI/CD Environment Credentials
 Deployment authentication variables (`GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`) are stored as **GitHub Repository Variables**, rather than Secrets. Because Workload Identity Federation uses temporary OIDC tokens, these variables are completely safe to expose to developers in the repository settings.
+
+---
+
+## 6. Access Control & Branch Protection Rules
+
+To comply with SOC 2 access control guidelines and prevent unauthorized code execution in the production environment, the following governance rules are enforced:
+
+### 1. GitHub Branch Protection Policies
+Direct pushes to the `main` and `master` branches are blocked. Branch protection rules mandate:
+- **Required Reviews**: All pull requests must receive at least **one approving review** from a designated code owner (mapped via `.github/CODEOWNERS`) before they can be merged.
+- **Mandatory Status Checks**: The pull request cannot merge until all automated checks in `.github/workflows/docs.yml` pass successfully. This guarantees that:
+  - Trivy Container vulnerability scans report zero vulnerabilities.
+  - Gitleaks detects zero hardcoded secrets.
+  - `pip-audit` and `npm audit` return zero dependency CVE vulnerabilities.
+  - Backend unit tests pass.
+- **Block Force Pushes**: Force pushes (`git push --force`) are globally blocked to prevent history alteration.
+- **Signed Commits Enforced**: All commits must be cryptographically signed using GPG or SSH keys. Unsigned commits are blocked by the gateway.
+
+### 2. Two-Factor Authentication (2FA)
+All contributors, organization members, and external collaborators are required to enable Two-Factor Authentication (2FA) on their GitHub profiles. Contributors without 2FA active are automatically stripped of repository access.
+
 

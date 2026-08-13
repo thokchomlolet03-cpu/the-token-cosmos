@@ -12,6 +12,7 @@ REQUIRED_FILES = [
     "monitoring.md",
     "security.md",
     "disaster_recovery.md",
+    "incident_response.md",
     "api.md",
     "sla.md",
     "onboarding.md",

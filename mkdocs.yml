@@ -45,6 +45,7 @@ nav:
   - Monitoring & Observability: monitoring.md
   - Security & Vulnerability: security.md
   - Disaster Recovery: disaster_recovery.md
+  - Incident Response Plan: incident_response.md
   - API Reference: api.md
   - SLAs & Requirements: sla.md
   - Developer Onboarding: onboarding.md

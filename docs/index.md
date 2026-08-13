@@ -67,14 +67,15 @@ To explore specific topics in detail, navigate through the following sections:
 4. **[Monitoring & Observability](monitoring.md)**: Understand key telemetry metrics, live dashboard configurations, and alerting thresholds.
 5. **[Security & Vulnerability Management](security.md)**: Learn about CORS policies, Workload Identity Federation, and browser sandboxing (COOP/COEP headers).
 6. **[Disaster Recovery & Rollback](disaster_recovery.md)**: Quick-recovery runbooks, stateless recovery steps, and health verification checklists.
-7. **[API Reference](api.md)**: Detailed API specs for `/api/logits` and `/api/health` with code integration scripts.
-8. **[Service Level Agreements (SLAs)](sla.md)**: Latency bounds, uptime commitments, and client performance expectations.
-9. **[Developer Setup & Onboarding](onboarding.md)**: Step-by-step instructions for running the development server and local models on your machine.
-10. **[End-User Interface Manual](user_guide.md)**: Guides on how to use Mission Control sliders, interpret 3D visual star shapes/UMAP terrain, and troubleshoot interface loops.
-11. **[LLM & WebGPU Glossary](glossary.md)**: A dictionary of key technical terms such as Logit, Softmax, Min-P, UMAP, and WebGPU.
-12. **[Compliance & AI Safety](compliance.md)**: Open-source license attributions, model usage guidelines, and a browser-side data privacy guarantee.
-13. **[Release Changelog](changelog.md)**: Semantic Versioning details for version milestones, including the current `v4.1.0` release.
-14. **[Testing Strategy](testing.md)**: Explains backend unit testing, browser WebGPU worker mocking, and WebGL E2E Playwright setup.
-15. **[Telemetry & BigQuery Schemas](telemetry_schema.md)**: Specifications for Google Cloud BigQuery data ingestion, payloads, PII filtering, and service identity.
-16. **[Architecture Decision Records (ADR)](adrs/0001-use-edge-webgpu-inference.md)**: Historical log of major architectural decisions, starting with ADR-0001.
+7. **[Incident Response Plan](incident_response.md)**: Sev1 triage protocols, containment rollbacks, and blameless post-mortem audit guidelines.
+8. **[API Reference](api.md)**: Detailed API specs for `/api/logits` and `/api/health` with code integration scripts.
+9. **[Service Level Agreements (SLAs)](sla.md)**: Latency bounds, uptime commitments, and client performance expectations.
+10. **[Developer Setup & Onboarding](onboarding.md)**: Step-by-step instructions for running the development server and local models on your machine.
+11. **[End-User Interface Manual](user_guide.md)**: Guides on how to use Mission Control sliders, interpret 3D visual star shapes/UMAP terrain, and troubleshoot interface loops.
+12. **[LLM & WebGPU Glossary](glossary.md)**: A dictionary of key technical terms such as Logit, Softmax, Min-P, UMAP, and WebGPU.
+13. **[Compliance & AI Safety](compliance.md)**: Open-source license attributions, model usage guidelines, and a browser-side data privacy guarantee.
+14. **[Release Changelog](changelog.md)**: Semantic Versioning details for version milestones, including the current `v4.1.0` release.
+15. **[Testing Strategy](testing.md)**: Explains backend unit testing, browser WebGPU worker mocking, and WebGL E2E Playwright setup.
+16. **[Telemetry & BigQuery Schemas](telemetry_schema.md)**: Specifications for Google Cloud BigQuery data ingestion, payloads, PII filtering, and service identity.
+17. **[Architecture Decision Records (ADR)](adrs/0001-use-edge-webgpu-inference.md)**: Historical log of major architectural decisions, starting with ADR-0001.
 

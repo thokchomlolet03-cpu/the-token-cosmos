@@ -137,3 +137,59 @@ Reasoning-capable models structure their outputs by prefixing thinking sequences
   - *Thought Log Panel*: The frontend intercepts the `isThinking` packets and streams them into a separate collapsible text field, hiding them from the standard user generation box.
   - *Canvas Highlight Dimming*: The 3D canvas dims the main Supergiant star constellations and highlights the reasoning tokens as a faint outer cloud of asteroids, illustrating the cognitive density of the model's self-reflection process in real-time.
 
+---
+
+## 5. Hardware Degradation & Graceful Fallback Strategy
+
+To guarantee platform resilience on legacy browsers, mobile devices, or hardware with constrained graphical resources, **The Token Cosmos** implements a progressive, three-tier hardware degradation cascade.
+
+```
+                   PROGRESSIVE DEGRADATION CASCADE
+                   
+   ┌────────────────────────────────────────────────────────┐
+   │                  App Initialization                    │
+   └────────────────────────────────────────────────────────┘
+                               │
+               ┌───────────────┴───────────────┐
+      [WebGPU Supported]              [Unsupported / OOM]
+               │                               │
+               ▼                               ▼
+     ┌───────────────────┐           ┌───────────────────┐
+     │  Tier 1: WebGPU   │           │   Tier 2: WASM    │
+     │  In-VRAM LLM Run  │           │  CPU-Threaded Run │
+     │  (> 35 tokens/s)  │           │  (5-10 tokens/s)  │
+     └───────────────────┘           └───────────────────┘
+                                               │
+                                       [WASM Load Error /
+                                        Strict RAM Cap]
+                                               │
+                                               ▼
+                                     ┌───────────────────┐
+                                     │  Tier 3: Backend  │
+                                     │  FastAPI API /    │
+                                     │  Synthetic Logits │
+                                     └───────────────────┘
+```
+
+### 1. Cascade Degradation Tiers
+
+#### Tier 1: Local WebGPU Acceleration (Target Mode)
+- **Runtime**: Executed via `@mlc-ai/web-llm` in a background WebWorker, binding directly to Vulkan, Metal, or Direct3D12 drivers.
+- **Capabilities**: Full 60 FPS rendering on the 3D semantic canvas; instant Z-axis terrain heights. SmolLM2/Qwen models operate inside dedicated VRAM segments.
+- **Metrics**: Uptime and token throughput > 35 tokens/sec.
+
+#### Tier 2: WebAssembly (WASM) CPU Fallback
+- **Trigger**: The client detects that WebGPU context creation fails (`navigator.gpu` is undefined, or `requestAdapter()` returns null).
+- **Execution**: The browser unloads the WebGPU worker thread and initializes a multi-threaded WASM compilation of the inference engine. 
+- **User Interface Impact**: A warning banner is displayed: `Running in WebAssembly CPU Fallback Mode. Canvas updates may occur at a lower refresh rate.`
+- **Metrics**: Performance drops to 5-10 tokens/sec. The particle count on the 3D starfield is automatically throttled from 150,000 to 30,000 nodes to prevent main-thread lag.
+
+#### Tier 3: Backend API / Synthetic Logit Fallback (Zero-Compute Client)
+- **Trigger**: The local browser execution throws a fatal memory allocation error (OOM) due to strict sandbox limitations (common on mobile browsers with < 1GB RAM caps), or WebAssembly execution fails.
+- **Execution**: All local WebWorker scripts are terminated. The client initiates a silent proxy bridge, routing all logits retrieval to the FastAPI backend service (`POST /api/logits`).
+- **Backend Resolution**:
+  - The server attempts to fulfill queries using the CPU-bound GGUF model (`llama-cpp-python` loading `qwen2.5-0.5b-instruct-q4_k_m.gguf` in CPU memory).
+  - If the GGUF model fails or is unprovisioned, the API cascades to the deterministic **Synthetic Logit Generator Engine**.
+- **User Interface Impact**: The visualizer remains fully functional and interactive. However, all inference computations are executed on the server, ensuring compatibility on legacy devices.
+
+
