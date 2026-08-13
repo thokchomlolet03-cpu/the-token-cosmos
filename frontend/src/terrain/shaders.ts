@@ -55,14 +55,17 @@ void main() {
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
 
-    // Dynamic point sizing
-    float baseSize = 2.5;
-    float activeSize = smoothstep(0.01, 1.0, max(activeProb, baseProb)) * 15.0;
-    float ragSize = isRagGrounded * 10.0;
-    float anchorSize = vIsGreedyAnchor * 25.0; // Huge pillar for the north star
+    // Dynamic point sizing locked to individual probability
+    float minSize = 2.0;
+    float maxSize = 15.0;
+    float probability = max(activeProb, baseProb);
+    float activeSize = mix(minSize, maxSize, probability);
+    
+    float ragSize = isRagGrounded * 6.0;
+    float anchorSize = vIsGreedyAnchor * 10.0; // Extra size boost for target #1 word
     
     // Attenuate with distance
-    gl_PointSize = (baseSize + activeSize + ragSize + anchorSize) * (300.0 / -mvPosition.z);
+    gl_PointSize = (activeSize + ragSize + anchorSize) * (300.0 / -mvPosition.z);
 }
 `;
 

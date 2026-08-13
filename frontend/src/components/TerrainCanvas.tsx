@@ -194,7 +194,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         uniforms,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: THREE.NormalBlending
     });
 
     const points = new THREE.Points(geometry, material);
