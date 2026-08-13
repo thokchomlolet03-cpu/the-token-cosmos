@@ -828,6 +828,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-production-error-aggregation-alert-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Production Error Aggregation &amp; Alert Routing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Production Error Aggregation &amp; Alert Routing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-client-server-error-aggregation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Client &amp; Server Error Aggregation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-alert-escalation-routing-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Alert Escalation &amp; Routing Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1275,6 +1314,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-production-error-aggregation-alert-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Production Error Aggregation &amp; Alert Routing
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Production Error Aggregation &amp; Alert Routing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-client-server-error-aggregation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Client &amp; Server Error Aggregation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-alert-escalation-routing-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Alert Escalation &amp; Routing Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1404,6 +1482,48 @@
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
 </span></code></pre></div>
 The uptime monitor (e.g. Google Cloud Monitoring Uptime Check) polls <code>/api/health</code> every 60 seconds to assert a <code>200 OK</code> status.</li>
+</ul>
+<hr />
+<h2 id="4-production-error-aggregation-alert-routing">4. Production Error Aggregation &amp; Alert Routing</h2>
+<p>To ensure client-side WebGPU failures or backend uncaught exceptions do not go unnoticed, The Token Cosmos implements an automated runtime error tracking and alert dispatching flow.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>                     ERROR AGGREGATION &amp; ALERTS
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>   Client / Browser Errors             Backend API Errors
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>   (WebGPU Crash, Device Lost)         (500 Exceptions, OOM)
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>              │                                  │
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>              ▼                                  ▼
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>   ┌─────────────────────────────────────────────────────────┐
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>   │         Sentry / GCP Error Ingestion Gateway            │
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>   └─────────────────────────────────────────────────────────┘
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>                                │
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>               ┌────────────────┴────────────────┐
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>               ▼                                 ▼
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>       [P1: Critical Outage]             [P2: Degradation]
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>      (Healthcheck failure)             (WebGPU OOM &gt; 10%)
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>               │                                 │
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>               ▼                                 ▼
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>         PagerDuty Alert                    Slack Alert
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>      (SLA: Ack &lt; 15 mins)            (#cosmos-degradation)
+</span></code></pre></div>
+<h3 id="1-client-server-error-aggregation">1. Client &amp; Server Error Aggregation</h3>
+<ul>
+<li><strong>Client-Side Exception Capture</strong>: Sentry is initialized in the React client and the <code>WebGPUInferenceWorker.ts</code>. It intercepts unhandled runtime exceptions and WebGPU device lost events (<code>device.lost</code>). Every client-side event payload is enriched with:</li>
+<li>User-Agent details (OS, Browser version).</li>
+<li>WebGPU Adapter metadata (vendor name, device architecture, driver version if available).</li>
+<li>Selected model tier during the crash.</li>
+<li><strong>Server-Side Exception Capture</strong>: Unhandled HTTP 500 exceptions, database timeout conditions, or startup faults in FastAPI are intercepted by the Sentry middleware and GCP Error Reporting.</li>
+</ul>
+<h3 id="2-alert-escalation-routing-rules">2. Alert Escalation &amp; Routing Rules</h3>
+<p>Alerts are classified based on severity to prevent alert fatigue:</p>
+<ul>
+<li><strong>P1: Critical Outages</strong></li>
+<li><em>Triggers</em>: <code>/api/health</code> uptime checks fail for 2 consecutive cycles, or unhandled exception volume exceeds 10 per minute.</li>
+<li><em>Escalation Route</em>: Pushed directly to <strong>PagerDuty</strong> for immediate pager notifications.</li>
+<li><em>Response SLA</em>: On-call engineer must acknowledge within <strong>15 minutes</strong>. Unacknowledged alerts automatically escalate to the secondary manager pool after 10 minutes.</li>
+<li><strong>P2: Performance Degradation</strong></li>
+<li><em>Triggers</em>: WebGPU initialization failure or forced WASM/Synthetic mode fallback exceeds 10% of active sessions in a 5-minute window.</li>
+<li><em>Escalation Route</em>: Posted to the <code>#cosmos-degradation</code> Slack channel.</li>
+<li><em>Response SLA</em>: Checked and addressed during standard business hours (next business day).</li>
 </ul>
 
 

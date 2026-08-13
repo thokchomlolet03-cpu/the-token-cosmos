@@ -854,6 +854,73 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-disaster-recovery-operational-metrics-rto-rpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Disaster Recovery Operational Metrics (RTO &amp; RPO)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Disaster Recovery Operational Metrics (RTO &amp; RPO)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-recovery-objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Recovery Objectives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-bigquery-data-restoration-verification-drills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. BigQuery Data Restoration &amp; Verification Drills
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. BigQuery Data Restoration &amp; Verification Drills">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#drill-a-validate-time-travel-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drill A: Validate Time-Travel Access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#drill-b-snapshot-restoration-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drill B: Snapshot Restoration Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1219,6 +1286,73 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-disaster-recovery-operational-metrics-rto-rpo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Disaster Recovery Operational Metrics (RTO &amp; RPO)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Disaster Recovery Operational Metrics (RTO &amp; RPO)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-recovery-objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Recovery Objectives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-bigquery-data-restoration-verification-drills" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. BigQuery Data Restoration &amp; Verification Drills
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. BigQuery Data Restoration &amp; Verification Drills">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#drill-a-validate-time-travel-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drill A: Validate Time-Travel Access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#drill-b-snapshot-restoration-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drill B: Snapshot Restoration Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1301,13 +1435,62 @@
 </span></code></pre></div>
 <ol>
 <li><strong>Verify Outage</strong>: Attempt to curl the health endpoint: <code>curl -I https://the-token-cosmos.run.app/api/health</code>.</li>
-<li><strong>Shift Traffic</strong>: If the health check fails or returns an error, execute a rollback to the last stable revision using Method A or B.</li>
+<li><strong>Shift Status</strong>: If the health check fails or returns an error, execute a rollback to the last stable revision using Method A or B.</li>
 <li><strong>Analyze Stacktrace</strong>: Check the Google Cloud Log Explorer to view the FastAPI logs and identify the bug.</li>
 <li><strong>Local Reproduction</strong>: Rebuild the image locally using the Docker command:
    <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>the-token-cosmos-test<span class="w"> </span>.
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span><span class="m">8080</span>:8080<span class="w"> </span>the-token-cosmos-test
 </span></code></pre></div></li>
 <li><strong>Publish Hotfix</strong>: Push the fix to <code>main</code> to trigger the automated CI/CD pipeline.</li>
+</ol>
+<hr />
+<h2 id="4-disaster-recovery-operational-metrics-rto-rpo">4. Disaster Recovery Operational Metrics (RTO &amp; RPO)</h2>
+<p>To maintain platform compliance, the engineering team adheres to strict operational limits during outages.</p>
+<h3 id="1-recovery-objectives">1. Recovery Objectives</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: center;">Target</th>
+<th style="text-align: left;">System Mitigation &amp; Fail-Safe Mechanics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>RTO (Recovery Time Objective)</strong></td>
+<td style="text-align: center;"><strong>&lt; 15 minutes</strong></td>
+<td style="text-align: left;">- Cloud Run container image revisions are cached. Shifting traffic takes <strong>&lt; 1 minute</strong>.<br>- Multi-region backups: DNS nameserver configurations can route requests to standby GCP regions within 10 minutes.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>RPO (Recovery Point Objective)</strong></td>
+<td style="text-align: center;"><strong>&lt; 1 hour</strong></td>
+<td style="text-align: left;">- Telemetry logs are buffered locally in the browser memory for up to 5 minutes.<br>- <strong>Backend Ingestion Fail-Safe</strong>: If BigQuery becomes unreachable, the FastAPI backend automatically diverts the incoming telemetry payloads into a local, temporary SQLite file buffer on ephemeral storage. These logs are re-flushed to BigQuery once connection health is restored, maintaining an actual RPO of <strong>0 minutes</strong> during DB downtime.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-bigquery-data-restoration-verification-drills">2. BigQuery Data Restoration &amp; Verification Drills</h3>
+<p>BigQuery datasets utilize daily snapshots with a 30-day retention policy. Once per quarter, engineers must execute the following data recovery drills to verify backup integrity.</p>
+<h4 id="drill-a-validate-time-travel-access">Drill A: Validate Time-Travel Access</h4>
+<p>Run a SQL validation check in the BigQuery Console to verify that historical data remains queryable using BigQuery's native time-travel features:
+<div class="language-sql highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">-- Query rows exactly as they existed 1 hour ago</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="n">cosmos_telemetry</span><span class="p">.</span><span class="n">friction_points</span><span class="o">`</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">FOR</span><span class="w"> </span><span class="n">SYSTEM_TIME</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">OF</span><span class="w"> </span><span class="n">TIMESTAMP_SUB</span><span class="p">(</span><span class="k">CURRENT_TIMESTAMP</span><span class="p">(),</span><span class="w"> </span><span class="nb">INTERVAL</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">HOUR</span><span class="p">);</span>
+</span></code></pre></div></p>
+<h4 id="drill-b-snapshot-restoration-validation">Drill B: Snapshot Restoration Validation</h4>
+<ol>
+<li>Create a verification dataset target:
+   <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bq<span class="w"> </span>mk<span class="w"> </span>cosmos_telemetry_drill_restore
+</span></code></pre></div></li>
+<li>Restore the daily snapshot into the verification dataset:
+   <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bq<span class="w"> </span>cp<span class="w"> </span>cosmos_telemetry.friction_points@1723536000<span class="w"> </span>cosmos_telemetry_drill_restore.friction_points_restored
+</span></code></pre></div></li>
+<li>Run count checks against the restored table:
+   <div class="language-sql highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="o">`</span><span class="n">cosmos_telemetry_drill_restore</span><span class="p">.</span><span class="n">friction_points_restored</span><span class="o">`</span><span class="p">;</span>
+</span></code></pre></div></li>
+<li>Delete the temporary verification dataset after completing the drill:
+   <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>bq<span class="w"> </span>rm<span class="w"> </span>-r<span class="w"> </span>-f<span class="w"> </span>cosmos_telemetry_drill_restore
+</span></code></pre></div></li>
 </ol>
 
 
