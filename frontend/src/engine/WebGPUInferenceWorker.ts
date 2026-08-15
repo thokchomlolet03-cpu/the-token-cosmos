@@ -287,7 +287,7 @@ function checkRepetitionLoop(tokens: string[]): { detected: boolean; phrase: str
 
 // ─── Multi-Step Generation ──────────────────────────────────────────
 
-async function generateSteps(prompt: string, maxTokens: number, maxThinkingTokens?: number) {
+async function generateSteps(prompt: string, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) {
   if (!engine || !currentModelId) {
     post({ type: 'ERROR', message: 'No model loaded' });
     return;
@@ -302,7 +302,14 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
     let isThinking = false;
     let accumulatedText = '';
     const generatedTokens: string[] = [];
-    let currentMessages = [{ role: 'user', content: prompt }];
+    
+    // Construct full message context (Context-Restoration Guarantee)
+    const currentMessages: Array<{ role: string; content: string }> = [];
+    if (systemPrompt && systemPrompt.trim().length > 0) {
+      currentMessages.push({ role: 'system', content: systemPrompt.trim() });
+    }
+    currentMessages.push({ role: 'user', content: prompt });
+
     let hasTruncated = false;
     let totalSteps = 0;
 
@@ -393,13 +400,16 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
           hasTruncated = false;
           // Force exit by injecting </think>
           accumulatedText += '</think>\n';
-          currentMessages = [
-              { role: 'user', content: prompt },
-              { role: 'assistant', content: accumulatedText }
-          ];
+          const continuationMessages: Array<{ role: string; content: string }> = [];
+          if (systemPrompt && systemPrompt.trim().length > 0) {
+            continuationMessages.push({ role: 'system', content: systemPrompt.trim() });
+          }
+          continuationMessages.push({ role: 'user', content: prompt });
+          continuationMessages.push({ role: 'assistant', content: accumulatedText });
+          
           isThinking = false;
           stream = await engine.chat.completions.create({
-              messages: currentMessages as any,
+              messages: continuationMessages as any,
               max_tokens: maxTokens - capturedStepIndex,
               temperature: 1.0,
               logprobs: true,
@@ -442,7 +452,7 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
       break;
 
     case 'GENERATE_STEP':
-      await generateSteps(msg.prompt, msg.maxTokens, msg.maxThinkingTokens);
+      await generateSteps(msg.prompt, msg.maxTokens, msg.maxThinkingTokens, msg.systemPrompt);
       break;
 
     case 'RESET_CHAT':

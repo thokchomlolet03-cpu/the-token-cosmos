@@ -306,9 +306,9 @@ export const App: React.FC = () => {
         if (isReasoning) {
             // For reasoning models, we want to watch the stream to see the thinking phase
             // We pass the thinking budget. The total tokens can be budget + some fixed output buffer
-            inferenceEngine.generateSteps(fullPrompt, (params.maxThinkingTokens || 2048) + 1024, params.maxThinkingTokens);
+            inferenceEngine.generateSteps(fullPrompt, (params.maxThinkingTokens || 2048) + 1024, params.maxThinkingTokens, systemPrompt);
         } else {
-            // Standard models just evaluate a single pass
+            // Standard models evaluate with context-preserving prompts
             inferenceEngine.getLogits(fullPrompt);
         }
         setDataSource(`Local WebGPU - ${inferenceEngine.state.modelId}`);

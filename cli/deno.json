@@ -1,0 +1,14 @@
+{
+  "name": "@the-token-cosmos/lint",
+  "version": "1.0.0",
+  "exports": "./src/cosmos-lint.ts",
+  "tasks": {
+    "start": "deno run --unstable-webgpu --allow-read --allow-write --allow-env src/cosmos-lint.ts",
+    "sample": "deno run --unstable-webgpu --allow-read --allow-write --allow-env src/cosmos-lint.ts --sample",
+    "compile": "deno compile --unstable-webgpu --allow-read --allow-write --allow-env --output bin/cosmos-lint src/cosmos-lint.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "deno.ns", "dom"],
+    "strict": true
+  }
+}

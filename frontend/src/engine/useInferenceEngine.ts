@@ -36,7 +36,7 @@ export interface InferenceEngine {
   // Actions
   loadModel: (modelId: string) => void;
   getLogits: (prompt: string) => void;
-  generateSteps: (prompt: string, maxTokens: number, maxThinkingTokens?: number) => void;
+  generateSteps: (prompt: string, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) => void;
   resetChat: () => void;
   abort: () => void;
   unload: () => void;
@@ -213,11 +213,11 @@ export function useInferenceEngine(): InferenceEngine {
     send({ type: 'GET_FULL_LOGITS', prompt });
   }, [send]);
 
-  const generateSteps = useCallback((prompt: string, maxTokens: number, maxThinkingTokens?: number) => {
+  const generateSteps = useCallback((prompt: string, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) => {
     setGeneratedTokens([]);
     setIsLoopAborted(false);
     setLoopAbortedMessage(null);
-    send({ type: 'GENERATE_STEP', prompt, maxTokens, maxThinkingTokens });
+    send({ type: 'GENERATE_STEP', prompt, maxTokens, maxThinkingTokens, systemPrompt });
   }, [send]);
 
   const resetChat = useCallback(() => {

@@ -55,7 +55,7 @@ export interface InferenceState {
 
 export type WorkerInbound =
   | { type: 'LOAD_MODEL'; modelId: string }
-  | { type: 'GENERATE_STEP'; prompt: string; maxTokens: number; maxThinkingTokens?: number }
+  | { type: 'GENERATE_STEP'; prompt: string; systemPrompt?: string; maxTokens: number; maxThinkingTokens?: number }
   | { type: 'GET_FULL_LOGITS'; prompt: string }
   | { type: 'RESET_CHAT' }
   | { type: 'ABORT' }
