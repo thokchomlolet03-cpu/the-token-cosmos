@@ -500,6 +500,44 @@
   
   
     <li class="md-tabs__item">
+      <a href="../interactive_labs/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Interactive Labs Curriculum
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../cli_guide/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Prompt Linter CLI Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../changelog/" class="md-tabs__link">
         
   
@@ -1003,6 +1041,45 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#post-apitelemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/telemetry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="POST /api/telemetry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-body-schema_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request Body Schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response-statuses_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response Statuses
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1047,6 +1124,39 @@
     <span class="md-ellipsis">
       
         LogitResponse
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetrybatchrequest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TelemetryBatchRequest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetryfrictionevent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TelemetryFrictionEvent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetryresponse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TelemetryResponse
       
     </span>
   </a>
@@ -1288,6 +1398,60 @@
     
   
     Third-Party Subprocessors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interactive_labs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interactive Labs Curriculum
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Linter CLI Guide
   
 
     
@@ -1552,6 +1716,45 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#post-apitelemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /api/telemetry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="POST /api/telemetry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-body-schema_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request Body Schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response-statuses_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response Statuses
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1596,6 +1799,39 @@
     <span class="md-ellipsis">
       
         LogitResponse
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetrybatchrequest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TelemetryBatchRequest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetryfrictionevent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TelemetryFrictionEvent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetryresponse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TelemetryResponse
       
     </span>
   </a>
@@ -1777,6 +2013,35 @@
 </tbody>
 </table>
 <hr />
+<h3 id="post-apitelemetry"><code>POST /api/telemetry</code></h3>
+<p><strong>Summary</strong>: Ingest Telemetry
+<strong>Description</strong>: Ingests anonymized prompt friction telemetry from CLI and Studio.
+Extracts tenant org_id from JWT or headers and relays to BigQuery.</p>
+<h4 id="request-body-schema_1">Request Body Schema</h4>
+<p>This endpoint requires a JSON body matching the <strong><a href="#telemetrybatchrequest">TelemetryBatchRequest</a></strong> schema.</p>
+<h4 id="response-statuses_3">Response Statuses</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">HTTP Code</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Schema</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>200</code></td>
+<td style="text-align: left;">Successful Response</td>
+<td style="text-align: left;"><a href="#telemetryresponse">TelemetryResponse</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>422</code></td>
+<td style="text-align: left;">Validation Error</td>
+<td style="text-align: left;"><a href="#httpvalidationerror">HTTPValidationError</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
 <h2 id="3-data-schemas-pydantic-models">3. Data Schemas (Pydantic Models)</h2>
 <h3 id="httpvalidationerror"><code>HTTPValidationError</code></h3>
 <table>
@@ -1879,6 +2144,144 @@
 </tr>
 <tr>
 <td style="text-align: left;"><code>processing_time_ms</code></td>
+<td style="text-align: left;"><code>number</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="telemetrybatchrequest"><code>TelemetryBatchRequest</code></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Field Name</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: center;">Required</th>
+<th style="text-align: left;">Description / Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>events</code></td>
+<td style="text-align: left;"><code>Array of [TelemetryFrictionEvent](#telemetryfrictionevent)</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="telemetryfrictionevent"><code>TelemetryFrictionEvent</code></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Field Name</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: center;">Required</th>
+<th style="text-align: left;">Description / Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>event_id</code></td>
+<td style="text-align: left;"><code>string</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>client_timestamp</code></td>
+<td style="text-align: left;"><code>integer</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>total_tokens</code></td>
+<td style="text-align: left;"><code>integer</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>avg_entropy</code></td>
+<td style="text-align: left;"><code>number</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>max_entropy</code></td>
+<td style="text-align: left;"><code>number</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>friction_count</code></td>
+<td style="text-align: left;"><code>integer</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>recommended_min_p</code></td>
+<td style="text-align: left;"><code>number</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>recommended_freq_penalty</code></td>
+<td style="text-align: left;"><code>number</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cost_reduction_pct</code></td>
+<td style="text-align: left;"><code>number</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>model_id</code></td>
+<td style="text-align: left;"><code>unknown</code></td>
+<td style="text-align: center;">No</td>
+<td style="text-align: left;">default: <code>SmolLM2-135M-Instruct</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>org_id</code></td>
+<td style="text-align: left;"><code>unknown</code></td>
+<td style="text-align: center;">No</td>
+<td style="text-align: left;">-</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="telemetryresponse"><code>TelemetryResponse</code></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Field Name</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: center;">Required</th>
+<th style="text-align: left;">Description / Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>status</code></td>
+<td style="text-align: left;"><code>string</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ingested_count</code></td>
+<td style="text-align: left;"><code>integer</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>org_id</code></td>
+<td style="text-align: left;"><code>string</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">-</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>processed_at</code></td>
 <td style="text-align: left;"><code>number</code></td>
 <td style="text-align: center;">Yes</td>
 <td style="text-align: left;">-</td>

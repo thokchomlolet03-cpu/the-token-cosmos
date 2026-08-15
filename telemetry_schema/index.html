@@ -498,6 +498,44 @@
   
   
     <li class="md-tabs__item">
+      <a href="../interactive_labs/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Interactive Labs Curriculum
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../cli_guide/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Prompt Linter CLI Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../changelog/" class="md-tabs__link">
         
   
@@ -1015,6 +1053,60 @@
   
   
     <li class="md-nav__item">
+      <a href="../interactive_labs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interactive Labs Curriculum
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Linter CLI Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../changelog/" class="md-nav__link">
         
   
@@ -1235,10 +1327,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#bigquery-partitioning-cost-controls" class="md-nav__link">
+  <a href="#bigquery-multi-tenant-partitioning-clustering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        BigQuery Partitioning &amp; Cost Controls
+        BigQuery Multi-Tenant Partitioning &amp; Clustering
       
     </span>
   </a>
@@ -1418,10 +1510,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#bigquery-partitioning-cost-controls" class="md-nav__link">
+  <a href="#bigquery-multi-tenant-partitioning-clustering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        BigQuery Partitioning &amp; Cost Controls
+        BigQuery Multi-Tenant Partitioning &amp; Clustering
       
     </span>
   </a>
@@ -1628,6 +1720,12 @@
 <td style="text-align: left;">Unique session UUID (PII-free).</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>org_id</code></td>
+<td style="text-align: center;"><code>STRING</code></td>
+<td style="text-align: center;">Required</td>
+<td style="text-align: left;">Enterprise tenant ID extracted from Auth0 JWT claims (<code>https://the-token-cosmos.com/org_id</code>).</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>phrase</code></td>
 <td style="text-align: center;"><code>STRING</code></td>
 <td style="text-align: center;">Required</td>
@@ -1665,10 +1763,10 @@
 </tr>
 </tbody>
 </table>
-<h3 id="bigquery-partitioning-cost-controls">BigQuery Partitioning &amp; Cost Controls</h3>
-<p>To minimize analysis costs, the <code>friction_points</code> table is partitioned by day using the <code>timestamp</code> field:
-- <strong>Partition Filter</strong>: All analytical queries must include a filter on <code>timestamp</code> (e.g. <code>WHERE timestamp &gt; TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)</code>).
-- <strong>Clustering</strong>: Rows are clustered by <code>severity</code> and <code>model_id</code> to speed up filtering on critical failures.</p>
+<h3 id="bigquery-multi-tenant-partitioning-clustering">BigQuery Multi-Tenant Partitioning &amp; Clustering</h3>
+<p>To minimize query billing and ensure complete data isolation across enterprise clients:
+- <strong>Day Partitioning</strong>: Partitioned by <code>timestamp</code> with a mandatory 90-day TTL expiration limit.
+- <strong>Tenant Clustering</strong>: Rows are <strong>Clustered by <code>org_id</code> and <code>severity</code></strong>, allowing instant, sub-second single-tenant reporting without costly full-table scans across multiple enterprise organizations.</p>
 
 
 
