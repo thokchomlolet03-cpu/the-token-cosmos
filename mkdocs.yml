@@ -53,6 +53,8 @@ nav:
   - Terminology Glossary: glossary.md
   - Compliance & Safety: compliance.md
   - Third-Party Subprocessors: subprocessors.md
+  - Interactive Labs Curriculum: interactive_labs.md
+  - Prompt Linter CLI Guide: cli_guide.md
   - Release Changelog: changelog.md
   - Testing Strategy: testing.md
   - Data Telemetry: telemetry_schema.md

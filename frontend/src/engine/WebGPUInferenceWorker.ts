@@ -267,6 +267,24 @@ async function getFullLogits(prompt: string) {
   }
 }
 
+// ─── Loop Cycle Detection ───────────────────────────────────────────
+
+function checkRepetitionLoop(tokens: string[]): { detected: boolean; phrase: string } | null {
+  if (tokens.length < 12) return null;
+
+  for (const n of [3, 4, 5]) {
+    if (tokens.length < n * 3) continue;
+    const lastN = tokens.slice(-n).join('');
+    const prevN = tokens.slice(-2 * n, -n).join('');
+    const prevPrevN = tokens.slice(-3 * n, -2 * n).join('');
+
+    if (lastN.length > 2 && lastN === prevN && prevN === prevPrevN) {
+      return { detected: true, phrase: lastN.trim() };
+    }
+  }
+  return null;
+}
+
 // ─── Multi-Step Generation ──────────────────────────────────────────
 
 async function generateSteps(prompt: string, maxTokens: number, maxThinkingTokens?: number) {
@@ -283,6 +301,7 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
     
     let isThinking = false;
     let accumulatedText = '';
+    const generatedTokens: string[] = [];
     let currentMessages = [{ role: 'user', content: prompt }];
     let hasTruncated = false;
     let totalSteps = 0;
@@ -299,12 +318,30 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
 
     while (true) {
       for await (const chunk of stream) {
-        if (abortController.signal.aborted) break;
+        if (abortController?.signal.aborted) break;
 
         const delta = chunk.choices?.[0]?.delta?.content;
         if (delta && capturedLogits) {
           accumulatedText += delta;
+          generatedTokens.push(delta);
           
+          // In-Worker Loop Detection
+          const loop = checkRepetitionLoop(generatedTokens);
+          if (loop) {
+            abortController?.abort();
+            if (engine) {
+              await engine.interruptGenerate();
+              await engine.resetChat();
+            }
+            post({
+              type: 'LOOP_ABORTED',
+              message: 'Autoregressive loop detected. Stream aborted safely.',
+              repeatedPhrase: loop.phrase,
+            });
+            post({ type: 'STATUS', status: 'ready', progress: 100, text: 'Loop detected & aborted safely' });
+            return;
+          }
+
           // Detect <think> tags
           if (accumulatedText.includes('<think>') && !accumulatedText.includes('</think>')) {
               isThinking = true;
@@ -408,9 +445,22 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
       await generateSteps(msg.prompt, msg.maxTokens, msg.maxThinkingTokens);
       break;
 
+    case 'RESET_CHAT':
+      if (engine) {
+        await engine.resetChat();
+      }
+      capturedLogits = null;
+      capturedStepIndex = 0;
+      post({ type: 'STATUS', status: 'ready', progress: 100, text: 'Context reset' });
+      break;
+
     case 'ABORT':
       abortController?.abort();
-      if (engine) await engine.interruptGenerate();
+      if (engine) {
+        await engine.interruptGenerate();
+        await engine.resetChat();
+      }
+      post({ type: 'STATUS', status: 'ready', progress: 100, text: 'Generation aborted' });
       break;
 
     case 'UNLOAD':
@@ -423,3 +473,4 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
       break;
   }
 };
+

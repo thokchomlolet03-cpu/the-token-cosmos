@@ -57,6 +57,7 @@ export type WorkerInbound =
   | { type: 'LOAD_MODEL'; modelId: string }
   | { type: 'GENERATE_STEP'; prompt: string; maxTokens: number; maxThinkingTokens?: number }
   | { type: 'GET_FULL_LOGITS'; prompt: string }
+  | { type: 'RESET_CHAT' }
   | { type: 'ABORT' }
   | { type: 'UNLOAD' };
 
@@ -66,6 +67,7 @@ export type WorkerOutbound =
   | { type: 'VOCAB_LOADED'; modelId: string; vocabList: string[] }
   | { type: 'LOGITS_READY'; snapshot: LogitSnapshotTransfer }
   | { type: 'TOKEN_GENERATED'; tokenId: number; tokenStr: string; stepIndex: number }
+  | { type: 'LOOP_ABORTED'; message: string; repeatedPhrase: string }
   | { type: 'GENERATION_COMPLETE'; totalSteps: number }
   | { type: 'ERROR'; message: string };
 

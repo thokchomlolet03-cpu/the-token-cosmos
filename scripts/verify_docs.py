@@ -20,6 +20,8 @@ REQUIRED_FILES = [
     "glossary.md",
     "compliance.md",
     "subprocessors.md",
+    "interactive_labs.md",
+    "cli_guide.md",
     "changelog.md",
     "testing.md",
     "telemetry_schema.md",

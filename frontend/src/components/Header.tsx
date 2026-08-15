@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Sparkles, Github, Layers, BookOpen, Orbit, Settings, Share2, Check, Swords, Code2 } from 'lucide-react';
+import { Sparkles, Github, Layers, BookOpen, Orbit, Settings, Share2, Check, Swords, Code2, GraduationCap } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'learn' | 'experiment' | 'export';
-  setActiveTab: (tab: 'learn' | 'experiment' | 'export') => void;
+  activeTab: 'learn' | 'experiment' | 'labs' | 'export';
+  setActiveTab: (tab: 'learn' | 'experiment' | 'labs' | 'export') => void;
   splitView: boolean;
   setSplitView: (val: boolean) => void;
   onOpenSettings: () => void;
@@ -42,18 +42,18 @@ export const Header: React.FC<HeaderProps> = ({
                 The Token Cosmos
               </h1>
               <span className="hidden rounded-full border border-blue-500/30 bg-blue-500/20 px-2.5 py-0.5 font-mono text-[10px] text-blue-300 sm:inline">
-                v4.0
+                v4.1
               </span>
             </div>
             <p className="text-xs text-gray-400 hidden sm:block">
-              See How AI Actually Thinks & Chooses Words
+              Interactive X-Ray & Linter for Language Model Probabilities
             </p>
           </div>
         </div>
 
         {/* Floating Pill Action Controls & Navigation */}
         <div className="flex w-full items-center justify-between gap-1 overflow-x-auto sm:ml-auto sm:w-auto sm:justify-end sm:gap-2">
-          {/* A/B Duel Mode Toggle (Only in EXPERIMENT mode) */}
+          {/* Share Setup Link */}
           <button
             onClick={handleCopy}
             aria-label="Copy current parameter setup link to clipboard"
@@ -106,6 +106,20 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <BookOpen className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">LEARN</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('labs')}
+              role="tab"
+              aria-selected={activeTab === 'labs'}
+              aria-label="Switch to LABS mode"
+              className={`flex items-center space-x-1.5 rounded-full p-2 text-xs font-medium transition-all sm:px-3.5 sm:py-1 ${
+                activeTab === 'labs'
+                  ? 'bg-cyan-600 text-white font-semibold shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <GraduationCap className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">LABS</span>
             </button>
             <button
               onClick={() => setActiveTab('experiment')}

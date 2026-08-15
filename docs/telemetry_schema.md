@@ -103,6 +103,7 @@ The **Friction Hunter** is a diagnostic bridge that analyzes the logical flow of
 | :--- | :---: | :---: | :--- |
 | `timestamp` | `TIMESTAMP` | Required | Ingestion date/time. |
 | `session_id` | `STRING` | Required | Unique session UUID (PII-free). |
+| `org_id` | `STRING` | Required | Enterprise tenant ID extracted from Auth0 JWT claims (`https://the-token-cosmos.com/org_id`). |
 | `phrase` | `STRING` | Required | The text fragment that caused the drop (e.g. "Select * from"). |
 | `log_prob_drop` | `FLOAT` | Required | The logit difference $D_i$. |
 | `previous_log_prob`| `FLOAT` | Required | Probability before the drop. |
@@ -110,8 +111,9 @@ The **Friction Hunter** is a diagnostic bridge that analyzes the logical flow of
 | `severity` | `STRING` | Required | Severity rating: `critical`, `warning`, or `info`. |
 | `reason` | `STRING` | Required | Structured text reason string indicating why the drop occurred. |
 
-### BigQuery Partitioning & Cost Controls
-To minimize analysis costs, the `friction_points` table is partitioned by day using the `timestamp` field:
-- **Partition Filter**: All analytical queries must include a filter on `timestamp` (e.g. `WHERE timestamp > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)`).
-- **Clustering**: Rows are clustered by `severity` and `model_id` to speed up filtering on critical failures.
+### BigQuery Multi-Tenant Partitioning & Clustering
+To minimize query billing and ensure complete data isolation across enterprise clients:
+- **Day Partitioning**: Partitioned by `timestamp` with a mandatory 90-day TTL expiration limit.
+- **Tenant Clustering**: Rows are **Clustered by `org_id` and `severity`**, allowing instant, sub-second single-tenant reporting without costly full-table scans across multiple enterprise organizations.
+
 

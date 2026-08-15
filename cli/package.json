@@ -1,0 +1,22 @@
+{
+  "name": "@the-token-cosmos/lint",
+  "version": "1.0.0",
+  "description": "Zero-Egress Prompt Linter & Sampling Friction Hunter CLI",
+  "main": "dist/cosmos-lint.js",
+  "bin": {
+    "cosmos-lint": "./bin/cosmos-lint.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint:demo": "ts-node src/cosmos-lint.ts --sample",
+    "test": "ts-node src/cosmos-lint.ts --prompts test/sample-prompts.json"
+  },
+  "keywords": ["llm", "sampling", "webgpu", "prompts", "linter", "min-p", "entropy"],
+  "author": "The Token Cosmos Team",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

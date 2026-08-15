@@ -37,6 +37,7 @@ export interface InferenceEngine {
   loadModel: (modelId: string) => void;
   getLogits: (prompt: string) => void;
   generateSteps: (prompt: string, maxTokens: number, maxThinkingTokens?: number) => void;
+  resetChat: () => void;
   abort: () => void;
   unload: () => void;
 
@@ -45,6 +46,8 @@ export interface InferenceEngine {
   latestSnapshot: LogitSnapshot | null;
   latestCandidates: DecodedTokenCandidate[];
   generatedTokens: Array<{ tokenStr: string; stepIndex: number }>;
+  isLoopAborted: boolean;
+  loopAbortedMessage: string | null;
 
   // Conversion: raw Float32Array logits → RawTokenCandidate[] for existing math pipeline
   logitsToRawCandidates: (logits: Float32Array, ragTokens?: Set<string>) => RawTokenCandidate[];
@@ -70,6 +73,8 @@ export function useInferenceEngine(): InferenceEngine {
   const [latestSnapshot, setLatestSnapshot] = useState<LogitSnapshot | null>(null);
   const [latestCandidates, setLatestCandidates] = useState<DecodedTokenCandidate[]>([]);
   const [generatedTokens, setGeneratedTokens] = useState<Array<{ tokenStr: string; stepIndex: number }>>([]);
+  const [isLoopAborted, setIsLoopAborted] = useState<boolean>(false);
+  const [loopAbortedMessage, setLoopAbortedMessage] = useState<string | null>(null);
 
   // Tokenizer vocabulary cache (token_id → string mapping)
   // Built lazily when we get the first logit snapshot
@@ -145,6 +150,11 @@ export function useInferenceEngine(): InferenceEngine {
           ]);
           break;
 
+        case 'LOOP_ABORTED':
+          setIsLoopAborted(true);
+          setLoopAbortedMessage(msg.message);
+          break;
+
         case 'GENERATION_COMPLETE':
           // State already updated by STATUS message
           break;
@@ -190,18 +200,30 @@ export function useInferenceEngine(): InferenceEngine {
     setLatestSnapshot(null);
     setLatestCandidates([]);
     setGeneratedTokens([]);
+    setIsLoopAborted(false);
+    setLoopAbortedMessage(null);
     vocabMapRef.current = null;
     send({ type: 'LOAD_MODEL', modelId });
   }, [send]);
 
   const getLogits = useCallback((prompt: string) => {
     setGeneratedTokens([]);
+    setIsLoopAborted(false);
+    setLoopAbortedMessage(null);
     send({ type: 'GET_FULL_LOGITS', prompt });
   }, [send]);
 
   const generateSteps = useCallback((prompt: string, maxTokens: number, maxThinkingTokens?: number) => {
     setGeneratedTokens([]);
+    setIsLoopAborted(false);
+    setLoopAbortedMessage(null);
     send({ type: 'GENERATE_STEP', prompt, maxTokens, maxThinkingTokens });
+  }, [send]);
+
+  const resetChat = useCallback(() => {
+    setIsLoopAborted(false);
+    setLoopAbortedMessage(null);
+    send({ type: 'RESET_CHAT' });
   }, [send]);
 
   const abort = useCallback(() => {
@@ -213,6 +235,8 @@ export function useInferenceEngine(): InferenceEngine {
     setLatestSnapshot(null);
     setLatestCandidates([]);
     setGeneratedTokens([]);
+    setIsLoopAborted(false);
+    setLoopAbortedMessage(null);
     vocabMapRef.current = null;
     send({ type: 'UNLOAD' });
   }, [send]);
@@ -245,8 +269,6 @@ export function useInferenceEngine(): InferenceEngine {
       }
 
       // Sort by raw_logit descending and take top 200 for visualization
-      // (full 128K is too many for the UI; terrain renders all, but
-      //  the candidate list feeds MissionControl/Inspector)
       candidates.sort((a, b) => b.raw_logit - a.raw_logit);
       return candidates.slice(0, 200);
     },
@@ -262,6 +284,7 @@ export function useInferenceEngine(): InferenceEngine {
     loadModel,
     getLogits,
     generateSteps,
+    resetChat,
     abort,
     unload,
 
@@ -269,6 +292,8 @@ export function useInferenceEngine(): InferenceEngine {
     latestSnapshot,
     latestCandidates,
     generatedTokens,
+    isLoopAborted,
+    loopAbortedMessage,
 
     logitsToRawCandidates,
   };

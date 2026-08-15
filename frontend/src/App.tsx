@@ -14,6 +14,10 @@ import { PRESET_SCENARIOS, SAMPLE_RAW_LOGITS_MAP } from './utils/tokenData';
 import { calculateTokenProbabilities, normalizeOpenAILogprobs } from './utils/samplingMath';
 import { useUrlState } from './utils/useUrlState';
 import { useInferenceEngine } from './engine/useInferenceEngine';
+import { LabPanel } from './components/InteractiveLabs/LabPanel';
+import { useLabVerifier } from './components/InteractiveLabs/useLabVerifier';
+import { LAB_SCENARIOS } from './data/labScenarios';
+import { LabScenario } from './types/labs';
 
 function markRagGrounding(
   candidates: RawTokenCandidate[],
@@ -33,8 +37,18 @@ function markRagGrounding(
 }
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'learn' | 'experiment' | 'export'>('experiment');
+  const [activeTab, setActiveTab] = useState<'learn' | 'experiment' | 'labs' | 'export'>('experiment');
   const [splitView, setSplitView] = useState<boolean>(false);
+
+  // ─── Interactive Guided Labs State ──────────────────────────────
+  const [activeLab, setActiveLab] = useState<LabScenario>(LAB_SCENARIOS[0]);
+  const [completedLabIds, setCompletedLabIds] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('token_cosmos_completed_labs') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
   // ─── WebGPU Inference Engine (v4.0) ─────────────────────────────
   const inferenceEngine = useInferenceEngine();
@@ -581,6 +595,49 @@ export const App: React.FC = () => {
     && ['idle', 'downloading', 'loading', 'error'].includes(inferenceEngine.state.status);
   const isInferencePending = isFetchingLogits || inferenceEngine.state.status === 'generating';
 
+  // ─── Guided Labs Hook & Handlers ────────────────────────────────
+  const labEvaluation = useLabVerifier({
+    scenario: activeTab === 'labs' ? activeLab : null,
+    params,
+    flightSteps: steps,
+    outputText: steps.map(s => s.selectedToken.token_str).join(''),
+    ragContext: ragEnabled ? ragContext : '',
+    isGenerating: isInferencePending,
+    isLoopAborted: inferenceEngine.isLoopAborted,
+  });
+
+  useEffect(() => {
+    if (labEvaluation.status === 'passed' && activeLab && !completedLabIds.includes(activeLab.id)) {
+      setCompletedLabIds(prev => {
+        const next = [...prev, activeLab.id];
+        localStorage.setItem('token_cosmos_completed_labs', JSON.stringify(next));
+        return next;
+      });
+    }
+  }, [labEvaluation.status, activeLab, completedLabIds]);
+
+  const handleSelectLab = (lab: LabScenario) => {
+    setActiveLab(lab);
+    setPrompt(lab.brokenPrompt);
+    setParams(prev => ({
+      ...prev,
+      ...lab.initialParams,
+    }));
+    if (lab.ragContext) {
+      setRagContext(lab.ragContext);
+      setRagEnabled(true);
+    } else {
+      setRagEnabled(false);
+    }
+    inferenceEngine.resetChat();
+    setSteps([]);
+    setCurrentStepIndex(0);
+  };
+
+  const handleResetLabScenario = () => {
+    handleSelectLab(activeLab);
+  };
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#050714] text-gray-100 font-sans selection:bg-blue-500/30 selection:text-white select-text">
       {/* WebGPU Model Loading Overlay (Also acts as WebGPU Guardrail) */}
@@ -607,7 +664,69 @@ export const App: React.FC = () => {
 
       {/* Main Workspace */}
       <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 sm:p-6 flex flex-col space-y-6 min-h-0 overflow-hidden">
-        {activeTab === 'experiment' ? (
+        {activeTab === 'labs' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
+            {/* Panel A: Lab Challenge Briefing & Mission Control */}
+            <div className="lg:col-span-5 xl:col-span-4 h-full min-h-0 overflow-y-auto pr-1 space-y-4">
+              <LabPanel
+                activeLab={activeLab}
+                onSelectLab={handleSelectLab}
+                evaluation={labEvaluation}
+                params={params}
+                onUpdateParams={newParams => setParams(prev => ({ ...prev, ...newParams }))}
+                onResetScenario={handleResetLabScenario}
+                completedLabIds={completedLabIds}
+              />
+              <MissionControl
+                params={params}
+                setParams={setParams}
+                prompt={prompt}
+                setPrompt={setPrompt}
+                systemPrompt={systemPrompt}
+                setSystemPrompt={setSystemPrompt}
+                jsonSchema={jsonSchema}
+                setJsonSchema={setJsonSchema}
+                jsonSchemaEnabled={jsonSchemaEnabled}
+                setJsonSchemaEnabled={setJsonSchemaEnabled}
+                ragContext={ragContext}
+                setRagContext={setRagContext}
+                ragEnabled={ragEnabled}
+                setRagEnabled={setRagEnabled}
+                onApplyPreset={handleApplyPreset}
+                onLaunchPrompt={handleLaunchPrompt}
+                onInteractFeature={notice => setActiveNotice(notice)}
+                isFetchingLogits={isInferencePending}
+                rawLogits={activeRawLogits}
+                isReasoningModel={inferenceEngine.availableModels.find(m => m.id === inferenceEngine.state.modelId)?.isReasoning}
+              />
+            </div>
+
+            {/* Panel B: Center Canvas (Celestial Starfield Graph) */}
+            <div className="lg:col-span-7 xl:col-span-8 h-full min-h-0 overflow-hidden flex flex-col">
+              <TokenCosmosGraph
+                candidates={processedCandidates}
+                params={params}
+                ragEnabled={ragEnabled}
+                onSelectToken={handleSelectToken}
+                title={`${activeLab.title}`}
+                subtitle={`Interactive Challenge • ${activeLab.conceptTaught}`}
+                steps={steps}
+                currentStepIndex={currentStepIndex}
+                onSelectStep={idx => setCurrentStepIndex(idx)}
+                onGenerateNextStep={handleGenerateNextStep}
+                onResetTimeline={handleResetTimeline}
+                isGenerating={isGenerating}
+                allCandidatesByStep={stepCandidatesList}
+                historyLength={historyTokens.length}
+                modelId={inferenceEngine.state.modelId}
+                latestLogits={inferenceEngine.latestLogits}
+                isThinking={inferenceEngine.latestSnapshot?.isThinking}
+                isPlaying={isPlaying}
+                onTogglePlay={() => setIsPlaying(!isPlaying)}
+              />
+            </div>
+          </div>
+        ) : activeTab === 'experiment' ? (
           <>
             {/* Split-Reality Educational Hero Banner */}
             <HeroBanner />

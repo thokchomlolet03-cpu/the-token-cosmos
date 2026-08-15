@@ -1,0 +1,45 @@
+[
+  {
+    "prompt": "Please verify your account details. For your security, please verify your account number.",
+    "tokens": [
+      { "token_str": "Please", "raw_logit": 8.5 },
+      { "token_str": " verify", "raw_logit": 9.1 },
+      { "token_str": " your", "raw_logit": 9.4 },
+      { "token_str": " account", "raw_logit": 9.6 },
+      { "token_str": " details", "raw_logit": 7.8 },
+      { "token_str": ".", "raw_logit": 9.8 },
+      { "token_str": " For", "raw_logit": 7.2 },
+      { "token_str": " your", "raw_logit": 8.9 },
+      { "token_str": " security", "raw_logit": 8.6 },
+      { "token_str": ",", "raw_logit": 9.2 },
+      { "token_str": " please", "raw_logit": 9.5 },
+      { "token_str": " verify", "raw_logit": 9.9 },
+      { "token_str": " your", "raw_logit": 9.9 },
+      { "token_str": " account", "raw_logit": 9.9 },
+      { "token_str": " number", "raw_logit": 8.4 }
+    ]
+  },
+  {
+    "prompt": "Extract customer record into strict JSON: Customer Alex is active with 790 score.",
+    "tokens": [
+      { "token_str": "{\n ", "raw_logit": 9.2 },
+      { "token_str": " \"", "raw_logit": 9.8 },
+      { "token_str": "name", "raw_logit": 8.9 },
+      { "token_str": "\":", "raw_logit": 9.9 },
+      { "token_str": " \"", "raw_logit": 9.7 },
+      { "token_str": "Alex", "raw_logit": 8.4 },
+      { "token_str": "\",\n ", "raw_logit": 9.5 },
+      { "token_str": " \"", "raw_logit": 9.8 },
+      { "token_str": "status", "raw_logit": 8.7 },
+      { "token_str": "\":", "raw_logit": 9.9 },
+      { "token_str": " \"", "raw_logit": 9.6 },
+      { "token_str": "active", "raw_logit": 9.1 },
+      { "token_str": "\",\n ", "raw_logit": 9.4 },
+      { "token_str": " \"", "raw_logit": 9.8 },
+      { "token_str": "creditScore", "raw_logit": 8.6 },
+      { "token_str": "\":", "raw_logit": 9.9 },
+      { "token_str": " 790", "raw_logit": 9.4 },
+      { "token_str": "\n}", "raw_logit": 9.9 }
+    ]
+  }
+]

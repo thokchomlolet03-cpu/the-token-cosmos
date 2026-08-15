@@ -2,6 +2,8 @@
 node_modules/
 dist/
 build/
+cli/dist/
+backend/static/
 .env
 .env.local
 *.log
