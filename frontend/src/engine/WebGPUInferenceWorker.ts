@@ -52,6 +52,19 @@ let abortController: AbortController | null = null;
 let capturedLogits: Float32Array | null = null;
 let capturedStepIndex = 0;
 
+// Triple Buffer memory pool for zero-allocation transferable array buffers
+const bufferPool: ArrayBuffer[] = [];
+
+function acquireBuffer(byteLength: number): ArrayBuffer {
+  if (bufferPool.length > 0) {
+    const buf = bufferPool.pop()!;
+    if (buf.byteLength === byteLength) {
+      return buf;
+    }
+  }
+  return new ArrayBuffer(byteLength);
+}
+
 // ─── Logit Interceptor ──────────────────────────────────────────────
 
 class CosmosLogitProcessor implements LogitProcessor {
@@ -235,8 +248,8 @@ async function getFullLogits(prompt: string) {
     const captured = capturedLogits as unknown as Float32Array;
     const tokenStr = response.choices?.[0]?.message?.content ?? '';
 
-    // Transfer the buffer to main thread (zero-copy)
-    const buffer = new ArrayBuffer(captured.byteLength);
+    // Transfer the buffer to main thread (zero-copy with buffer recycling)
+    const buffer = acquireBuffer(captured.byteLength);
     new Float32Array(buffer).set(captured);
     const snapshot: LogitSnapshotTransfer = {
       stepIndex: 0,
@@ -357,8 +370,8 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
           }
 
           const captured = capturedLogits as unknown as Float32Array;
-          // Transfer logits for this step
-          const buffer = new ArrayBuffer(captured.byteLength);
+          // Transfer logits for this step (zero-copy with buffer recycling)
+          const buffer = acquireBuffer(captured.byteLength);
           new Float32Array(buffer).set(captured);
           const snapshot: LogitSnapshotTransfer = {
             stepIndex: capturedStepIndex,
@@ -449,6 +462,12 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
 
     case 'GET_FULL_LOGITS':
       await getFullLogits(msg.prompt);
+      break;
+
+    case 'RETURN_BUFFER':
+      if (msg.buffer && msg.buffer instanceof ArrayBuffer) {
+        bufferPool.push(msg.buffer);
+      }
       break;
 
     case 'GENERATE_STEP':

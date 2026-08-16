@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────────
- * shaders.ts — Cartographic Shaders with Hypsometric Relief & Isobars
- * The Token Cosmos v4.2
+ * shaders.ts — Cartographic Shaders with Dynamic Density LoD & Isobars
+ * Synthesizing CELLxGENE, Bookmap, and Houdini Topographic Pipelines
+ * The Token Cosmos v4.3
  * ───────────────────────────────────────────────────────────────────── */
 
 export const terrainVertexShader = `
@@ -22,6 +23,7 @@ varying float vIsRagGrounded;
 varying float vIsGreedyAnchor;
 varying float vElevation;
 varying vec3 vBiomeColor;
+varying float vViewDistance;
 
 void main() {
     vUmapCoord = umapCoord;
@@ -44,7 +46,6 @@ void main() {
     vBaseProb = baseProb;
 
     // ─── 1. Base Cartographic Topography (Permanent Hypsometric Relief) ──
-    // Compute mountain plateaus and valleys from semantic cluster centers
     float geoHills = exp(-dot(umapCoord - vec2(0.45, 0.45), umapCoord - vec2(0.45, 0.45)) / 0.35) * 12.0;
     float verbHills = exp(-dot(umapCoord - vec2(-0.50, 0.15), umapCoord - vec2(-0.50, 0.15)) / 0.35) * 10.0;
     float codeHills = exp(-dot(umapCoord - vec2(0.55, -0.25), umapCoord - vec2(0.55, -0.25)) / 0.30) * 8.0;
@@ -83,17 +84,24 @@ void main() {
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
 
-    // Dynamic point sizing locked to individual probability & distance
-    float minSize = 2.5;
-    float maxSize = 16.0;
+    float viewDist = -mvPosition.z;
+    vViewDistance = viewDist;
+
+    // ─── 4. Dynamic Level of Detail (LoD) Point Sizing ──────────────────
+    // In orbit (viewDist > 300), background points expand into smooth density heatmaps
+    // At close range (viewDist < 120), points resolve into sharp pinpoint coordinates
+    float lodScale = mix(1.6, 0.85, smoothstep(80.0, 450.0, viewDist));
+    float minSize = 3.0 * lodScale;
+    float maxSize = 18.0 * lodScale;
+    
     float probability = max(activeProb, baseProb);
     float activeSize = mix(minSize, maxSize, probability);
     
-    float ragSize = isRagGrounded * 7.0;
-    float anchorSize = vIsGreedyAnchor * 12.0; // Extra size boost for greedy anchor #1
+    float ragSize = isRagGrounded * 8.0;
+    float anchorSize = vIsGreedyAnchor * 14.0; // Radiant beacon for Greedy Target #1
     
     // Attenuate with distance
-    gl_PointSize = (activeSize + ragSize + anchorSize) * (320.0 / -mvPosition.z);
+    gl_PointSize = (activeSize + ragSize + anchorSize) * (340.0 / max(10.0, viewDist));
 }
 `;
 
@@ -109,6 +117,7 @@ varying float vIsRagGrounded;
 varying float vIsGreedyAnchor;
 varying float vElevation;
 varying vec3 vBiomeColor;
+varying float vViewDistance;
 
 void main() {
     // Soft circular particle
@@ -116,27 +125,28 @@ void main() {
     float r = dot(cxy, cxy);
     if (r > 1.0) discard;
 
-    // Status Colors
-    vec3 candidateColor = vec3(0.95, 0.35, 0.95);  // Magenta (#D946EF)
-    vec3 winnerColor = vec3(0.06, 0.85, 0.55);     // Emerald (#10B981)
-    vec3 ragColor = vec3(0.23, 0.65, 1.0);         // Laser Blue (#3B82F6)
+    // Status Colors (Houdini Unified Taxonomy)
+    vec3 candidateColor = vec3(0.85, 0.27, 0.94);  // Magenta (#D946EF)
+    vec3 winnerColor = vec3(0.06, 0.72, 0.51);     // Emerald (#10B981)
+    vec3 ragColor = vec3(0.02, 0.71, 0.83);        // Cyan (#06B6D4)
     vec3 ghostColor = vec3(0.15, 0.40, 0.55);      // Ghost Blue
 
-    // ─── 1. Topographic Isobar Contour Rings ───────────────────────────
-    float isobarSpacing = 3.5; // Isobar ring every 3.5 units of elevation
-    float isobarPhase = fract(vElevation / isobarSpacing);
-    float isobarMask = smoothstep(0.82, 0.98, isobarPhase);
+    // ─── 1. Topographic Isobar Contour Rings (Dual-Frequency) ───────────
+    float majorIsobar = fract(vElevation / 6.0);
+    float minorIsobar = fract(vElevation / 2.0);
+    float isobarMaskMajor = smoothstep(0.85, 0.98, majorIsobar);
+    float isobarMaskMinor = smoothstep(0.92, 0.98, minorIsobar) * 0.4;
+    float totalIsobar = max(isobarMaskMajor, isobarMaskMinor);
 
     // ─── 2. Biome-Aware Base Color Mapping ──────────────────────────────
-    // Idle/background points inherit their semantic continent color tint
-    vec3 idleColor = mix(vBiomeColor * 0.45, vBiomeColor * 0.85, smoothstep(0.0, 15.0, vElevation));
+    vec3 idleColor = mix(vBiomeColor * 0.45, vBiomeColor * 0.90, smoothstep(0.0, 16.0, vElevation));
     
     // Active candidates transition from Biome color -> Magenta -> Emerald
-    vec3 activeCol = mix(idleColor, candidateColor, smoothstep(0.005, 0.12, vActiveProb));
-    vec3 color = mix(activeCol, winnerColor, smoothstep(0.20, 1.0, vActiveProb));
+    vec3 activeCol = mix(idleColor, candidateColor, smoothstep(0.004, 0.10, vActiveProb));
+    vec3 color = mix(activeCol, winnerColor, smoothstep(0.18, 1.0, vActiveProb));
 
     // ─── 3. Isobar Contour Glow ─────────────────────────────────────────
-    color = mix(color, color + vec3(0.3, 0.3, 0.45), isobarMask * 0.45);
+    color = mix(color, color + vec3(0.35, 0.40, 0.60), totalIsobar * 0.55);
 
     // Reasoning Pulse
     if (uIsThinking > 0.5) {
@@ -146,11 +156,11 @@ void main() {
 
     // Celestial Anchors overrides (HDR Intensity for Bloom)
     if (vIsRagGrounded > 0.5) {
-        color = mix(color, ragColor * 8.0, 0.85);
+        color = mix(color, ragColor * 7.0, 0.85);
     }
 
     if (vIsGreedyAnchor > 0.5) {
-        color = vec3(12.0, 12.0, 12.0); // Bright radiant beacon for Greedy Target #1
+        color = vec3(14.0, 14.0, 14.0); // Bright radiant beacon for Greedy Target #1
     }
 
     // Ghost Shell Diffing logic
@@ -159,13 +169,16 @@ void main() {
         color = mix(color, ghostColor, smoothstep(0.0, 0.5, -probDelta));
     }
 
-    // ─── 4. Alpha Intensity & Distance Attenuation ──────────────────────
+    // ─── 4. Alpha Intensity & Continuous Density LoD Falloff ────────────
     float distFromCenter = length(vUmapCoord);
-    float perimeterFade = smoothstep(1.2, 0.4, distFromCenter); // Smooth radial fade
+    float perimeterFade = smoothstep(1.25, 0.35, distFromCenter);
 
-    float baseAlpha = 0.35 * perimeterFade;
+    // LoD density blending: distant points use softer Gaussian radial profile
+    float densityProfile = (vViewDistance > 250.0) ? exp(-r * 2.8) : (1.0 - r);
+    
+    float baseAlpha = 0.38 * perimeterFade;
     float activeAlpha = smoothstep(0.001, 1.0, max(vActiveProb, vBaseProb)) * 0.75;
-    float alpha = baseAlpha + activeAlpha;
+    float alpha = (baseAlpha + activeAlpha) * densityProfile;
     
     if (probDelta < -0.01) {
         alpha *= 0.5;
@@ -174,9 +187,6 @@ void main() {
     if (vIsGreedyAnchor > 0.5) {
         alpha = 1.0;
     }
-
-    // Circular point particle edge fade
-    alpha *= (1.0 - r);
 
     gl_FragColor = vec4(color, alpha);
 }

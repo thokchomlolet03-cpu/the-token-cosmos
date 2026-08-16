@@ -57,6 +57,7 @@ export type WorkerInbound =
   | { type: 'LOAD_MODEL'; modelId: string }
   | { type: 'GENERATE_STEP'; prompt: string; systemPrompt?: string; maxTokens: number; maxThinkingTokens?: number }
   | { type: 'GET_FULL_LOGITS'; prompt: string }
+  | { type: 'RETURN_BUFFER'; buffer: ArrayBuffer }
   | { type: 'RESET_CHAT' }
   | { type: 'ABORT' }
   | { type: 'UNLOAD' };

@@ -7,8 +7,13 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { terrainVertexShader, terrainFragmentShader } from '../terrain/shaders';
 import { useTerrainCoordinates } from '../terrain/useTerrainCoordinates';
 import { SamplingParameters, ProcessedTokenCandidate } from '../types/sampling';
-import { SEMANTIC_BIOMES, computeBaseTopologicalHeight, getSectorCode } from '../terrain/semanticBiomes';
+import { SEMANTIC_BIOMES, computeBaseTopologicalHeight, getSectorCode, identifyBiome } from '../terrain/semanticBiomes';
 import { MiniRadar } from './MiniRadar';
+import { spatialIndex } from '../terrain/SpatialTokenIndex';
+import { LassoSelectionTool } from './LassoSelectionTool';
+import { ClusterAnalyticsDrawer } from './ClusterAnalyticsDrawer';
+import { ZenViewportHUD } from './ZenViewportHUD';
+import { ScreenPolygonPoint, ClusterMetrics, IndexedTokenPoint } from '../types/spatial';
 
 interface TerrainCanvasProps {
   modelId: string | null;
@@ -61,6 +66,46 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     x: number;
     y: number;
   } | null>(null);
+
+  const [isLassoActive, setIsLassoActive] = useState<boolean>(false);
+  const [clusterMetrics, setClusterMetrics] = useState<ClusterMetrics | null>(null);
+  const [screenCentroid, setScreenCentroid] = useState<{ x: number; y: number } | null>(null);
+
+  const handleLassoComplete = (polygon: ScreenPolygonPoint[], centroid: { x: number; y: number }) => {
+    if (!cameraRef.current || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const selected = spatialIndex.queryLassoScreenSpace(polygon, cameraRef.current, rect.width, rect.height);
+    
+    if (candidatesRef.current) {
+      const candMap = new Map(candidatesRef.current.map(c => [c.token_id, c]));
+      selected.forEach(s => {
+        const c = candMap.get(s.token_id);
+        if (c) {
+          s.probability = c.probability;
+          s.token_str = c.token_str;
+          s.rank = c.rank;
+        }
+      });
+    }
+
+    const metrics = spatialIndex.computeClusterMetrics(selected);
+    setClusterMetrics(metrics);
+    setScreenCentroid(centroid);
+  };
+
+  const handleCameraLockChange = (locked: boolean) => {
+    if (controlsRef.current) {
+      controlsRef.current.enabled = !locked;
+    }
+  };
+
+  const handleResetCamera = () => {
+    if (cameraRef.current && controlsRef.current) {
+      cameraRef.current.position.set(0, 160, 260);
+      controlsRef.current.target.set(0, 0, 0);
+      controlsRef.current.update();
+    }
+  };
 
   const candidatesRef = useRef(candidates);
   useEffect(() => {
@@ -165,6 +210,19 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     const isRagArray = new Float32Array(vocabSize);
     const tokenIndexArray = new Float32Array(vocabSize);
 
+    // Build 1D Heightmap for 3D DDA Occlusion
+    const GRID_SIZE = 64;
+    const heightmap1D = new Float32Array(GRID_SIZE * GRID_SIZE);
+    for (let gz = 0; gz < GRID_SIZE; gz++) {
+      for (let gx = 0; gx < GRID_SIZE; gx++) {
+        const ux = (gx / (GRID_SIZE - 1)) * 2 - 1;
+        const uz = (gz / (GRID_SIZE - 1)) * 2 - 1;
+        heightmap1D[gz * GRID_SIZE + gx] = computeBaseTopologicalHeight(ux, uz);
+      }
+    }
+
+    const indexedPoints: IndexedTokenPoint[] = [];
+
     for (let i = 0; i < vocabSize; i++) {
         let x = rawCoordinates[i * 2];
         let y = rawCoordinates[i * 2 + 1];
@@ -176,6 +234,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         y += Math.sin(angle) * radius;
 
         const baseH = computeBaseTopologicalHeight(x, y);
+        const biome = identifyBiome(x, y);
 
         positionArray[i * 3] = x * spread;
         positionArray[i * 3 + 1] = baseH;
@@ -184,7 +243,19 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         umapArray[i * 2 + 1] = y;
         isRagArray[i] = 0.0;
         tokenIndexArray[i] = i;
+
+        indexedPoints.push({
+          token_id: i,
+          token_str: `Token #${i}`,
+          worldX: x * spread,
+          worldZ: y * spread,
+          elevation: baseH,
+          biomeId: biome.id,
+        });
     }
+
+    // Build spatial quadtree index
+    spatialIndex.build(indexedPoints, heightmap1D, spread * 2, GRID_SIZE, GRID_SIZE);
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
     geometry.setAttribute('umapCoord', new THREE.BufferAttribute(umapArray, 2));
@@ -684,14 +755,30 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         <div ref={continentLabelsRef} className="absolute inset-0 pointer-events-none overflow-hidden" />
         <div ref={labelsContainerRef} className="absolute inset-0 pointer-events-none overflow-hidden" />
         
-        {/* Graticule Legend Top HUD */}
-        <div className="absolute top-3 left-3 z-20 pointer-events-none flex items-center gap-2 bg-slate-950/75 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-lg text-[10px] font-mono text-slate-300 shadow-lg">
-          <span className="text-cyan-400 font-bold">GRID: WGS-COSMOS</span>
-          <span className="text-slate-600">•</span>
-          <span className="text-slate-400">SECTORS: A1–F6</span>
-          <span className="text-slate-600">•</span>
-          <span className="text-amber-400">ELEVATION: HYPSOMETRIC RELIEF</span>
-        </div>
+        {/* Zen Viewport HUD */}
+        <ZenViewportHUD
+          modelId={modelId}
+          status={isLoaded ? 'ready' : 'downloading'}
+          stepIndex={candidates.length > 0 ? 1 : 0}
+          topCandidate={candidates.length > 0 ? candidates[0] : null}
+          isLassoActive={isLassoActive}
+          onToggleLasso={() => setIsLassoActive(!isLassoActive)}
+          onResetCamera={handleResetCamera}
+        />
+
+        {/* 60 FPS Lasso Selection Tool */}
+        <LassoSelectionTool
+          enabled={isLassoActive}
+          onLassoComplete={handleLassoComplete}
+          onCameraLockChange={handleCameraLockChange}
+        />
+
+        {/* Cluster Analytics Drawer */}
+        <ClusterAnalyticsDrawer
+          metrics={clusterMetrics}
+          onClose={() => setClusterMetrics(null)}
+          screenCentroid={screenCentroid}
+        />
 
         {/* Hover Tooltip */}
         {hoveredToken && (

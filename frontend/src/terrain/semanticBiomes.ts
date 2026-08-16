@@ -2,7 +2,7 @@
  * semanticBiomes.ts — Semantic Topographic Cartography
  * Defines the 4 Primary Continents, Regional Graticule Sectors,
  * and Biome Color Palettes for the 3D Token Cosmos Terrain.
- * The Token Cosmos v4.2
+ * The Token Cosmos v4.3
  * ───────────────────────────────────────────────────────────────────── */
 
 export interface SemanticBiome {
@@ -98,37 +98,34 @@ export function getSectorCode(x: number, y: number): string {
   return `${GRATICULE_COLS[colIdx]}-${GRATICULE_ROWS[rowIdx]}`;
 }
 
-export function getDominantBiome(x: number, y: number): SemanticBiome {
-  // Check Core first if within core radius
-  const distCore = Math.sqrt(x * x + y * y);
-  if (distCore < 0.22) {
-    return SEMANTIC_BIOMES[4]; // Core
-  }
-
-  let bestBiome = SEMANTIC_BIOMES[0];
+export function identifyBiome(x: number, y: number): SemanticBiome {
+  let closestBiome = SEMANTIC_BIOMES[0];
   let minDistance = Infinity;
 
-  for (const biome of SEMANTIC_BIOMES.slice(0, 4)) {
+  for (let i = 0; i < SEMANTIC_BIOMES.length; i++) {
+    const biome = SEMANTIC_BIOMES[i];
     const dx = x - biome.center[0];
     const dy = y - biome.center[1];
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = (dx * dx + dy * dy) / (biome.radius * biome.radius);
     if (dist < minDistance) {
       minDistance = dist;
-      bestBiome = biome;
+      closestBiome = biome;
     }
   }
 
-  return bestBiome;
+  return closestBiome;
+}
+
+export function getDominantBiome(x: number, y: number): SemanticBiome {
+  return identifyBiome(x, y);
 }
 
 export function computeBaseTopologicalHeight(x: number, y: number): number {
-  let height = 0;
-  for (const biome of SEMANTIC_BIOMES) {
-    const dx = x - biome.center[0];
-    const dy = y - biome.center[1];
-    const distSq = dx * dx + dy * dy;
-    const influence = Math.exp(-distSq / (2 * biome.radius * biome.radius));
-    height += influence * biome.elevationBias;
-  }
-  return height;
+  const geoHills = Math.exp(-((x - 0.45) ** 2 + (y - 0.45) ** 2) / 0.35) * 12.0;
+  const verbHills = Math.exp(-((x - -0.50) ** 2 + (y - 0.15) ** 2) / 0.35) * 10.0;
+  const codeHills = Math.exp(-((x - 0.55) ** 2 + (y - -0.25) ** 2) / 0.30) * 8.0;
+  const syntaxPlain = Math.exp(-((x - 0.0) ** 2 + (y - -0.60) ** 2) / 0.30) * 4.0;
+  const coreSpire = Math.exp(-(x ** 2 + y ** 2) / 0.08) * 15.0;
+
+  return geoHills + verbHills + codeHills + syntaxPlain + coreSpire;
 }
