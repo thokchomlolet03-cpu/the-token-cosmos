@@ -174,8 +174,10 @@ export const LassoSelectionTool: React.FC<LassoSelectionToolProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      className={`absolute inset-0 z-20 pointer-events-auto touch-none ${
-        enabled || isShiftPressedRef.current ? 'cursor-crosshair' : 'pointer-events-none'
+      className={`absolute inset-0 z-20 ${
+        enabled || isShiftPressedRef.current
+          ? 'pointer-events-auto cursor-crosshair touch-none'
+          : 'pointer-events-none'
       }`}
       style={{ width: '100%', height: '100%' }}
       onPointerDown={handlePointerDown}

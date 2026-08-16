@@ -70,6 +70,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   const [isLassoActive, setIsLassoActive] = useState<boolean>(false);
   const [clusterMetrics, setClusterMetrics] = useState<ClusterMetrics | null>(null);
   const [screenCentroid, setScreenCentroid] = useState<{ x: number; y: number } | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   const handleLassoComplete = (polygon: ScreenPolygonPoint[], centroid: { x: number; y: number }) => {
     if (!cameraRef.current || !containerRef.current) return;
@@ -106,6 +107,58 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
       controlsRef.current.update();
     }
   };
+
+  const handleZoomIn = () => {
+    if (cameraRef.current && controlsRef.current) {
+      const cam = cameraRef.current;
+      const tgt = controlsRef.current.target;
+      cam.position.lerp(tgt, 0.25);
+      controlsRef.current.update();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (cameraRef.current && controlsRef.current) {
+      const cam = cameraRef.current;
+      const tgt = controlsRef.current.target;
+      const dir = new THREE.Vector3().subVectors(cam.position, tgt).normalize();
+      cam.position.addScaledVector(dir, 45);
+      controlsRef.current.update();
+    }
+  };
+
+  const handleToggleFullscreen = () => {
+    const el = containerRef.current?.parentElement || containerRef.current;
+    if (!el) return;
+
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch((err) => console.warn("Fullscreen request error:", err));
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch((err) => console.warn("Exit fullscreen error:", err));
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFs = !!document.fullscreenElement;
+      setIsFullscreen(isFs);
+      if (containerRef.current && cameraRef.current && rendererRef.current && composerRef.current) {
+        setTimeout(() => {
+          if (!containerRef.current || !cameraRef.current || !rendererRef.current || !composerRef.current) return;
+          const width = containerRef.current.clientWidth || window.innerWidth;
+          const height = containerRef.current.clientHeight || window.innerHeight;
+          cameraRef.current.aspect = width / height;
+          cameraRef.current.updateProjectionMatrix();
+          rendererRef.current.setSize(width, height);
+          rendererRef.current.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          composerRef.current.setSize(width, height);
+        }, 50);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   const candidatesRef = useRef(candidates);
   useEffect(() => {
@@ -762,8 +815,12 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
           stepIndex={candidates.length > 0 ? 1 : 0}
           topCandidate={candidates.length > 0 ? candidates[0] : null}
           isLassoActive={isLassoActive}
+          isFullscreen={isFullscreen}
           onToggleLasso={() => setIsLassoActive(!isLassoActive)}
           onResetCamera={handleResetCamera}
+          onToggleFullscreen={handleToggleFullscreen}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
         />
 
         {/* 60 FPS Lasso Selection Tool */}
