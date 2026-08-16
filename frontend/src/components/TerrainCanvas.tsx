@@ -7,6 +7,8 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { terrainVertexShader, terrainFragmentShader } from '../terrain/shaders';
 import { useTerrainCoordinates } from '../terrain/useTerrainCoordinates';
 import { SamplingParameters, ProcessedTokenCandidate } from '../types/sampling';
+import { SEMANTIC_BIOMES, computeBaseTopologicalHeight, getSectorCode } from '../terrain/semanticBiomes';
+import { MiniRadar } from './MiniRadar';
 
 interface TerrainCanvasProps {
   modelId: string | null;
@@ -21,7 +23,7 @@ interface TerrainCanvasProps {
 export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({ 
   modelId, 
   latestLogits, 
-  params, 
+  params: _params, 
   ragTokenIds = [], 
   isThinking = false,
   candidates = [],
@@ -29,6 +31,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const labelsContainerRef = useRef<HTMLDivElement>(null);
+  const continentLabelsRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const composerRef = useRef<EffectComposer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -37,6 +40,14 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   const pointsRef = useRef<THREE.Points | null>(null);
   const argmaxIndexRef = useRef<number>(-1);
   
+  // Radar state
+  const [cameraState, setCameraState] = useState<{
+    angle: number;
+    distance: number;
+    pos: { x: number; z: number };
+    target: { x: number; z: number };
+  }>({ angle: 0, distance: 300, pos: { x: 0, z: 250 }, target: { x: 0, z: 0 } });
+
   const [hoveredToken, setHoveredToken] = useState<{
     id: number;
     tokenStr: string;
@@ -46,6 +57,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     isFiltered: boolean;
     filterReason?: string;
     isRag?: boolean;
+    sector: string;
     x: number;
     y: number;
   } | null>(null);
@@ -92,11 +104,11 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     const height = containerRef.current.clientHeight;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x050714, 0.0015);
+    scene.fog = new THREE.FogExp2(0x050714, 0.0012);
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 1, 15000);
-    camera.position.set(0, 150, 250);
+    camera.position.set(0, 160, 260);
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
@@ -117,7 +129,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     const renderScene = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(
         new THREE.Vector2(width, height),
-        1.5,
+        1.3,
         0.4,
         0.85
     );
@@ -126,30 +138,47 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     composer.addPass(bloomPass);
     composerRef.current = composer;
 
-    const gridHelper = new THREE.GridHelper(600, 60, 0x1e293b, 0x0f172a);
+    // ─── Cartographic Graticule Base Plane ─────────────────────────────
+    const spread = 250.0;
+    const gridHelper = new THREE.GridHelper(spread * 2, 12, 0x334155, 0x0f172a);
     gridHelper.position.y = -0.5;
     scene.add(gridHelper);
 
+    // Perimeter boundary border
+    const borderGeometry = new THREE.BufferGeometry();
+    const borderPoints = [
+      new THREE.Vector3(-spread, 0, -spread),
+      new THREE.Vector3(spread, 0, -spread),
+      new THREE.Vector3(spread, 0, spread),
+      new THREE.Vector3(-spread, 0, spread),
+      new THREE.Vector3(-spread, 0, -spread),
+    ];
+    borderGeometry.setFromPoints(borderPoints);
+    const borderMaterial = new THREE.LineBasicMaterial({ color: 0x475569, transparent: true, opacity: 0.4 });
+    const borderLine = new THREE.Line(borderGeometry, borderMaterial);
+    scene.add(borderLine);
+
+    // Geometry attributes
     const geometry = new THREE.BufferGeometry();
     const positionArray = new Float32Array(vocabSize * 3);
     const umapArray = new Float32Array(vocabSize * 2);
     const isRagArray = new Float32Array(vocabSize);
     const tokenIndexArray = new Float32Array(vocabSize);
 
-    const spread = 250.0;
     for (let i = 0; i < vocabSize; i++) {
         let x = rawCoordinates[i * 2];
         let y = rawCoordinates[i * 2 + 1];
         
-        // Add a tiny deterministic jitter based on index to separate overlapping/very close points
-        // visually and break raycast overlap
-        const angle = (i * 0.17) % (Math.PI * 2); // pseudo-random but deterministic angle
-        const radius = 0.0015 * (1.0 + (i % 5) * 0.2); // tiny offset in normalized coordinates
+        // Deterministic jitter to break exact overlaps
+        const angle = (i * 0.17) % (Math.PI * 2);
+        const radius = 0.0015 * (1.0 + (i % 5) * 0.2);
         x += Math.cos(angle) * radius;
         y += Math.sin(angle) * radius;
 
+        const baseH = computeBaseTopologicalHeight(x, y);
+
         positionArray[i * 3] = x * spread;
-        positionArray[i * 3 + 1] = 0;
+        positionArray[i * 3 + 1] = baseH;
         positionArray[i * 3 + 2] = y * spread;
         umapArray[i * 2] = x;
         umapArray[i * 2 + 1] = y;
@@ -217,6 +246,21 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
             targetFocusRef.current = null;
         }
       }
+
+      // Update camera tracking state for radar
+      if (cameraRef.current && controlsRef.current) {
+        const cam = cameraRef.current;
+        const tgt = controlsRef.current.target;
+        const dist = cam.position.distanceTo(tgt);
+        const ang = Math.atan2(cam.position.x - tgt.x, cam.position.z - tgt.z);
+        setCameraState({
+          angle: ang,
+          distance: dist,
+          pos: { x: cam.position.x, z: cam.position.z },
+          target: { x: tgt.x, z: tgt.z },
+        });
+      }
+
       if (rendererRef.current && composerRef.current && sceneRef.current && cameraRef.current && pointsRef.current) {
         const points = pointsRef.current;
         const material = points.material as THREE.ShaderMaterial;
@@ -228,7 +272,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
             const tokenCount = Math.min(vocabSize, data.length / 2);
             
             let needsTextureUpdate = false;
-            const lerpFactor = 0.15; // Smooth morphing speed (15% per frame)
+            const lerpFactor = 0.15;
             
             for (let i = 0; i < tokenCount; i++) {
                 const targetActive = targetActiveProbsRef.current[i];
@@ -260,10 +304,15 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                 
                 for (let i = 0; i < tokenCount; i++) {
                     const activeProb = data[i * 2];
-                    const elevation = smoothStep(0.001, 0.1, activeProb) * (maxHeight * 0.3) + 
-                                      smoothStep(0.1, 1.0, activeProb) * (maxHeight * 0.7);
+                    const x = rawCoordinates[i * 2];
+                    const y = rawCoordinates[i * 2 + 1];
+                    const baseH = computeBaseTopologicalHeight(x, y);
+
+                    const activeSummit = smoothStep(0.001, 0.08, activeProb) * (maxHeight * 0.25) + 
+                                         smoothStep(0.08, 1.0, activeProb) * (maxHeight * 0.75);
+                    const targetElevation = baseH + activeSummit;
                     
-                    positions[i * 3 + 1] += (elevation - positions[i * 3 + 1]) * lerpFactor;
+                    positions[i * 3 + 1] += (targetElevation - positions[i * 3 + 1]) * lerpFactor;
                 }
                 positionsAttr.needsUpdate = true;
             }
@@ -272,7 +321,51 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         material.uniforms.time.value = (performance.now() - startTime) / 1000;
         composerRef.current.render();
 
-        // ─── Project Dynamic HTML overlays for Top 8 active candidates ───
+        // ─── 1. Project Macro Continent Toponym Labels (LoD Distance Culling) ───
+        const continentContainer = continentLabelsRef.current;
+        if (continentContainer && cameraRef.current && containerRef.current) {
+          const camera = cameraRef.current;
+          const rect = containerRef.current.getBoundingClientRect();
+          const camDist = camera.position.distanceTo(controlsRef.current?.target || new THREE.Vector3());
+
+          // LoD: continent labels are most visible when zoomed out (camDist > 120)
+          const continentOpacity = Math.max(0.0, Math.min(0.75, (camDist - 80) / 140));
+
+          while (continentContainer.children.length > SEMANTIC_BIOMES.length) {
+            continentContainer.removeChild(continentContainer.lastChild!);
+          }
+          while (continentContainer.children.length < SEMANTIC_BIOMES.length) {
+            const div = document.createElement('div');
+            div.className = "absolute pointer-events-none text-[10px] font-mono tracking-widest uppercase font-black px-2.5 py-1 rounded border border-white/10 backdrop-blur-sm shadow-md transition-opacity duration-300";
+            continentContainer.appendChild(div);
+          }
+
+          SEMANTIC_BIOMES.forEach((biome, idx) => {
+            const el = continentContainer.children[idx] as HTMLDivElement;
+            const wx = biome.center[0] * spread;
+            const wz = biome.center[1] * spread;
+            const wy = biome.elevationBias + 20.0;
+
+            const vec = new THREE.Vector3(wx, wy, wz);
+            vec.project(camera);
+
+            if (vec.z > 1.0 || continentOpacity <= 0.05) {
+              el.style.opacity = '0';
+            } else {
+              const xPos = (vec.x * 0.5 + 0.5) * rect.width;
+              const yPos = (-vec.y * 0.5 + 0.5) * rect.height;
+
+              el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0) translate(-50%, -50%)`;
+              el.style.opacity = String(continentOpacity);
+              el.style.color = biome.colorHex;
+              el.style.backgroundColor = 'rgba(5, 7, 20, 0.65)';
+              el.style.borderColor = biome.colorHex + '40';
+              el.innerHTML = `<span>${biome.shortLabel}</span>`;
+            }
+          });
+        }
+
+        // ─── 2. Project Dynamic HTML overlays for Top 8 active candidates ───
         const container = labelsContainerRef.current;
         const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
         const positions = positionsAttr.array as Float32Array;
@@ -287,7 +380,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
             }
             while (container.children.length < topN.length) {
                 const div = document.createElement('div');
-                div.className = "absolute pointer-events-none px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-950/80 backdrop-blur border text-white shadow-lg transition-opacity duration-150 flex items-center space-x-1 border-slate-700/80";
+                div.className = "absolute pointer-events-none px-2.5 py-1 rounded-full text-[9px] font-mono font-bold bg-slate-950/85 backdrop-blur-md border text-white shadow-xl transition-opacity duration-150 flex items-center space-x-1.5 border-slate-700/80";
                 container.appendChild(div);
             }
             
@@ -311,15 +404,15 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                         const xPos = (vec.x * 0.5 + 0.5) * rect.width;
                         const yPos = (-vec.y * 0.5 + 0.5) * rect.height;
                         
-                        el.style.transform = `translate3d(${xPos}px, ${yPos - 20}px, 0) translate(-50%, -50%)`;
+                        el.style.transform = `translate3d(${xPos}px, ${yPos - 22}px, 0) translate(-50%, -50%)`;
                         el.style.opacity = '1';
-                        el.style.borderColor = `rgba(71, 85, 105, 0.8)`; // border-slate-600 with opacity
-                        el.style.boxShadow = `0 4px 6px rgba(0, 0, 0, 0.3)`; // drop shadow, no glowing neon shadow
+                        el.style.borderColor = c.rank === 1 ? '#10B981' : '#64748B';
+                        el.style.boxShadow = `0 6px 12px rgba(0, 0, 0, 0.4)`;
                         
                         el.innerHTML = `
-                          <span style="color: #60a5fa; font-weight: 800;">#${c.rank}</span>
-                          <span>${c.token_str.trim() || '—'}</span>
-                          <span class="text-slate-400 font-normal text-[8px] opacity-80">(${(c.probability * 100).toFixed(1)}%)</span>
+                          <span style="color: ${c.rank === 1 ? '#10B981' : '#38BDF8'}; font-weight: 800;">#${c.rank}</span>
+                          <span class="text-slate-100 font-semibold">${c.token_str.trim() || '—'}</span>
+                          <span class="text-slate-400 font-normal text-[8px] opacity-90">(${(c.probability * 100).toFixed(1)}%)</span>
                         `;
                     }
                 } else {
@@ -368,7 +461,6 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
             let highestProb = -1;
             let bestCandidate: any = null;
 
-            // Iterate through intersects to find the one with highest visual probability
             for (let k = 0; k < Math.min(intersects.length, 15); k++) {
                 const idx = intersects[k].index;
                 if (idx !== undefined && idx >= 0 && idx < vocabSize) {
@@ -396,16 +488,21 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                 const candidate = candidatesRef.current?.find(c => c.token_id === idx);
                 const tooltipX = event.clientX - rect.left + 15;
                 const tooltipY = event.clientY - rect.top + 15;
+                const xCoord = rawCoordinates[idx * 2];
+                const yCoord = rawCoordinates[idx * 2 + 1];
+                const sector = getSectorCode(xCoord, yCoord);
+
                 if (candidate) {
                     setHoveredToken({
                         id: idx,
                         tokenStr: candidate.token_str,
-                        probability: candidate.probability, // Use actual probability from state instead of visual texture heights
+                        probability: candidate.probability,
                         rank: candidate.rank,
                         rawLogit: candidate.raw_logit,
                         isFiltered: candidate.isFiltered,
                         filterReason: candidate.filterReason,
                         isRag: candidate.is_rag_grounded,
+                        sector,
                         x: tooltipX,
                         y: tooltipY,
                     });
@@ -418,6 +515,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                         rawLogit: latestLogits ? latestLogits[idx] : 0,
                         isFiltered: true,
                         filterReason: 'Fringe',
+                        sector,
                         x: tooltipX,
                         y: tooltipY,
                     });
@@ -454,7 +552,6 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     const x = rawCoordinates[argmaxIndexRef.current * 2];
     const y = rawCoordinates[argmaxIndexRef.current * 2 + 1];
     
-    // Retrieve the actual dynamic elevation of the greedy anchor from the positions array
     const points = pointsRef.current;
     const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
     const positions = positionsAttr.array as Float32Array;
@@ -478,7 +575,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [rawCoordinates]);
 
-  // Focus once when the coordinates first load, then let the user control the camera manually
+  // Focus once when coordinates load
   useEffect(() => {
     if (isLoaded && argmaxIndexRef.current !== -1) {
       setTimeout(focusOnGreedyAnchor, 200);
@@ -570,19 +667,47 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     material.uniforms.uIsThinking.value = isThinking ? 1.0 : 0.0;
   }, [latestLogits, isLoaded, candidates, isThinking, vocabSize, heightMode]);
 
+  // Primary active target for MiniRadar
+  const primeCandidate = candidates.find(c => c.rank === 1 && !c.isFiltered);
+  const activeRadarToken = primeCandidate && rawCoordinates && primeCandidate.token_id < vocabSize
+    ? {
+        tokenStr: primeCandidate.token_str,
+        probability: primeCandidate.probability,
+        umapX: rawCoordinates[primeCandidate.token_id * 2],
+        umapY: rawCoordinates[primeCandidate.token_id * 2 + 1],
+      }
+    : null;
+
   return (
     <div className="w-full h-full relative group">
         <div ref={containerRef} className="absolute inset-0 cursor-move" />
+        <div ref={continentLabelsRef} className="absolute inset-0 pointer-events-none overflow-hidden" />
         <div ref={labelsContainerRef} className="absolute inset-0 pointer-events-none overflow-hidden" />
+        
+        {/* Graticule Legend Top HUD */}
+        <div className="absolute top-3 left-3 z-20 pointer-events-none flex items-center gap-2 bg-slate-950/75 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-lg text-[10px] font-mono text-slate-300 shadow-lg">
+          <span className="text-cyan-400 font-bold">GRID: WGS-COSMOS</span>
+          <span className="text-slate-600">•</span>
+          <span className="text-slate-400">SECTORS: A1–F6</span>
+          <span className="text-slate-600">•</span>
+          <span className="text-amber-400">ELEVATION: HYPSOMETRIC RELIEF</span>
+        </div>
+
+        {/* Hover Tooltip */}
         {hoveredToken && (
             <div 
-                className="absolute z-30 pointer-events-none bg-slate-950/90 backdrop-blur-md border border-slate-700/60 rounded-lg px-2.5 py-2 text-[10px] font-mono text-slate-200 shadow-2xl min-w-[150px]"
+                className="absolute z-30 pointer-events-none bg-slate-950/90 backdrop-blur-md border border-slate-700/60 rounded-lg px-2.5 py-2 text-[10px] font-mono text-slate-200 shadow-2xl min-w-[160px]"
                 style={{ left: hoveredToken.x, top: hoveredToken.y }}
             >
-                <div className="font-bold text-slate-100 flex items-center space-x-1 border-b border-white/10 pb-1 mb-1">
-                    <span className={`w-1.5 h-1.5 rounded-full ${hoveredToken.isFiltered ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    <span className="truncate max-w-[120px]">
-                        {hoveredToken.tokenStr.trim() ? `"${hoveredToken.tokenStr}"` : `Token #${hoveredToken.id}`}
+                <div className="font-bold text-slate-100 flex items-center justify-between border-b border-white/10 pb-1 mb-1">
+                    <div className="flex items-center space-x-1 truncate max-w-[110px]">
+                      <span className={`w-1.5 h-1.5 rounded-full ${hoveredToken.isFiltered ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                      <span className="truncate">
+                          {hoveredToken.tokenStr.trim() ? `"${hoveredToken.tokenStr}"` : `Token #${hoveredToken.id}`}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-cyan-300 font-mono bg-cyan-950/60 px-1 py-0.5 rounded border border-cyan-800/40">
+                      {hoveredToken.sector}
                     </span>
                 </div>
                 <div className="space-y-0.5">
@@ -622,7 +747,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
             </div>
         )}
         
-        {/* Interactive Controls Overlay */}
+        {/* Interactive Center on Target Button */}
         {isLoaded && argmaxIndexRef.current !== -1 && (
             <button 
                 type="button"
@@ -631,18 +756,28 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                     e.stopPropagation();
                     focusOnGreedyAnchor();
                 }}
-                className="absolute bottom-4 right-4 bg-white/10 hover:bg-white/20 backdrop-blur text-white text-[10px] font-mono px-3 py-1.5 rounded-full border border-white/20 shadow-lg transition-colors z-20"
+                className="absolute bottom-4 left-4 bg-slate-900/80 hover:bg-slate-800 backdrop-blur text-slate-200 hover:text-white text-[10px] font-mono px-3 py-1.5 rounded-lg border border-slate-700/70 shadow-lg transition-colors z-20 flex items-center gap-1.5"
             >
-                [SPACE] Target #1 Word
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span>[SPACE] Focus Target #1</span>
             </button>
         )}
+
+        {/* 2D Semantic Mini-Radar */}
+        <MiniRadar
+          cameraAngle={cameraState.angle}
+          cameraDistance={cameraState.distance}
+          cameraPos={cameraState.pos}
+          targetPos={cameraState.target}
+          activeToken={activeRadarToken}
+        />
         
-        {/* Loading Overlay if needed */}
+        {/* Loading Overlay */}
         {!isLoaded && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl z-10">
                 <div className="flex flex-col items-center space-y-4">
                     <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm font-mono text-blue-400">Loading Terrain Coordinates...</p>
+                    <p className="text-sm font-mono text-blue-400">Loading Cartographic Topography...</p>
                 </div>
             </div>
         )}
