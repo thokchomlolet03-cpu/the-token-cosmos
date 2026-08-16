@@ -25,9 +25,21 @@
 
 ---
 
-## 2. Installation & Quick Start
+## 2. Execution Tiers & Performance Characteristics
 
-### Building from Source
+`cosmos-lint` is engineered with distinct execution tiers to fit different development and CI/CD environments:
+
+| Tier | Engine | Startup Latency | VRAM Required | Primary Use Case |
+| :--- | :--- | :---: | :---: | :--- |
+| **Statistical Linter** | Pure Mathematical Vector Engine | $< 50\text{ ms}$ | $0\text{ MB}$ | Fast pre-commit hooks, CI/CD prompt regression tests, and local parameter linting. |
+| **Standalone Deno Binary** | Deno V8 / WebGPU Native Engine | Sub-second | $0-180\text{ MB}$ | Single-binary air-gapped terminal deployment (`deno compile --unstable-webgpu`). |
+| **Neural Web Studio** | `@mlc-ai/web-llm` WebWorker | $1.5 - 3.0\text{ s}$ | $180 - 950\text{ MB}$ | Interactive 3D celestial starfield visualizer and real-time prompt steering. |
+
+---
+
+## 3. Installation & Quick Start
+
+### Running with Node / TypeScript
 ```bash
 # Navigate to the CLI package
 cd cli/
@@ -35,13 +47,26 @@ cd cli/
 # Build TypeScript executable
 npm run build
 
-# Run the built-in enterprise benchmark suite
+# Run the instant benchmark linter
 node dist/cosmos-lint.js --sample
 ```
 
+### Compiling to a Standalone Deno Binary
+```bash
+# Navigate to the CLI package
+cd cli/
+
+# Compile single-file executable using native Deno WebGPU
+deno task compile
+
+# Execute standalone binary
+./bin/cosmos-lint --sample
+```
+
+
 ---
 
-## 3. CLI Command Reference
+## 4. CLI Command Reference
 
 ### Summary Options
 
@@ -59,7 +84,7 @@ node dist/cosmos-lint.js --sample
 
 ---
 
-## 4. Mathematical Friction Engine
+## 5. Mathematical Friction Engine
 
 `cosmos-lint` analyzes the transition drop between consecutive token logits:
 
@@ -74,7 +99,7 @@ Tokens exhibiting an anomaly score $\text{Score}_i > 2.5\sigma$ or Shannon entro
 
 ---
 
-## 5. Headless & CI/CD Operation
+## 6. Headless & CI/CD Operation
 
 For automated execution in GitHub Actions, GitLab CI, or headless WSL2 environments where interactive graphical keyrings are unavailable:
 
@@ -85,3 +110,4 @@ export COSMOS_AUTH_TOKEN="tc_jwt_..."
 # Run prompt evaluation in headless mode
 node dist/cosmos-lint.js --prompts ./prompts.json --output json > ./artifacts/lint-report.json
 ```
+
