@@ -122,9 +122,13 @@ async function main() {
   const promptIdx = args.indexOf('--prompt');
   if (promptIdx !== -1 && args[promptIdx + 1]) {
     const promptText = args[promptIdx + 1];
-    const tokens: TokenInput[] = promptText.split(/\s+/).map((word: string, i: number) => ({
+    console.log('\x1b[33mℹ Running Structural Token Friction Analysis on text input...\x1b[0m');
+    console.log('\x1b[90m(For deep neural forward-pass logits, supply pre-recorded candidates via --prompts or launch the WebGPU Studio.)\x1b[0m\n');
+    
+    const words = promptText.split(/\s+/);
+    const tokens: TokenInput[] = words.map((word: string, i: number) => ({
       token_str: (i === 0 ? '' : ' ') + word,
-      raw_logit: 7.0 + Math.sin(i) * 2.0,
+      raw_logit: 8.0 + (word.length > 6 ? 1.5 : -0.5),
     }));
 
     const report = evaluatePromptTokens(tokens, promptText, userMinP);
