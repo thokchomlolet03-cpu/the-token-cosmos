@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ScreenPolygonPoint } from '../types/spatial';
 
 interface LassoSelectionToolProps {
@@ -16,6 +16,12 @@ export const LassoSelectionTool: React.FC<LassoSelectionToolProps> = ({
   const isDrawingRef = useRef<boolean>(false);
   const pointsRef = useRef<ScreenPolygonPoint[]>([]);
   const isShiftPressedRef = useRef<boolean>(false);
+  const [isInteractive, setIsInteractive] = useState<boolean>(enabled);
+
+  // Sync interactive state with enabled prop
+  useEffect(() => {
+    setIsInteractive(enabled || isShiftPressedRef.current);
+  }, [enabled]);
 
   // High-DPI Canvas Resize helper
   const syncCanvasSize = useCallback(() => {
@@ -77,11 +83,12 @@ export const LassoSelectionTool: React.FC<LassoSelectionToolProps> = ({
     ctx.restore();
   }, []);
 
-  // Keyboard Shift Listeners (Lock camera inertia)
+  // Keyboard Shift Listeners (Dynamically toggle pointer-events & lock camera)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         isShiftPressedRef.current = true;
+        setIsInteractive(true);
         onCameraLockChange(true);
       }
     };
@@ -89,7 +96,8 @@ export const LassoSelectionTool: React.FC<LassoSelectionToolProps> = ({
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         isShiftPressedRef.current = false;
-        if (!isDrawingRef.current) {
+        if (!isDrawingRef.current && !enabled) {
+          setIsInteractive(false);
           onCameraLockChange(false);
         }
       }
@@ -101,7 +109,7 @@ export const LassoSelectionTool: React.FC<LassoSelectionToolProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [onCameraLockChange]);
+  }, [enabled, onCameraLockChange]);
 
   // Pointer Event Handlers
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -137,7 +145,8 @@ export const LassoSelectionTool: React.FC<LassoSelectionToolProps> = ({
     if (!isDrawingRef.current) return;
     isDrawingRef.current = false;
 
-    if (!isShiftPressedRef.current) {
+    if (!isShiftPressedRef.current && !enabled) {
+      setIsInteractive(false);
       onCameraLockChange(false);
     }
 
@@ -147,7 +156,6 @@ export const LassoSelectionTool: React.FC<LassoSelectionToolProps> = ({
 
     const pts = pointsRef.current;
     if (pts.length >= 3) {
-      // Calculate 2D centroid for drawer positioning
       let sumX = 0;
       let sumY = 0;
       for (let i = 0; i < pts.length; i++) {
@@ -175,7 +183,7 @@ export const LassoSelectionTool: React.FC<LassoSelectionToolProps> = ({
     <canvas
       ref={canvasRef}
       className={`absolute inset-0 z-20 ${
-        enabled || isShiftPressedRef.current
+        isInteractive
           ? 'pointer-events-auto cursor-crosshair touch-none'
           : 'pointer-events-none'
       }`}

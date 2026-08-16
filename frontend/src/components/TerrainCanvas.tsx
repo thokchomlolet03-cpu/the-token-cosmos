@@ -110,37 +110,80 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
 
   const handleZoomIn = () => {
     if (cameraRef.current && controlsRef.current) {
+      const controls = controlsRef.current;
       const cam = cameraRef.current;
-      const tgt = controlsRef.current.target;
-      cam.position.lerp(tgt, 0.25);
-      controlsRef.current.update();
+      const offset = new THREE.Vector3().subVectors(cam.position, controls.target);
+      offset.multiplyScalar(0.75); // Dolly 25% closer
+      if (offset.length() > controls.minDistance) {
+        cam.position.copy(controls.target).add(offset);
+        controls.update(); // Syncs spherical radius inside OrbitControls
+      }
     }
   };
 
   const handleZoomOut = () => {
     if (cameraRef.current && controlsRef.current) {
+      const controls = controlsRef.current;
       const cam = cameraRef.current;
-      const tgt = controlsRef.current.target;
-      const dir = new THREE.Vector3().subVectors(cam.position, tgt).normalize();
-      cam.position.addScaledVector(dir, 45);
-      controlsRef.current.update();
+      const offset = new THREE.Vector3().subVectors(cam.position, controls.target);
+      offset.multiplyScalar(1.33); // Dolly 33% further
+      if (offset.length() < controls.maxDistance) {
+        cam.position.copy(controls.target).add(offset);
+        controls.update(); // Syncs spherical radius inside OrbitControls
+      }
     }
   };
 
   const handleToggleFullscreen = () => {
-    const el = containerRef.current?.parentElement || containerRef.current;
+    const el = (containerRef.current?.parentElement || containerRef.current) as any;
     if (!el) return;
 
-    if (!document.fullscreenElement) {
-      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch((err) => console.warn("Fullscreen request error:", err));
+    const doc = document as any;
+    const isFs = !!(
+      doc.fullscreenElement ||
+      doc.webkitFullscreenElement ||
+      doc.mozFullScreenElement ||
+      doc.msFullscreenElement
+    );
+
+    if (!isFs) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen().then(() => setIsFullscreen(true)).catch((e: any) => console.warn(e));
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+        setIsFullscreen(true);
+      } else if (el.mozRequestFullScreen) {
+        el.mozRequestFullScreen();
+        setIsFullscreen(true);
+      } else if (el.msRequestFullscreen) {
+        el.msRequestFullscreen();
+        setIsFullscreen(true);
+      }
     } else {
-      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch((err) => console.warn("Exit fullscreen error:", err));
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen().then(() => setIsFullscreen(false)).catch((e: any) => console.warn(e));
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
+        setIsFullscreen(false);
+      } else if (doc.mozCancelFullScreen) {
+        doc.mozCancelFullScreen();
+        setIsFullscreen(false);
+      } else if (doc.msExitFullscreen) {
+        doc.msExitFullscreen();
+        setIsFullscreen(false);
+      }
     }
   };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const isFs = !!document.fullscreenElement;
+      const doc = document as any;
+      const isFs = !!(
+        doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.mozFullScreenElement ||
+        doc.msFullscreenElement
+      );
       setIsFullscreen(isFs);
       if (containerRef.current && cameraRef.current && rendererRef.current && composerRef.current) {
         setTimeout(() => {
@@ -156,8 +199,11 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
       }
     };
 
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    const events = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+    events.forEach(evt => document.addEventListener(evt, handleFullscreenChange));
+    return () => {
+      events.forEach(evt => document.removeEventListener(evt, handleFullscreenChange));
+    };
   }, []);
 
   const candidatesRef = useRef(candidates);
