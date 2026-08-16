@@ -8,7 +8,7 @@ from main import app
 class TelemetryGatewayIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
-        self.secret_key = "cosmos-enterprise-telemetry-test-secret"
+        self.mock_signing_key = "cosmos-enterprise-telemetry-test-key"  # nosec B105
         self.tenant_org = "org_enterprise_acme_corp"
 
     def test_e2e_authenticated_telemetry_ingest_with_custom_org_claim(self):
@@ -27,7 +27,7 @@ class TelemetryGatewayIntegrationTests(unittest.TestCase):
         }
 
         # Encode a valid JWT token
-        encoded_token = jwt.encode(token_payload, self.secret_key, algorithm="HS256")
+        encoded_token = jwt.encode(token_payload, self.mock_signing_key, algorithm="HS256")
 
         # Telemetry batch payload
         telemetry_payload = {
