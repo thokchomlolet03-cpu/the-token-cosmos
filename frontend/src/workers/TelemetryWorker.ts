@@ -1,13 +1,15 @@
 /* ─────────────────────────────────────────────────────────────────────
  * TelemetryWorker.ts — Native IndexedDB Persistent Telemetry Ledger
  * 100% Persistent, Client-Side Audit Storage with Zero Network Egress.
- * Direct IndexedDB transactions with zero-copy transferable buffer recycling.
+ * Direct IndexedDB transactions with zero-copy transferable buffer recycling
+ * and automated LRU disk ring buffer pruning (capped at 50,000 records).
  * The Token Cosmos v4.9
  * ───────────────────────────────────────────────────────────────────── */
 
 const DB_NAME = 'TokenCosmosTelemetryDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'telemetry_records';
+const MAX_PERSISTED_RECORDS = 50000; // Cap persistent storage to prevent disk bloat (~5MB)
 
 let dbInstance: IDBDatabase | null = null;
 const pendingBatches: ArrayBuffer[] = [];
@@ -56,7 +58,7 @@ initDatabase()
     console.warn('[TelemetryWorker] Running in fallback mode:', err);
   });
 
-// ─── 2. Persist Batch to IndexedDB & Recycle Buffer ─────────────────
+// ─── 2. Persist Batch to IndexedDB with LRU Disk Pruning ────────────
 function persistBatch(db: IDBDatabase, buffer: ArrayBuffer): void {
   try {
     const view = new Float32Array(buffer);
@@ -76,6 +78,25 @@ function persistBatch(db: IDBDatabase, buffer: ArrayBuffer): void {
         entropy: view[offset + 4],
       });
     }
+
+    // LRU Ring Buffer Pruning: Check count and prune oldest if exceeding limit
+    const countReq = store.count();
+    countReq.onsuccess = () => {
+      const currentTotal = countReq.result;
+      if (currentTotal > MAX_PERSISTED_RECORDS) {
+        const excess = currentTotal - MAX_PERSISTED_RECORDS;
+        let deleted = 0;
+        const cursorReq = store.openCursor();
+        cursorReq.onsuccess = (e) => {
+          const cursor = (e.target as IDBRequest).result as IDBCursorWithValue;
+          if (cursor && deleted < excess) {
+            cursor.delete();
+            deleted++;
+            cursor.continue();
+          }
+        };
+      }
+    };
 
     transaction.oncomplete = () => {
       // ── Zero-Copy Transfer Buffer Back to Main Thread Pool ─────────
@@ -125,7 +146,7 @@ self.onmessage = (e: MessageEvent) => {
     if (!dbInstance) {
       (self as unknown as Worker).postMessage({
         type: 'STATS_RESULT',
-        stats: { totalRecords: 0, averageEntropy: 0 },
+        stats: { totalRecords: 0, averageEntropy: 0, isPersisted: false },
       });
       return;
     }
@@ -141,6 +162,7 @@ self.onmessage = (e: MessageEvent) => {
           totalRecords: countRequest.result,
           databaseName: DB_NAME,
           storageType: 'Persistent IndexedDB (Zero-Egress)',
+          maxCapacity: MAX_PERSISTED_RECORDS,
         },
       });
     };

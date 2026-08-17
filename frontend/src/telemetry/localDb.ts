@@ -1,7 +1,8 @@
 /* ─────────────────────────────────────────────────────────────────────
  * localDb.ts — LIFO Stack Telemetry Buffer Pool & Sovereign IndexedDB Client
  * Manages zero-copy ArrayBuffer transfers to the IndexedDB TelemetryWorker.
- * Guarantees 100% persistent local hard-drive storage with zero network egress.
+ * Requests hardware durable storage via navigator.storage.persist().
+ * Guarantees persistent local hard-drive storage with zero network egress.
  * The Token Cosmos v4.9
  * ───────────────────────────────────────────────────────────────────── */
 
@@ -15,6 +16,7 @@ export class LocalTelemetryClient {
   private currentBatch: Float32Array;
   private currentRecordCount: number = 0;
   public isAirgapped: boolean;
+  public isDurable: boolean = false;
 
   constructor(isAirgapped: boolean = true) {
     this.isAirgapped = isAirgapped;
@@ -25,6 +27,27 @@ export class LocalTelemetryClient {
     ];
     this.currentBatch = this.acquireBuffer();
     this.initWorker();
+    this.requestDurableStorage();
+  }
+
+  /**
+   * Explicitly requests persistent, non-evictable browser storage for compliance audits
+   */
+  public async requestDurableStorage(): Promise<boolean> {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+        this.isDurable = await navigator.storage.persist();
+        if (this.isDurable) {
+          console.log('[TelemetryClient] Hardware durable storage granted: IndexedDB is immune to browser eviction.');
+        } else {
+          console.warn('[TelemetryClient] Best-effort storage active. Browser may evict if disk space is critically low.');
+        }
+        return this.isDurable;
+      }
+    } catch (e) {
+      console.warn('[TelemetryClient] Storage persist request failed:', e);
+    }
+    return false;
   }
 
   private initWorker(): void {
@@ -98,17 +121,20 @@ export class LocalTelemetryClient {
   /**
    * Queries summary statistics from the persistent IndexedDB ledger
    */
-  public queryStats(): Promise<{ totalRecords: number; databaseName: string; storageType: string }> {
+  public queryStats(): Promise<{ totalRecords: number; databaseName: string; storageType: string; isDurable: boolean }> {
     return new Promise((resolve) => {
       if (!this.worker) {
-        resolve({ totalRecords: 0, databaseName: 'InMemoryFallback', storageType: 'Volatile RAM' });
+        resolve({ totalRecords: 0, databaseName: 'InMemoryFallback', storageType: 'Volatile RAM', isDurable: false });
         return;
       }
 
       const handler = (e: MessageEvent) => {
         if (e.data.type === 'STATS_RESULT') {
           this.worker?.removeEventListener('message', handler);
-          resolve(e.data.stats);
+          resolve({
+            ...e.data.stats,
+            isDurable: this.isDurable,
+          });
         }
       };
 

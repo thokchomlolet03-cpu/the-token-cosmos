@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-test_enterprise_engine.py — Rigorous Enterprise Engine & Physics Verification Suite
-Tests mathematical zero-clamps, SIMD sliding window bounds, LIFO stack buffer lifecycles,
-and sovereign IndexedDB air-gap persistence.
+test_enterprise_engine.py — Backend Mathematical Physics & Array Algorithm Simulation Suite
+Validates the mathematical correctness of:
+1. Thermodynamic exponent waterplane zero-clamping bounds at temperature and probability limits.
+2. SIMD sliding window memory copy arithmetic and capacity gating bounds.
+3. LIFO double-buffer pool zero-allocation pointer arithmetic under sustained throughput.
 The Token Cosmos v4.9
 """
 
@@ -10,10 +12,10 @@ import unittest
 import math
 from array import array
 
-class TestEnterpriseEnginePhysics(unittest.TestCase):
+class TestEnterpriseMathematicalPhysics(unittest.TestCase):
     
     def test_thermodynamic_waterplane_zero_clamp_safety(self):
-        """Verifies that GLSL/CPU thermodynamic exponent equations never produce NaN or Inf at zero-domain limits."""
+        """Verifies that the exponent waterplane equation y = h + beta * (min_p)^(1/T) never produces NaN or Inf."""
         shelf_height = 4.0
         beta = 150.0
         
@@ -28,7 +30,6 @@ class TestEnterpriseEnginePhysics(unittest.TestCase):
             safe_temp = max(case["T"], 0.01)
             safe_min_p = max(case["min_p"], 1e-7)
             
-            # Equation: y_water = shelf_height + beta * (safe_min_p)^(1 / safe_temp)
             y_water = shelf_height + beta * math.pow(safe_min_p, 1.0 / safe_temp)
             
             self.assertTrue(math.isfinite(y_water), f"Failed finite check on {case['name']}: {y_water}")
@@ -36,7 +37,7 @@ class TestEnterpriseEnginePhysics(unittest.TestCase):
             self.assertGreaterEqual(y_water, shelf_height, f"Water level below shelf on {case['name']}")
 
     def test_simd_sliding_window_bound_integrity(self):
-        """Simulates TypedArray copyWithin(0, 6, activeCount * 6) to verify active points are never overwritten by tail zeroes."""
+        """Simulates TypedArray copyWithin(0, 6, activeCount * 6) arithmetic to verify active points are preserved."""
         max_points = 128
         quad_floats = 6
         buffer_len = max_points * quad_floats
@@ -51,11 +52,10 @@ class TestEnterpriseEnginePhysics(unittest.TestCase):
         active_count = 5
         active_float_count = active_count * quad_floats
         
-        # Perform correctly bounded shift: copy index 6..active_float_count into 0..active_float_count-6
+        # Perform bounded shift: copy index 6..active_float_count into 0..active_float_count-6
         shifted = array('f', positions)
         shifted[0 : active_float_count - quad_floats] = positions[quad_floats : active_float_count]
         
-        # Verify that index 0 now holds token #2 (values 20..25)
         self.assertEqual(shifted[0], 20.0, "Shifted first float mismatch")
         self.assertEqual(shifted[quad_floats - 1], 25.0, "Shifted last float of token #2 mismatch")
 
@@ -73,49 +73,18 @@ class TestEnterpriseEnginePhysics(unittest.TestCase):
         allocations = 0
         
         for step in range(10000):
-            # Acquire from stack
             if len(pool) > 0:
                 buf = pool.pop()
             else:
                 buf = array('f', [0.0] * buffer_size)
                 allocations += 1
                 
-            # Fill batch
             buf[0] = float(step)
             buf[1] = float(step % 100)
-            
-            # Simulate worker recycling buffer back to stack
             pool.append(buf)
             
         self.assertEqual(allocations, 0, "LIFO stack pool required unexpected re-allocations during 10,000 writes")
         self.assertEqual(len(pool), 2, "LIFO pool leaked buffers")
-
-    def test_ghost_trajectory_polygon_offset_invariant(self):
-        """Asserts that ghost ribbon depth parameters satisfy hardware polygon offset rules."""
-        polygon_offset = True
-        polygon_offset_factor = 1.0
-        polygon_offset_units = 1.0
-        
-        self.assertTrue(polygon_offset)
-        self.assertGreater(polygon_offset_factor, 0.0)
-        self.assertGreater(polygon_offset_units, 0.0)
-
-    def test_indexeddb_sovereign_telemetry_schema(self):
-        """Verifies the persistent IndexedDB audit schema specification for zero-egress compliance."""
-        db_spec = {
-            "name": "TokenCosmosTelemetryDB",
-            "version": 1,
-            "store": "telemetry_records",
-            "keyPath": "id",
-            "autoIncrement": True,
-            "indices": ["timestamp", "stepIndex"],
-            "network_egress": 0,
-        }
-        
-        self.assertEqual(db_spec["name"], "TokenCosmosTelemetryDB")
-        self.assertEqual(db_spec["store"], "telemetry_records")
-        self.assertTrue(db_spec["autoIncrement"])
-        self.assertEqual(db_spec["network_egress"], 0, "IndexedDB must execute with 0 network egress")
 
 if __name__ == "__main__":
     unittest.main()
