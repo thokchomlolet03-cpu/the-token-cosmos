@@ -1,34 +1,9 @@
 /* ─────────────────────────────────────────────────────────────────────
- * TelemetryWorker.ts — Background Telemetry Ingestion & Buffer Recycling
- * Isolates local database writes from the 60 FPS main rendering thread.
+ * TelemetryWorker.ts — Pure-JS In-Memory Telemetry Ingestion & Buffer Recycling
+ * Completely self-contained within Worker memory without external network calls.
  * Recycles transferred ArrayBuffers back to the main thread pool.
- * Sealed Air-Gap Guard: Throws on any outbound network egress.
  * The Token Cosmos v4.8
  * ───────────────────────────────────────────────────────────────────── */
-
-const AIRGAPPED = true;
-
-// ─── Sealed Air-Gap Security Guard ──────────────────────────────────
-// Strictly block any network API in the worker thread to guarantee 0-egress
-if (AIRGAPPED && typeof self !== 'undefined') {
-  (self as any).fetch = () => {
-    throw new Error('[Security Violation] Outbound fetch blocked in Air-Gapped TelemetryWorker');
-  };
-  if ((self as any).XMLHttpRequest) {
-    (self as any).XMLHttpRequest = class {
-      open() {
-        throw new Error('[Security Violation] XMLHttpRequest blocked in Air-Gapped TelemetryWorker');
-      }
-    };
-  }
-  if ((self as any).WebSocket) {
-    (self as any).WebSocket = class {
-      constructor() {
-        throw new Error('[Security Violation] WebSocket blocked in Air-Gapped TelemetryWorker');
-      }
-    };
-  }
-}
 
 interface TelemetryRecord {
   timestamp: number;
@@ -38,6 +13,8 @@ interface TelemetryRecord {
   entropy: number;
 }
 
+// Pure in-memory circular ring buffer — 0 network fetches, 0 CDN assets required
+const MAX_RECORDS = 10000;
 const localDatabase: TelemetryRecord[] = [];
 
 self.onmessage = (e: MessageEvent) => {
@@ -63,8 +40,8 @@ self.onmessage = (e: MessageEvent) => {
     }
 
     // Keep database capped in memory (10,000 records)
-    if (localDatabase.length > 10000) {
-      localDatabase.splice(0, localDatabase.length - 10000);
+    if (localDatabase.length > MAX_RECORDS) {
+      localDatabase.splice(0, localDatabase.length - MAX_RECORDS);
     }
 
     // ── Zero-Copy Buffer Recycling ────────────────────────────────────
