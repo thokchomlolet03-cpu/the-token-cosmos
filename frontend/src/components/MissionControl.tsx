@@ -33,6 +33,8 @@ import {
   Terminal,
   AlertTriangle,
   Zap,
+  Pause,
+  RotateCcw,
 } from 'lucide-react';
 
 interface MissionControlProps {
@@ -54,6 +56,11 @@ interface MissionControlProps {
   setRagEnabled: (e: boolean) => void;
   onApplyPreset: (preset: PresetScenario) => void;
   onLaunchPrompt: () => void;
+  isPlaying?: boolean;
+  onTogglePlay?: () => void;
+  onGenerateNextStep?: () => void;
+  onResetTimeline?: () => void;
+  stepsCount?: number;
   onInteractFeature?: (notice: ActiveInteractionNotice) => void;
   isFetchingLogits?: boolean;
   rawLogits?: RawTokenCandidate[];
@@ -79,6 +86,11 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   setRagEnabled,
   onApplyPreset,
   onLaunchPrompt,
+  isPlaying = false,
+  onTogglePlay,
+  onGenerateNextStep,
+  onResetTimeline,
+  stepsCount = 0,
   onInteractFeature,
   isFetchingLogits = false,
   rawLogits = [],
@@ -344,25 +356,74 @@ export const MissionControl: React.FC<MissionControlProps> = ({
               </div>
             </div>
 
-            {/* Launch Prompt Button */}
-            <button
-              onClick={onLaunchPrompt}
-              disabled={isFetchingLogits || !prompt.trim()}
-              aria-label="Launch prompt evaluation and fetch token candidates"
-              className="w-full flex items-center justify-center space-x-2 rounded-lg bg-blue-600 hover:bg-blue-500 py-2.5 text-xs font-bold text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {isFetchingLogits ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  <span>Mapping AI Thoughts...</span>
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 text-white" />
-                  <span>Map the AI's Thoughts</span>
-                </>
+            {/* ─── Generation & Stream Control Deck ─── */}
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={onTogglePlay}
+                disabled={!prompt.trim()}
+                aria-label={isPlaying ? 'Pause stream generation' : 'Auto-generate continuous stream'}
+                className={`w-full flex items-center justify-center space-x-2 rounded-lg py-2.5 px-3 text-xs font-bold transition-all shadow-md ${
+                  isPlaying
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 hover:bg-amber-500/30 animate-pulse'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed'
+                }`}
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause className="h-4 w-4 fill-current" />
+                    <span>Pause Continuous Stream</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 fill-current" />
+                    <span>Auto-Generate Continuous Stream</span>
+                  </>
+                )}
+              </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={onGenerateNextStep}
+                  disabled={isFetchingLogits || isPlaying || !prompt.trim()}
+                  className="flex items-center justify-center space-x-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 py-2 px-2 text-xs font-medium text-gray-200 hover:text-white disabled:opacity-40 transition-colors"
+                >
+                  <Zap className="h-3.5 w-3.5 text-blue-400" />
+                  <span>+1 Next Token</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onLaunchPrompt}
+                  disabled={isFetchingLogits || isPlaying || !prompt.trim()}
+                  className="flex items-center justify-center space-x-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 py-2 px-2 text-xs font-medium text-gray-200 hover:text-white disabled:opacity-40 transition-colors"
+                >
+                  {isFetchingLogits ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-400" />
+                      <span>Mapping...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                      <span>Map Logits (1 Step)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {stepsCount > 0 && onResetTimeline && (
+                <button
+                  type="button"
+                  onClick={onResetTimeline}
+                  className="w-full flex items-center justify-center space-x-1.5 py-1.5 text-[11px] font-mono text-gray-400 hover:text-rose-300 hover:bg-rose-500/10 rounded border border-transparent hover:border-rose-500/20 transition-all"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Reset Generation Timeline ({stepsCount} tokens)</span>
+                </button>
               )}
-            </button>
+            </div>
 
             {/* RAG Reference Facts Accordion */}
             <div className="rounded-lg border border-white/10 bg-[#111424] overflow-hidden">

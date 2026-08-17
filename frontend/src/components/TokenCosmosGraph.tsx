@@ -317,58 +317,102 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
         <LegendItem color={CATEGORY_COLORS.filtered} label="Filtered" />
       </div>
 
-      {/* ─── Bottom Timeline Scrubber ─── */}
-      {steps.length > 0 && onSelectStep && (
-        <div className="border-t border-white/5 px-4 py-2 flex items-center space-x-3">
+      {/* ─── Bottom Timeline Scrubber & Auto-Play Controller ─── */}
+      <div className="border-t border-white/10 bg-[#090b14]/90 backdrop-blur-md px-4 py-2.5 flex items-center justify-between space-x-3">
+        <div className="flex items-center space-x-2">
           <button
             onClick={togglePlay}
-            className="h-7 w-7 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-blue-400 transition-colors"
+            aria-label={isPlaying ? 'Pause auto-generation' : 'Start auto-generation'}
+            className={`h-7 px-3 rounded-md flex items-center space-x-1.5 text-xs font-semibold transition-all ${
+              isPlaying
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
+            }`}
           >
-            {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+            {isPlaying ? (
+              <>
+                <Pause className="h-3.5 w-3.5" />
+                <span>Pause</span>
+              </>
+            ) : (
+              <>
+                <Play className="h-3.5 w-3.5 fill-current" />
+                <span>Auto-Play</span>
+              </>
+            )}
           </button>
 
-          <button
-            onClick={() => onSelectStep(Math.max(0, currentStepIndex - 1))}
-            disabled={currentStepIndex === 0}
-            className="text-gray-500 hover:text-white disabled:opacity-30 transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
+          {onGenerateNextStep && (
+            <button
+              onClick={onGenerateNextStep}
+              disabled={isGenerating || isPlaying}
+              title="Generate Next Step (+1 Token)"
+              className="h-7 px-2.5 rounded-md bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 text-xs font-mono disabled:opacity-40 transition-colors flex items-center space-x-1"
+            >
+              <span>+1 Step</span>
+            </button>
+          )}
 
-          <div className="flex-1 flex items-center space-x-0.5 overflow-x-auto scrollbar-none">
-            {steps.map((step, idx) => {
-              const conf = perplexityMap[idx];
-              const bgColor = conf?.perplexityColor || '#333';
-              return (
-                <button
-                  key={idx}
-                  onClick={() => onSelectStep(idx)}
-                  className={`flex-shrink-0 h-5 px-1.5 rounded text-[9px] font-mono transition-all ${
-                    idx === currentStepIndex
-                      ? 'ring-1 ring-blue-500 scale-110 text-white'
-                      : 'text-gray-500 hover:text-white'
-                  }`}
-                  style={{ backgroundColor: bgColor }}
-                >
-                  {step.selectedToken.token_str.trim().slice(0, 6)}
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={() => onSelectStep(Math.min(steps.length - 1, currentStepIndex + 1))}
-            disabled={currentStepIndex === steps.length - 1}
-            className="text-gray-500 hover:text-white disabled:opacity-30 transition-colors"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-
-          <span className="text-[9px] text-gray-600 font-mono">
-            {currentStepIndex + 1}/{steps.length}
-          </span>
+          {onResetTimeline && steps.length > 0 && (
+            <button
+              onClick={onResetTimeline}
+              title="Reset Timeline"
+              className="h-7 px-2 rounded-md bg-white/5 hover:bg-rose-500/20 text-gray-400 hover:text-rose-300 border border-white/10 text-xs transition-colors flex items-center"
+            >
+              <RotateCcw className="h-3 w-3" />
+            </button>
+          )}
         </div>
-      )}
+
+        {steps.length > 0 && onSelectStep ? (
+          <div className="flex-1 flex items-center space-x-2 max-w-[60%]">
+            <button
+              onClick={() => onSelectStep(Math.max(0, currentStepIndex - 1))}
+              disabled={currentStepIndex === 0}
+              className="text-gray-500 hover:text-white disabled:opacity-30 p-1 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="flex-1 flex items-center space-x-1 overflow-x-auto scrollbar-none py-0.5">
+              {steps.map((step, idx) => {
+                const conf = perplexityMap[idx];
+                const bgColor = conf?.perplexityColor || '#333';
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => onSelectStep(idx)}
+                    className={`flex-shrink-0 h-5 px-2 rounded text-[10px] font-mono transition-all ${
+                      idx === currentStepIndex
+                        ? 'ring-2 ring-blue-400 scale-105 text-white font-bold'
+                        : 'text-gray-400 hover:text-white opacity-80 hover:opacity-100'
+                    }`}
+                    style={{ backgroundColor: bgColor }}
+                  >
+                    {step.selectedToken.token_str.trim().slice(0, 8) || '␣'}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => onSelectStep(Math.min(steps.length - 1, currentStepIndex + 1))}
+              disabled={currentStepIndex === steps.length - 1}
+              className="text-gray-500 hover:text-white disabled:opacity-30 p-1 transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+
+            <span className="text-[10px] text-gray-400 font-mono flex-shrink-0">
+              {currentStepIndex + 1}/{steps.length}
+            </span>
+          </div>
+        ) : (
+          <div className="text-[11px] font-mono text-gray-500 italic">
+            Ready • Click Auto-Play or +1 Step to stream generation
+          </div>
+        )}
+      </div>
     </div>
   );
 };

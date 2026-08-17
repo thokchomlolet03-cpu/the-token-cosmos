@@ -545,7 +545,22 @@ export const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [isPlaying, isFetchingLogits, inferenceEngine.state.status, processedCandidates, handleSelectToken]);
 
+  const handleTogglePlay = () => {
+    if (!isPlaying) {
+      setIsPlaying(true);
+      if (processedCandidates.length === 0 && prompt.trim()) {
+        handleLaunchPrompt();
+      }
+    } else {
+      setIsPlaying(false);
+    }
+  };
+
   const handleGenerateNextStep = () => {
+    if (processedCandidates.length === 0 && prompt.trim()) {
+      handleLaunchPrompt();
+      return;
+    }
     setIsGenerating(true);
     setTimeout(() => {
       const chosen = processedCandidates.find(c => !c.isFiltered) || processedCandidates[0];
@@ -669,6 +684,11 @@ export const App: React.FC = () => {
                 setRagEnabled={setRagEnabled}
                 onApplyPreset={handleApplyPreset}
                 onLaunchPrompt={() => handleLaunchPrompt()}
+                isPlaying={isPlaying}
+                onTogglePlay={handleTogglePlay}
+                onGenerateNextStep={handleGenerateNextStep}
+                onResetTimeline={handleResetTimeline}
+                stepsCount={steps.length}
                 onInteractFeature={notice => setActiveNotice(notice)}
                 isFetchingLogits={isInferencePending}
                 rawLogits={activeRawLogits}
@@ -697,7 +717,7 @@ export const App: React.FC = () => {
                 latestLogits={inferenceEngine.latestLogits}
                 isThinking={inferenceEngine.latestSnapshot?.isThinking}
                 isPlaying={isPlaying}
-                onTogglePlay={() => setIsPlaying(!isPlaying)}
+                onTogglePlay={handleTogglePlay}
               />
             </div>
           </div>
@@ -732,6 +752,11 @@ export const App: React.FC = () => {
                   setRagEnabled={setRagEnabled}
                   onApplyPreset={handleApplyPreset}
                   onLaunchPrompt={() => handleLaunchPrompt()}
+                  isPlaying={isPlaying}
+                  onTogglePlay={handleTogglePlay}
+                  onGenerateNextStep={handleGenerateNextStep}
+                  onResetTimeline={handleResetTimeline}
+                  stepsCount={steps.length}
                   onInteractFeature={notice => setActiveNotice(notice)}
                   isFetchingLogits={isInferencePending}
                   rawLogits={activeRawLogits}
