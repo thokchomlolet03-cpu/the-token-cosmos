@@ -287,8 +287,11 @@ export class FlightPath {
 
   public clear(): void {
     this.rawWaypoints = [];
+    this.cachedCurve.points = [];
     this.geometry.setDrawRange(0, 0);
     this.material.uniforms.u_has_anomaly.value = 0.0;
+    const posAttr = this.geometry.getAttribute('position');
+    if (posAttr) posAttr.needsUpdate = true;
   }
 
   public dispose(): void {

@@ -229,9 +229,15 @@ async function getFullLogits(prompt: string) {
     capturedStepIndex = 0;
     capturedLogits = null;
 
+    // Instruct model framing: ensure direct completion without conversational filler
+    const messages: Array<{ role: string; content: string }> = [
+      { role: 'system', content: 'You are a precise AI assistant. Complete user requests directly and concisely.' },
+      { role: 'user', content: prompt },
+    ];
+
     // Single-token generation to capture the logit distribution for the NEXT token
     const response = await engine.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
+      messages: messages as any,
       max_tokens: 1,
       temperature: 1.0, // Temperature doesn't affect raw logits, only sampling
       logprobs: true,
@@ -318,9 +324,10 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
     
     // Construct full message context (Context-Restoration Guarantee)
     const currentMessages: Array<{ role: string; content: string }> = [];
-    if (systemPrompt && systemPrompt.trim().length > 0) {
-      currentMessages.push({ role: 'system', content: systemPrompt.trim() });
-    }
+    const sysPrompt = (systemPrompt && systemPrompt.trim().length > 0)
+      ? systemPrompt.trim()
+      : 'You are a precise AI assistant. Complete user requests directly and concisely.';
+    currentMessages.push({ role: 'system', content: sysPrompt });
     currentMessages.push({ role: 'user', content: prompt });
 
     let hasTruncated = false;

@@ -179,20 +179,44 @@ export function alignModelTopography(
 
   for (let i = 0; i < vocabSize; i++) {
     const rawToken = activeVocab[i];
-    // 1. Normalize BPE special whitespace bytes (Ġ or  )
-    let cleanToken = rawToken
-      .replace(/^[\u0120\u2581\s]+/, '')
-      .toLowerCase();
+    
+    // 1. Multi-tier token normalization hierarchy
+    const stripped = rawToken.replace(/^[\u0120\u2581\s]+/, '');
+    const lower = stripped.toLowerCase();
+    const rawLower = rawToken.toLowerCase();
 
-    // Prevent empty string collapse for pure whitespace/formatting tokens
-    if (cleanToken.length === 0) {
-      cleanToken = `syntax_format_${rawToken}`;
+    let coords =
+      universalManifold[rawToken] ||
+      universalManifold[stripped] ||
+      universalManifold[lower] ||
+      universalManifold[` ${lower}`] ||
+      universalManifold[rawLower];
+
+    // 2. Core grammar safety anchor (prevent essential pronouns and stop words from exiling to halo)
+    if (!coords) {
+      if (
+        lower === 'i' ||
+        lower === 'it' ||
+        lower === 'you' ||
+        lower === 'he' ||
+        lower === 'she' ||
+        lower === 'we' ||
+        lower === 'they' ||
+        lower === 'the' ||
+        lower === 'a' ||
+        lower === 'an' ||
+        lower === 'is' ||
+        lower === 'in' ||
+        lower === 'to' ||
+        lower === 'of' ||
+        lower === 'and'
+      ) {
+        coords = { x: 0.0 + ((i % 7) - 3) * 4.0, z: -15.0 + ((i % 5) - 2) * 4.0 }; // Center in CORE GRAMMAR
+      }
     }
 
-    let coords = universalManifold[cleanToken] || universalManifold[rawToken.toLowerCase()];
-
+    // 3. Fallback: Fibonacci Hashing & Irrational Radial Scattering (Organic Halo Ring)
     if (!coords) {
-      // 2. Fibonacci Hashing & Irrational Radial Scattering (Organic Halo Ring)
       const normalizedAngle = (i * goldenRatio) % 1.0;
       const angle = normalizedAngle * Math.PI * 2;
       const radius = 280.0 + ((i * 0.14159265) % 1.0) * 40.0; // Halo radius [280, 320]
