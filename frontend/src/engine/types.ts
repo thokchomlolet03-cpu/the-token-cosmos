@@ -126,8 +126,24 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     label: 'Qwen2.5 1.5B',
     size: '~1.2GB',
     vocabSize: 151936,
-    description: 'High-quality inference. Requires ~2GB VRAM.',
+    description: 'High-quality interactive inference. Requires ~1.8GB VRAM.',
+    tier: 'standard',
+  },
+  {
+    id: 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
+    label: 'Qwen2.5 3B (Enterprise)',
+    size: '~2.1GB',
+    vocabSize: 151936,
+    description: 'Enterprise reasoning & legal contract analysis. Requires ~2.8GB VRAM.',
     tier: 'power',
+  },
+  {
+    id: 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC',
+    label: 'Qwen2.5 Coder 1.5B',
+    size: '~1.2GB',
+    vocabSize: 151936,
+    description: 'Optimized for SQL, Python syntax & structured JSON extraction.',
+    tier: 'standard',
   },
 ];
 

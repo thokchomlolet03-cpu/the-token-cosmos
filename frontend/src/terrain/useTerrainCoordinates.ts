@@ -15,6 +15,8 @@ const PRECOMPUTED_ASSETS: Record<string, string> = {
   'SmolLM2-135M-Instruct-q0f16-MLC': '/terrain/smollm2-135m-umap.bin',
   'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin',
   'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin', // Shares vocab
+  'Qwen2.5-3B-Instruct-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin',   // Shares vocab
+  'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC': '/terrain/qwen2.5-0.5b-umap.bin', // Shares vocab
 };
 
 // ─── Known Vocab Sizes ──────────────────────────────────────────────
@@ -24,6 +26,8 @@ const MODEL_VOCAB_SIZES: Record<string, number> = {
   'SmolLM2-135M-Instruct-q0f16-MLC': 49152,
   'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': 151936,
   'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': 151936,
+  'Qwen2.5-3B-Instruct-q4f16_1-MLC': 151936,
+  'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC': 151936,
   '__SAMPLE_FALLBACK__': 49152, // Procedural terrain for sample data mode
 };
 
