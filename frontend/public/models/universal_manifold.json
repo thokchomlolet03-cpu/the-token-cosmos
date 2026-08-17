@@ -1,0 +1,356 @@
+{
+  "Paris": {
+    "parent_word": "Paris",
+    "sector": "GEO",
+    "umap_x": 0.4499,
+    "umap_y": 0.4308
+  },
+  " Paris": {
+    "parent_word": "Paris",
+    "sector": "GEO",
+    "umap_x": 0.4882,
+    "umap_y": 0.4928
+  },
+  "PARIS": {
+    "parent_word": "Paris",
+    "sector": "GEO",
+    "umap_x": 0.48,
+    "umap_y": 0.4899
+  },
+  "London": {
+    "parent_word": "London",
+    "sector": "GEO",
+    "umap_x": 0.3936,
+    "umap_y": 0.5402
+  },
+  " London": {
+    "parent_word": "London",
+    "sector": "GEO",
+    "umap_x": 0.4231,
+    "umap_y": 0.4509
+  },
+  "France": {
+    "parent_word": "France",
+    "sector": "GEO",
+    "umap_x": 0.4922,
+    "umap_y": 0.4262
+  },
+  " France": {
+    "parent_word": "France",
+    "sector": "GEO",
+    "umap_x": 0.4704,
+    "umap_y": 0.4086
+  },
+  "Delaware": {
+    "parent_word": "Delaware",
+    "sector": "GEO",
+    "umap_x": 0.3591,
+    "umap_y": 0.3308
+  },
+  " Delaware": {
+    "parent_word": "Delaware",
+    "sector": "GEO",
+    "umap_x": 0.3752,
+    "umap_y": 0.3744
+  },
+  "reason": {
+    "parent_word": "reasoning",
+    "sector": "VRB",
+    "umap_x": -0.5173,
+    "umap_y": 0.194
+  },
+  "ing": {
+    "parent_word": "reasoning",
+    "sector": "VRB",
+    "umap_x": -0.496,
+    "umap_y": 0.152
+  },
+  " reasoning": {
+    "parent_word": "reasoning",
+    "sector": "VRB",
+    "umap_x": -0.5542,
+    "umap_y": 0.205
+  },
+  " Reason": {
+    "parent_word": "reasoning",
+    "sector": "VRB",
+    "umap_x": -0.542,
+    "umap_y": 0.1851
+  },
+  "infr": {
+    "parent_word": "infrastructure",
+    "sector": "VRB",
+    "umap_x": -0.4674,
+    "umap_y": 0.1737
+  },
+  "ast": {
+    "parent_word": "infrastructure",
+    "sector": "VRB",
+    "umap_x": -0.4347,
+    "umap_y": 0.2012
+  },
+  "ructure": {
+    "parent_word": "infrastructure",
+    "sector": "VRB",
+    "umap_x": -0.4428,
+    "umap_y": 0.202
+  },
+  " infrastructure": {
+    "parent_word": "infrastructure",
+    "sector": "VRB",
+    "umap_x": -0.4349,
+    "umap_y": 0.1884
+  },
+  " Infrastructure": {
+    "parent_word": "infrastructure",
+    "sector": "VRB",
+    "umap_x": -0.448,
+    "umap_y": 0.2546
+  },
+  "calc": {
+    "parent_word": "calculate",
+    "sector": "VRB",
+    "umap_x": -0.4512,
+    "umap_y": 0.1483
+  },
+  "ulate": {
+    "parent_word": "calculate",
+    "sector": "VRB",
+    "umap_x": -0.442,
+    "umap_y": 0.1502
+  },
+  " calculate": {
+    "parent_word": "calculate",
+    "sector": "VRB",
+    "umap_x": -0.4486,
+    "umap_y": 0.1459
+  },
+  "hypo": {
+    "parent_word": "hypothesize",
+    "sector": "VRB",
+    "umap_x": -0.5992,
+    "umap_y": 0.2793
+  },
+  "thesize": {
+    "parent_word": "hypothesize",
+    "sector": "VRB",
+    "umap_x": -0.5239,
+    "umap_y": 0.2895
+  },
+  " hypothesize": {
+    "parent_word": "hypothesize",
+    "sector": "VRB",
+    "umap_x": -0.5901,
+    "umap_y": 0.2166
+  },
+  "python": {
+    "parent_word": "python",
+    "sector": "NUM",
+    "umap_x": 0.5385,
+    "umap_y": -0.1784
+  },
+  " Python": {
+    "parent_word": "python",
+    "sector": "NUM",
+    "umap_x": 0.5662,
+    "umap_y": -0.2394
+  },
+  " py": {
+    "parent_word": "python",
+    "sector": "NUM",
+    "umap_x": 0.5622,
+    "umap_y": -0.225
+  },
+  "type": {
+    "parent_word": "typescript",
+    "sector": "NUM",
+    "umap_x": 0.6016,
+    "umap_y": -0.3051
+  },
+  "script": {
+    "parent_word": "typescript",
+    "sector": "NUM",
+    "umap_x": 0.5507,
+    "umap_y": -0.2768
+  },
+  " TypeScript": {
+    "parent_word": "typescript",
+    "sector": "NUM",
+    "umap_x": 0.5418,
+    "umap_y": -0.3155
+  },
+  " ts": {
+    "parent_word": "typescript",
+    "sector": "NUM",
+    "umap_x": 0.6239,
+    "umap_y": -0.2318
+  },
+  "return": {
+    "parent_word": "return",
+    "sector": "NUM",
+    "umap_x": 0.4782,
+    "umap_y": -0.2827
+  },
+  " Return": {
+    "parent_word": "return",
+    "sector": "NUM",
+    "umap_x": 0.427,
+    "umap_y": -0.2897
+  },
+  "func": {
+    "parent_word": "function",
+    "sector": "NUM",
+    "umap_x": 0.6125,
+    "umap_y": -0.1384
+  },
+  "tion": {
+    "parent_word": "function",
+    "sector": "NUM",
+    "umap_x": 0.5699,
+    "umap_y": -0.1911
+  },
+  " function": {
+    "parent_word": "function",
+    "sector": "NUM",
+    "umap_x": 0.5608,
+    "umap_y": -0.2074
+  },
+  "{": {
+    "parent_word": "{",
+    "sector": "SYN",
+    "umap_x": 0.0003,
+    "umap_y": -0.5997
+  },
+  " {": {
+    "parent_word": "{",
+    "sector": "SYN",
+    "umap_x": 0.0179,
+    "umap_y": -0.6179
+  },
+  "{{": {
+    "parent_word": "{",
+    "sector": "SYN",
+    "umap_x": 0.0301,
+    "umap_y": -0.5699
+  },
+  "}": {
+    "parent_word": "}",
+    "sector": "SYN",
+    "umap_x": 0.0051,
+    "umap_y": -0.5949
+  },
+  " }": {
+    "parent_word": "}",
+    "sector": "SYN",
+    "umap_x": -0.0252,
+    "umap_y": -0.6357
+  },
+  "}}": {
+    "parent_word": "}",
+    "sector": "SYN",
+    "umap_x": -0.0066,
+    "umap_y": -0.6066
+  },
+  "\n": {
+    "parent_word": "\n",
+    "sector": "SYN",
+    "umap_x": 0.0789,
+    "umap_y": -0.6211
+  },
+  "\n\n": {
+    "parent_word": "\n",
+    "sector": "SYN",
+    "umap_x": 0.0637,
+    "umap_y": -0.6363
+  },
+  "\\n": {
+    "parent_word": "\n",
+    "sector": "SYN",
+    "umap_x": 0.0731,
+    "umap_y": -0.6707
+  },
+  "[": {
+    "parent_word": "[",
+    "sector": "SYN",
+    "umap_x": -0.0963,
+    "umap_y": -0.5963
+  },
+  " [": {
+    "parent_word": "[",
+    "sector": "SYN",
+    "umap_x": -0.0208,
+    "umap_y": -0.584
+  },
+  "the": {
+    "parent_word": "the",
+    "sector": "COR",
+    "umap_x": 0.0368,
+    "umap_y": 0.0309
+  },
+  " The": {
+    "parent_word": "the",
+    "sector": "COR",
+    "umap_x": -0.0105,
+    "umap_y": 0.0666
+  },
+  "THE": {
+    "parent_word": "the",
+    "sector": "COR",
+    "umap_x": 0.0547,
+    "umap_y": 0.038
+  },
+  "is": {
+    "parent_word": "is",
+    "sector": "COR",
+    "umap_x": -0.0249,
+    "umap_y": -0.0229
+  },
+  " Is": {
+    "parent_word": "is",
+    "sector": "COR",
+    "umap_x": 0.0079,
+    "umap_y": -0.0544
+  },
+  "IS": {
+    "parent_word": "is",
+    "sector": "COR",
+    "umap_x": -0.0542,
+    "umap_y": -0.0515
+  },
+  "of": {
+    "parent_word": "of",
+    "sector": "COR",
+    "umap_x": 0.0027,
+    "umap_y": -0.0436
+  },
+  " Of": {
+    "parent_word": "of",
+    "sector": "COR",
+    "umap_x": 0.0547,
+    "umap_y": -0.0383
+  },
+  "OF": {
+    "parent_word": "of",
+    "sector": "COR",
+    "umap_x": 0.0438,
+    "umap_y": -0.06
+  },
+  "and": {
+    "parent_word": "and",
+    "sector": "COR",
+    "umap_x": -0.0162,
+    "umap_y": 0.0363
+  },
+  " And": {
+    "parent_word": "and",
+    "sector": "COR",
+    "umap_x": -0.0091,
+    "umap_y": 0.0724
+  },
+  "AND": {
+    "parent_word": "and",
+    "sector": "COR",
+    "umap_x": -0.0476,
+    "umap_y": 0.0435
+  }
+}

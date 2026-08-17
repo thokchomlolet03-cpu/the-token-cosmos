@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────────
- * shaders.ts — Cartographic Shaders with Dynamic Density LoD & Isobars
- * Synthesizing CELLxGENE, Bookmap, and Houdini Topographic Pipelines
- * The Token Cosmos v4.3
+ * shaders.ts — Cartographic Shaders with Thermodynamic Erosion & LoD
+ * Zero-Safe Clamped GLSL Exponent Equations with Relative Normalization
+ * The Token Cosmos v4.8
  * ───────────────────────────────────────────────────────────────────── */
 
 export const terrainVertexShader = `
@@ -10,6 +10,9 @@ uniform sampler2D probabilityTexture;
 uniform float maxHeight;
 uniform float textureSize;
 uniform float greedyAnchorIndex;
+uniform float uTemperature;
+uniform float uMaxProb;
+uniform float uMinP;
 
 attribute vec2 umapCoord;
 attribute float tokenIndex;
@@ -54,9 +57,15 @@ void main() {
 
     float baseTopography = geoHills + verbHills + codeHills + syntaxPlain + coreSpire;
 
-    // ─── 2. Dynamic Active Peak (Logit Probability Mass) ────────────────
-    float activeSummit = smoothstep(0.001, 0.08, activeProb) * (maxHeight * 0.25) + 
-                         smoothstep(0.08, 1.0, activeProb) * (maxHeight * 0.75);
+    // ─── 2. Zero-Safe Clamped Thermodynamic Peak Displacement ────────────
+    // Normalizing relative probability (P_i / P_max) anchors the active summit to maxHeight
+    float safeMaxProb = max(uMaxProb, 1e-7);
+    float safeProbRatio = max(activeProb / safeMaxProb, 1e-7);
+    float safeTemp = max(uTemperature, 0.01);
+    
+    // As T -> 0.05 (Glacial freeze): peaks sharpen into needles
+    // As T -> 2.0 (Thermal erosion): peaks collapse and spread
+    float activeSummit = (activeProb > 0.0001) ? (maxHeight * pow(safeProbRatio, 1.0 / safeTemp)) : 0.0;
     
     float totalElevation = baseTopography + activeSummit;
     vElevation = totalElevation;
@@ -88,8 +97,6 @@ void main() {
     vViewDistance = viewDist;
 
     // ─── 4. Dynamic Level of Detail (LoD) Point Sizing ──────────────────
-    // In orbit (viewDist > 300), background points expand into smooth density heatmaps
-    // At close range (viewDist < 120), points resolve into sharp pinpoint coordinates
     float lodScale = mix(1.6, 0.85, smoothstep(80.0, 450.0, viewDist));
     float minSize = 3.0 * lodScale;
     float maxSize = 18.0 * lodScale;
@@ -100,7 +107,6 @@ void main() {
     float ragSize = isRagGrounded * 8.0;
     float anchorSize = vIsGreedyAnchor * 14.0; // Radiant beacon for Greedy Target #1
     
-    // Attenuate with distance
     gl_PointSize = (activeSize + ragSize + anchorSize) * (340.0 / max(10.0, viewDist));
 }
 `;

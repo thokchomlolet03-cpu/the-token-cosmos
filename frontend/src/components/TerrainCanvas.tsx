@@ -12,7 +12,11 @@ import { MiniRadar } from './MiniRadar';
 import { spatialIndex } from '../terrain/SpatialTokenIndex';
 import { LassoSelectionTool } from './LassoSelectionTool';
 import { ClusterAnalyticsDrawer } from './ClusterAnalyticsDrawer';
-import { ZenViewportHUD } from './ZenViewportHUD';
+import { ZenViewportHUD, CosmosPersona } from './ZenViewportHUD';
+import { WaterPlane } from '../terrain/WaterPlane';
+import { FlightPath, TrajectoryAnomaly } from '../terrain/FlightPath';
+import { EnterpriseLabsModal, ENTERPRISE_MISSIONS, EnterpriseMission } from './EnterpriseLabsModal';
+import { localTelemetry } from '../telemetry/localDb';
 import { ScreenPolygonPoint, ClusterMetrics, IndexedTokenPoint } from '../types/spatial';
 
 interface TerrainCanvasProps {
@@ -44,6 +48,13 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   const controlsRef = useRef<OrbitControls | null>(null);
   const pointsRef = useRef<THREE.Points | null>(null);
   const argmaxIndexRef = useRef<number>(-1);
+  const waterPlaneRef = useRef<WaterPlane | null>(null);
+  const flightPathRef = useRef<FlightPath | null>(null);
+
+  // Persona & Enterprise Labs state
+  const [persona, setPersona] = useState<CosmosPersona>('flight_sim');
+  const [isLabsOpen, setIsLabsOpen] = useState<boolean>(false);
+  const [lastAnomaly, setLastAnomaly] = useState<TrajectoryAnomaly | null>(null);
   
   // Radar state
   const [cameraState, setCameraState] = useState<{
@@ -385,7 +396,10 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         maxHeight: { value: 150.0 },
         textureSize: { value: texSize },
         greedyAnchorIndex: { value: -1.0 },
-        uIsThinking: { value: 0.0 }
+        uIsThinking: { value: 0.0 },
+        uTemperature: { value: _params.temperature || 1.0 },
+        uMaxProb: { value: 1.0 },
+        uMinP: { value: _params.minP || 0.05 },
     };
     const material = new THREE.ShaderMaterial({
         vertexShader: terrainVertexShader,
@@ -399,6 +413,19 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     const points = new THREE.Points(geometry, material);
     scene.add(points);
     pointsRef.current = points;
+
+    // ─── 3D Volumetric Waterplane (Min-P Tides) ───────────────────────
+    const waterPlane = new WaterPlane(spread * 2.2, 64);
+    scene.add(waterPlane.mesh);
+    waterPlaneRef.current = waterPlane;
+
+    // ─── 3D Semantic Trajectory Ribbon (Flight Highway) ───────────────
+    const flightPath = new FlightPath(128, 3.2);
+    flightPath.onAnomalyDetected = (anomaly) => {
+      setLastAnomaly(anomaly);
+    };
+    scene.add(flightPath.mesh);
+    flightPathRef.current = flightPath;
 
     let animationFrameId: number;
     const startTime = performance.now();
@@ -415,6 +442,18 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         if (cam.position.distanceTo(targetPos) < 1.0 && controls.target.distanceTo(targetLook) < 1.0) {
             targetFocusRef.current = null;
         }
+      }
+
+      // ─── Animate Waterplane & Trajectory Ribbon ────────────────────
+      const safeMinP = Math.max(_params.minP || 0.05, 1e-7);
+      const safeTemp = Math.max(_params.temperature || 1.0, 0.01);
+      const yWater = 4.0 + 150.0 * Math.pow(safeMinP, 1.0 / safeTemp);
+      if (waterPlaneRef.current) {
+        waterPlaneRef.current.setElevation(yWater);
+        waterPlaneRef.current.update(0.016);
+      }
+      if (flightPathRef.current) {
+        flightPathRef.current.update(0.016);
       }
 
       // Update camera tracking state for radar
@@ -828,14 +867,42 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         sumExpBase += valBase;
     }
     
-    for (let i = 0; i < tokenCount; i++) {
-        targetBaseProbsRef.current[i] /= sumExpBase;
-    }
-    
     argmaxIndexRef.current = argmaxIndex;
     material.uniforms.greedyAnchorIndex.value = argmaxIndex;
     material.uniforms.uIsThinking.value = isThinking ? 1.0 : 0.0;
-  }, [latestLogits, isLoaded, candidates, isThinking, vocabSize, heightMode]);
+    material.uniforms.uTemperature.value = _params.temperature || 1.0;
+    material.uniforms.uMinP.value = _params.minP || 0.05;
+    material.uniforms.uMaxProb.value = primeCandidate ? primeCandidate.probability : 1.0;
+
+    // Track 3D Trajectory Ribbon & Local Telemetry
+    if (primeCandidate && rawCoordinates && primeCandidate.token_id < vocabSize) {
+      const spread = 250.0;
+      const wx = rawCoordinates[primeCandidate.token_id * 2] * spread;
+      const wz = rawCoordinates[primeCandidate.token_id * 2 + 1] * spread;
+      const baseH = computeBaseTopologicalHeight(
+        rawCoordinates[primeCandidate.token_id * 2],
+        rawCoordinates[primeCandidate.token_id * 2 + 1]
+      );
+      const safeMaxP = Math.max(primeCandidate.probability, 1e-7);
+      const safeTemp = Math.max(_params.temperature || 1.0, 0.01);
+      const peakH = 150.0 * Math.pow(primeCandidate.probability / safeMaxP, 1.0 / safeTemp);
+
+      if (flightPathRef.current) {
+        flightPathRef.current.addStep(
+          primeCandidate.token_str,
+          candidates.length > 0 ? 1 : 0,
+          new THREE.Vector3(wx, baseH + peakH, wz)
+        );
+      }
+
+      localTelemetry.logStep(
+        candidates.length > 0 ? 1 : 0,
+        primeCandidate.token_id,
+        primeCandidate.probability,
+        0.0
+      );
+    }
+  }, [latestLogits, isLoaded, candidates, isThinking, vocabSize, heightMode, _params.temperature, _params.minP]);
 
   // Primary active target for MiniRadar
   const primeCandidate = candidates.find(c => c.rank === 1 && !c.isFiltered);
@@ -862,11 +929,41 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
           topCandidate={candidates.length > 0 ? candidates[0] : null}
           isLassoActive={isLassoActive}
           isFullscreen={isFullscreen}
+          persona={persona}
+          temperature={_params.temperature || 1.0}
+          minP={_params.minP || 0.05}
           onToggleLasso={() => setIsLassoActive(!isLassoActive)}
           onResetCamera={handleResetCamera}
           onToggleFullscreen={handleToggleFullscreen}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
+          onTogglePersona={() => setPersona(persona === 'flight_sim' ? 'diagnostic' : 'flight_sim')}
+          onOpenEnterpriseLabs={() => setIsLabsOpen(true)}
+        />
+
+        {/* Semantic Anomaly Alert Banner */}
+        {lastAnomaly && (
+          <div className="absolute top-20 left-4 z-30 bg-rose-950/90 border border-rose-500/70 text-rose-200 px-3 py-1.5 rounded-xl shadow-2xl font-mono text-xs flex items-center gap-2 animate-bounce">
+            <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping" />
+            <span><strong>[ANOMALY]:</strong> {lastAnomaly.message}</span>
+            <button
+              onClick={() => setLastAnomaly(null)}
+              className="text-rose-400 hover:text-white ml-2 text-xs"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Enterprise Labs Modal */}
+        <EnterpriseLabsModal
+          isOpen={isLabsOpen}
+          onClose={() => setIsLabsOpen(false)}
+          onSelectMission={(_mission) => {
+            if (flightPathRef.current) {
+              flightPathRef.current.clear();
+            }
+          }}
         />
 
         {/* 60 FPS Lasso Selection Tool */}
