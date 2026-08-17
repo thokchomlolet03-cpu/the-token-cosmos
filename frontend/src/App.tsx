@@ -188,9 +188,10 @@ export const App: React.FC = () => {
     inferenceEngine.loadModel(modelId);
   };
 
-  // Flight Path steps history
+  // Flight Path steps history & Output Log stream
   const [steps, setSteps] = useState<FlightStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+  const [outputLog, setOutputLog] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
@@ -291,6 +292,7 @@ export const App: React.FC = () => {
     if (promptOverride === undefined) {
       setSteps([]);
       setCurrentStepIndex(0);
+      setOutputLog('');
     }
 
     setIsFetchingLogits(true);
@@ -532,6 +534,7 @@ export const App: React.FC = () => {
     const updated = [...steps.slice(0, currentStepIndex + 1), newStep];
     setSteps(updated);
     setCurrentStepIndex(updated.length - 1);
+    setOutputLog(prev => prev + token.token_str);
 
     setActiveNotice({
       feature: `Token Selection ("${token.token_str.trim()}")`,
@@ -558,22 +561,24 @@ export const App: React.FC = () => {
         } else {
           setIsPlaying(false);
         }
-      }, 950);
+      }, 900);
     }
     return () => clearTimeout(timer);
   }, [isPlaying, isFetchingLogits, inferenceEngine.state.status, processedCandidates, handleSelectToken]);
 
   const handleGenerateNextStep = () => {
-    if (processedCandidates.length === 0) return;
     setIsGenerating(true);
     setTimeout(() => {
       const chosen = processedCandidates.find(c => !c.isFiltered) || processedCandidates[0];
-      handleSelectToken(chosen);
+      if (chosen) {
+        handleSelectToken(chosen);
+      }
       setIsGenerating(false);
     }, 200);
   };
 
   const handleResetTimeline = () => {
+    setOutputLog('');
     if (processedCandidates.length > 0) {
       const topToken = processedCandidates[0];
       const initialStep: FlightStep = {
@@ -585,6 +590,9 @@ export const App: React.FC = () => {
         ragEnabled,
       };
       setSteps([initialStep]);
+      setCurrentStepIndex(0);
+    } else {
+      setSteps([]);
       setCurrentStepIndex(0);
     }
   };
@@ -682,6 +690,8 @@ export const App: React.FC = () => {
                 setParams={setParams}
                 prompt={prompt}
                 setPrompt={setPrompt}
+                outputLog={outputLog}
+                onClearOutputLog={() => setOutputLog('')}
                 systemPrompt={systemPrompt}
                 setSystemPrompt={setSystemPrompt}
                 jsonSchema={jsonSchema}
@@ -743,6 +753,8 @@ export const App: React.FC = () => {
                   setParams={setParams}
                   prompt={prompt}
                   setPrompt={setPrompt}
+                  outputLog={outputLog}
+                  onClearOutputLog={() => setOutputLog('')}
                   systemPrompt={systemPrompt}
                   setSystemPrompt={setSystemPrompt}
                   jsonSchema={jsonSchema}
