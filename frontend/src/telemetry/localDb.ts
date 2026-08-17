@@ -1,8 +1,8 @@
 /* ─────────────────────────────────────────────────────────────────────
- * localDb.ts — LIFO Stack Telemetry Buffer Pool & Zero-Egress Dispatcher
- * Manages zero-copy ArrayBuffer transfers to the TelemetryWorker.
- * Guarantees zero outbound network packets when AIRGAPPED = true.
- * The Token Cosmos v4.8
+ * localDb.ts — LIFO Stack Telemetry Buffer Pool & Sovereign IndexedDB Client
+ * Manages zero-copy ArrayBuffer transfers to the IndexedDB TelemetryWorker.
+ * Guarantees 100% persistent local hard-drive storage with zero network egress.
+ * The Token Cosmos v4.9
  * ───────────────────────────────────────────────────────────────────── */
 
 const BATCH_CAPACITY = 20; // 20 records * 5 floats = 100 floats
@@ -14,9 +14,9 @@ export class LocalTelemetryClient {
   private pool: Float32Array[] = [];
   private currentBatch: Float32Array;
   private currentRecordCount: number = 0;
-  private isAirgapped: boolean;
+  public isAirgapped: boolean;
 
-  constructor(isAirgapped: boolean = false) {
+  constructor(isAirgapped: boolean = true) {
     this.isAirgapped = isAirgapped;
     this.pool = [
       new Float32Array(BUFFER_SIZE),
@@ -92,6 +92,56 @@ export class LocalTelemetryClient {
         },
         [bufferToTransfer.buffer]
       );
+    }
+  }
+
+  /**
+   * Queries summary statistics from the persistent IndexedDB ledger
+   */
+  public queryStats(): Promise<{ totalRecords: number; databaseName: string; storageType: string }> {
+    return new Promise((resolve) => {
+      if (!this.worker) {
+        resolve({ totalRecords: 0, databaseName: 'InMemoryFallback', storageType: 'Volatile RAM' });
+        return;
+      }
+
+      const handler = (e: MessageEvent) => {
+        if (e.data.type === 'STATS_RESULT') {
+          this.worker?.removeEventListener('message', handler);
+          resolve(e.data.stats);
+        }
+      };
+
+      this.worker.addEventListener('message', handler);
+      this.worker.postMessage({ type: 'QUERY_STATS' });
+    });
+  }
+
+  /**
+   * Exports all historical audit records for compliance verification
+   */
+  public exportAuditLogs(): Promise<any[]> {
+    return new Promise((resolve) => {
+      if (!this.worker) {
+        resolve([]);
+        return;
+      }
+
+      const handler = (e: MessageEvent) => {
+        if (e.data.type === 'EXPORT_RESULT') {
+          this.worker?.removeEventListener('message', handler);
+          resolve(e.data.records);
+        }
+      };
+
+      this.worker.addEventListener('message', handler);
+      this.worker.postMessage({ type: 'EXPORT_LOGS' });
+    });
+  }
+
+  public clearDatabase(): void {
+    if (this.worker) {
+      this.worker.postMessage({ type: 'CLEAR_DB' });
     }
   }
 

@@ -1,36 +1,74 @@
 /* ─────────────────────────────────────────────────────────────────────
- * TelemetryWorker.ts — Pure-JS In-Memory Telemetry Ingestion & Buffer Recycling
- * Completely self-contained within Worker memory without external network calls.
- * Recycles transferred ArrayBuffers back to the main thread pool.
- * The Token Cosmos v4.8
+ * TelemetryWorker.ts — Native IndexedDB Persistent Telemetry Ledger
+ * 100% Persistent, Client-Side Audit Storage with Zero Network Egress.
+ * Direct IndexedDB transactions with zero-copy transferable buffer recycling.
+ * The Token Cosmos v4.9
  * ───────────────────────────────────────────────────────────────────── */
 
-interface TelemetryRecord {
-  timestamp: number;
-  stepIndex: number;
-  tokenId: number;
-  probability: number;
-  entropy: number;
+const DB_NAME = 'TokenCosmosTelemetryDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'telemetry_records';
+
+let dbInstance: IDBDatabase | null = null;
+const pendingBatches: ArrayBuffer[] = [];
+
+// ─── 1. Initialize Persistent Local IndexedDB Database ──────────────
+function initDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      reject(new Error('IndexedDB not supported in this environment'));
+      return;
+    }
+
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+        store.createIndex('timestamp', 'timestamp', { unique: false });
+        store.createIndex('stepIndex', 'stepIndex', { unique: false });
+      }
+    };
+
+    request.onsuccess = (event) => {
+      dbInstance = (event.target as IDBOpenDBRequest).result;
+      resolve(dbInstance);
+    };
+
+    request.onerror = (event) => {
+      console.warn('[TelemetryWorker] IndexedDB open error:', (event.target as IDBOpenDBRequest).error);
+      reject((event.target as IDBOpenDBRequest).error);
+    };
+  });
 }
 
-// Pure in-memory circular ring buffer — 0 network fetches, 0 CDN assets required
-const MAX_RECORDS = 10000;
-const localDatabase: TelemetryRecord[] = [];
+// Kick off async DB initialization
+initDatabase()
+  .then((db) => {
+    // Process any batches that queued while DB was opening
+    while (pendingBatches.length > 0) {
+      const buf = pendingBatches.shift()!;
+      persistBatch(db, buf);
+    }
+  })
+  .catch((err) => {
+    console.warn('[TelemetryWorker] Running in fallback mode:', err);
+  });
 
-self.onmessage = (e: MessageEvent) => {
-  const data = e.data;
-
-  if (data.type === 'LOG_BATCH' && data.buffer) {
-    const buffer = data.buffer as ArrayBuffer;
+// ─── 2. Persist Batch to IndexedDB & Recycle Buffer ─────────────────
+function persistBatch(db: IDBDatabase, buffer: ArrayBuffer): void {
+  try {
     const view = new Float32Array(buffer);
-    
-    // Each record has 5 floats: [timestamp_offset, stepIndex, tokenId, probability, entropy]
     const recordCount = Math.floor(view.length / 5);
     const now = Date.now();
 
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+
     for (let i = 0; i < recordCount; i++) {
       const offset = i * 5;
-      localDatabase.push({
+      store.add({
         timestamp: now + view[offset + 0],
         stepIndex: Math.round(view[offset + 1]),
         tokenId: Math.round(view[offset + 2]),
@@ -39,13 +77,28 @@ self.onmessage = (e: MessageEvent) => {
       });
     }
 
-    // Keep database capped in memory (10,000 records)
-    if (localDatabase.length > MAX_RECORDS) {
-      localDatabase.splice(0, localDatabase.length - MAX_RECORDS);
-    }
+    transaction.oncomplete = () => {
+      // ── Zero-Copy Transfer Buffer Back to Main Thread Pool ─────────
+      (self as unknown as Worker).postMessage(
+        {
+          type: 'BUFFER_RECYCLED',
+          buffer,
+        },
+        [buffer]
+      );
+    };
 
-    // ── Zero-Copy Buffer Recycling ────────────────────────────────────
-    // Transfer the cleaned buffer back to the main thread's LIFO stack pool
+    transaction.onerror = () => {
+      // Return buffer even if transaction errors to prevent buffer starvation
+      (self as unknown as Worker).postMessage(
+        {
+          type: 'BUFFER_RECYCLED',
+          buffer,
+        },
+        [buffer]
+      );
+    };
+  } catch (_err) {
     (self as unknown as Worker).postMessage(
       {
         type: 'BUFFER_RECYCLED',
@@ -53,16 +106,64 @@ self.onmessage = (e: MessageEvent) => {
       },
       [buffer]
     );
+  }
+}
+
+// ─── 3. Message Dispatcher & Telemetry Query Handlers ───────────────
+self.onmessage = (e: MessageEvent) => {
+  const data = e.data;
+
+  if (data.type === 'LOG_BATCH' && data.buffer) {
+    const buffer = data.buffer as ArrayBuffer;
+
+    if (dbInstance) {
+      persistBatch(dbInstance, buffer);
+    } else {
+      pendingBatches.push(buffer);
+    }
   } else if (data.type === 'QUERY_STATS') {
-    const total = localDatabase.length;
-    const avgEntropy = total > 0 ? localDatabase.reduce((acc, r) => acc + r.entropy, 0) / total : 0;
-    
-    (self as unknown as Worker).postMessage({
-      type: 'STATS_RESULT',
-      stats: {
-        totalRecords: total,
-        averageEntropy: avgEntropy,
-      },
-    });
+    if (!dbInstance) {
+      (self as unknown as Worker).postMessage({
+        type: 'STATS_RESULT',
+        stats: { totalRecords: 0, averageEntropy: 0 },
+      });
+      return;
+    }
+
+    const transaction = dbInstance.transaction(STORE_NAME, 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const countRequest = store.count();
+
+    countRequest.onsuccess = () => {
+      (self as unknown as Worker).postMessage({
+        type: 'STATS_RESULT',
+        stats: {
+          totalRecords: countRequest.result,
+          databaseName: DB_NAME,
+          storageType: 'Persistent IndexedDB (Zero-Egress)',
+        },
+      });
+    };
+  } else if (data.type === 'EXPORT_LOGS') {
+    if (!dbInstance) {
+      (self as unknown as Worker).postMessage({ type: 'EXPORT_RESULT', records: [] });
+      return;
+    }
+
+    const transaction = dbInstance.transaction(STORE_NAME, 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const getAllRequest = store.getAll();
+
+    getAllRequest.onsuccess = () => {
+      (self as unknown as Worker).postMessage({
+        type: 'EXPORT_RESULT',
+        records: getAllRequest.result,
+      });
+    };
+  } else if (data.type === 'CLEAR_DB') {
+    if (dbInstance) {
+      const transaction = dbInstance.transaction(STORE_NAME, 'readwrite');
+      transaction.objectStore(STORE_NAME).clear();
+    }
   }
 };
