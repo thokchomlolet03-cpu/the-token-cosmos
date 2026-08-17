@@ -27,6 +27,7 @@ interface ZenViewportHUDProps {
   onZoomOut?: () => void;
   onTogglePersona?: () => void;
   onOpenEnterpriseLabs?: () => void;
+  onOpenMultiModel?: () => void;
 }
 
 export const ZenViewportHUD: React.FC<ZenViewportHUDProps> = ({
@@ -46,6 +47,7 @@ export const ZenViewportHUD: React.FC<ZenViewportHUDProps> = ({
   onZoomOut,
   onTogglePersona,
   onOpenEnterpriseLabs,
+  onOpenMultiModel,
 }) => {
   const isFlightSim = persona === 'flight_sim';
 
@@ -178,6 +180,17 @@ export const ZenViewportHUD: React.FC<ZenViewportHUDProps> = ({
               title="Open Enterprise Training Missions & Certification Labs"
             >
               🎓 Labs
+            </button>
+          )}
+
+          {/* Multi-Model Split View Launcher */}
+          {onOpenMultiModel && (
+            <button
+              onClick={onOpenMultiModel}
+              className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-700/60 transition-all font-semibold shadow-[0_0_10px_rgba(168,85,247,0.25)]"
+              title="Open Multi-Model Trajectory Comparison & Ghost Overlay"
+            >
+              ⚖ Compare
             </button>
           )}
 

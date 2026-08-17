@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────────
  * FlightPath.ts — The "Token Highway" 3D Trajectory Ribbon & Anomaly Engine
  * Pre-allocated SIMD Sliding Window BufferGeometry with Static UV Gradient
+ * Hardware Polygon Offset Depth-Sorting for Multi-Model Ghost Trajectories
  * The Token Cosmos v4.8
  * ───────────────────────────────────────────────────────────────────── */
 
@@ -32,6 +33,7 @@ const RIBBON_FRAGMENT_SHADER = `
   uniform vec3 u_head_color;
   uniform vec3 u_tail_color;
   uniform float u_has_anomaly;
+  uniform float u_is_ghost;
   
   varying vec2 v_uv;
   varying vec3 v_world_pos;
@@ -40,20 +42,27 @@ const RIBBON_FRAGMENT_SHADER = `
     // v_uv.y maps strictly from 0.0 (fading tail) to 1.0 (active head)
     float progress = v_uv.y;
     
-    // Normal active neon glow vs crimson anomaly alert
+    // Normal active neon glow vs crimson anomaly alert vs ghost trajectory
     vec3 baseCol = mix(u_tail_color, u_head_color, smoothstep(0.0, 1.0, progress));
+    
     if (u_has_anomaly > 0.5) {
       vec3 anomalyCol = vec3(0.95, 0.20, 0.25); // Crimson warning
       baseCol = mix(baseCol, anomalyCol, 0.75);
     }
     
+    if (u_is_ghost > 0.5) {
+      vec3 ghostCol = vec3(0.38, 0.45, 0.65); // Ghost lavender-slate
+      baseCol = mix(baseCol, ghostCol, 0.85);
+    }
+    
     // Edge glow falloff
     float edgeGlow = pow(sin(v_uv.x * 3.14159), 0.65);
     
-    // Trailing alpha fade
-    float alpha = progress * edgeGlow * 0.92;
+    // Trailing alpha fade (ghost has lower opacity)
+    float maxAlpha = (u_is_ghost > 0.5) ? 0.45 : 0.92;
+    float alpha = progress * edgeGlow * maxAlpha;
     
-    gl_FragColor = vec4(baseCol * 1.5, alpha);
+    gl_FragColor = vec4(baseCol * (u_is_ghost > 0.5 ? 1.0 : 1.5), alpha);
   }
 `;
 
@@ -69,11 +78,13 @@ export class FlightPath {
   private maxPoints: number;
   private activeCount: number = 0;
   private historyCoords: THREE.Vector3[] = [];
+  private isGhost: boolean;
   
   public onAnomalyDetected?: (anomaly: TrajectoryAnomaly) => void;
 
-  constructor(maxPoints: number = 128, ribbonWidth: number = 3.2) {
+  constructor(maxPoints: number = 128, ribbonWidth: number = 3.2, isGhost: boolean = false) {
     this.maxPoints = maxPoints;
+    this.isGhost = isGhost;
     this.geometry = new THREE.BufferGeometry();
 
     // 2 vertices per ribbon step (left and right edges)
@@ -123,9 +134,10 @@ export class FlightPath {
       fragmentShader: RIBBON_FRAGMENT_SHADER,
       uniforms: {
         u_time: { value: 0.0 },
-        u_head_color: { value: new THREE.Color(0x06B6D4) }, // Radiant Cyan (#06B6D4)
-        u_tail_color: { value: new THREE.Color(0x4F46E5) }, // Deep Indigo (#4F46E5)
+        u_head_color: { value: isGhost ? new THREE.Color(0x64748B) : new THREE.Color(0x06B6D4) },
+        u_tail_color: { value: isGhost ? new THREE.Color(0x334155) : new THREE.Color(0x4F46E5) },
         u_has_anomaly: { value: 0.0 },
+        u_is_ghost: { value: isGhost ? 1.0 : 0.0 },
       },
       transparent: true,
       depthWrite: false,
@@ -133,8 +145,15 @@ export class FlightPath {
       blending: THREE.AdditiveBlending,
     });
 
+    // Hardware polygon depth offset for Ghost Trajectories to eliminate Z-fighting
+    if (isGhost) {
+      this.material.polygonOffset = true;
+      this.material.polygonOffsetFactor = 1.0;
+      this.material.polygonOffsetUnits = 1.0;
+    }
+
     this.mesh = new THREE.Mesh(this.geometry, this.material);
-    this.mesh.renderOrder = 15;
+    this.mesh.renderOrder = isGhost ? 14 : 15;
   }
 
   /**
@@ -148,10 +167,10 @@ export class FlightPath {
   ): void {
     // Elevate ribbon slightly above terrain surface
     const elevatedPoint = point.clone();
-    elevatedPoint.y += 2.5;
+    elevatedPoint.y += (this.isGhost ? 2.2 : 2.5);
 
-    // Detect Anomaly: Cross-Continent Jump or Repetition Loop
-    if (this.historyCoords.length > 1) {
+    // Detect Anomaly: Cross-Continent Jump or Repetition Loop (only on active live path)
+    if (!this.isGhost && this.historyCoords.length > 1) {
       const prev = this.historyCoords[this.historyCoords.length - 1];
       const dist = elevatedPoint.distanceTo(prev);
 
@@ -197,10 +216,11 @@ export class FlightPath {
 
       this.activeCount++;
     } else {
-      // ─── High-Speed SIMD Sliding Window Shift (copyWithin) ────────────
-      // Shifts existing vertices left by 1 quad (6 floats) in place
-      this.positions.copyWithin(0, 6, this.maxPoints * 6);
-      this.normals.copyWithin(0, 6, this.maxPoints * 6);
+      // ─── Strictly Bounded SIMD Sliding Window Shift ────────────────────
+      // Bound the end parameter by activeCount * 6 to never copy beyond active data
+      const activeFloatCount = this.activeCount * 6;
+      this.positions.copyWithin(0, 6, activeFloatCount);
+      this.normals.copyWithin(0, 6, activeFloatCount);
       // UV array is NOT touched: geometry flows through static head-to-tail gradient!
 
       const lastIdx = (this.maxPoints - 1) * 6;
@@ -222,6 +242,17 @@ export class FlightPath {
 
     if (this.activeCount > 1) {
       this.geometry.setDrawRange(0, (this.activeCount - 1) * 6);
+    }
+  }
+
+  public getHistory(): THREE.Vector3[] {
+    return [...this.historyCoords];
+  }
+
+  public loadFromHistory(points: THREE.Vector3[], halfWidth: number = 1.6): void {
+    this.clear();
+    for (let i = 0; i < points.length; i++) {
+      this.addStep(`Step #${i}`, i, points[i], halfWidth);
     }
   }
 

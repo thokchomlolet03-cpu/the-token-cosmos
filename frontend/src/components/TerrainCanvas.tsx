@@ -16,6 +16,7 @@ import { ZenViewportHUD, CosmosPersona } from './ZenViewportHUD';
 import { WaterPlane } from '../terrain/WaterPlane';
 import { FlightPath, TrajectoryAnomaly } from '../terrain/FlightPath';
 import { EnterpriseLabsModal, ENTERPRISE_MISSIONS, EnterpriseMission } from './EnterpriseLabsModal';
+import { MultiModelSplitView } from './MultiModelSplitView';
 import { localTelemetry } from '../telemetry/localDb';
 import { ScreenPolygonPoint, ClusterMetrics, IndexedTokenPoint } from '../types/spatial';
 
@@ -50,10 +51,12 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   const argmaxIndexRef = useRef<number>(-1);
   const waterPlaneRef = useRef<WaterPlane | null>(null);
   const flightPathRef = useRef<FlightPath | null>(null);
+  const ghostFlightPathRef = useRef<FlightPath | null>(null);
 
-  // Persona & Enterprise Labs state
+  // Persona & Enterprise Labs & Multi-Model state
   const [persona, setPersona] = useState<CosmosPersona>('flight_sim');
   const [isLabsOpen, setIsLabsOpen] = useState<boolean>(false);
+  const [isMultiModelOpen, setIsMultiModelOpen] = useState<boolean>(false);
   const [lastAnomaly, setLastAnomaly] = useState<TrajectoryAnomaly | null>(null);
   
   // Radar state
@@ -427,6 +430,11 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     scene.add(flightPath.mesh);
     flightPathRef.current = flightPath;
 
+    // ─── 3D Ghost Trajectory Ribbon (Multi-Model Comparison with Polygon Offset) ─
+    const ghostFlightPath = new FlightPath(128, 3.2, true);
+    scene.add(ghostFlightPath.mesh);
+    ghostFlightPathRef.current = ghostFlightPath;
+
     let animationFrameId: number;
     const startTime = performance.now();
 
@@ -444,7 +452,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
         }
       }
 
-      // ─── Animate Waterplane & Trajectory Ribbon ────────────────────
+      // ─── Animate Waterplane & Trajectory Ribbons ───────────────────
       const safeMinP = Math.max(_params.minP || 0.05, 1e-7);
       const safeTemp = Math.max(_params.temperature || 1.0, 0.01);
       const yWater = 4.0 + 150.0 * Math.pow(safeMinP, 1.0 / safeTemp);
@@ -454,6 +462,9 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
       }
       if (flightPathRef.current) {
         flightPathRef.current.update(0.016);
+      }
+      if (ghostFlightPathRef.current) {
+        ghostFlightPathRef.current.update(0.016);
       }
 
       // Update camera tracking state for radar
@@ -939,6 +950,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
           onZoomOut={handleZoomOut}
           onTogglePersona={() => setPersona(persona === 'flight_sim' ? 'diagnostic' : 'flight_sim')}
           onOpenEnterpriseLabs={() => setIsLabsOpen(true)}
+          onOpenMultiModel={() => setIsMultiModelOpen(true)}
         />
 
         {/* Semantic Anomaly Alert Banner */}
@@ -962,6 +974,17 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
           onSelectMission={(_mission) => {
             if (flightPathRef.current) {
               flightPathRef.current.clear();
+            }
+          }}
+        />
+
+        {/* Multi-Model Latent Topography Split View */}
+        <MultiModelSplitView
+          isOpen={isMultiModelOpen}
+          onClose={() => setIsMultiModelOpen(false)}
+          onApplyGhostTrajectory={(points) => {
+            if (ghostFlightPathRef.current) {
+              ghostFlightPathRef.current.loadFromHistory(points);
             }
           }}
         />

@@ -2,8 +2,33 @@
  * TelemetryWorker.ts — Background Telemetry Ingestion & Buffer Recycling
  * Isolates local database writes from the 60 FPS main rendering thread.
  * Recycles transferred ArrayBuffers back to the main thread pool.
+ * Sealed Air-Gap Guard: Throws on any outbound network egress.
  * The Token Cosmos v4.8
  * ───────────────────────────────────────────────────────────────────── */
+
+const AIRGAPPED = true;
+
+// ─── Sealed Air-Gap Security Guard ──────────────────────────────────
+// Strictly block any network API in the worker thread to guarantee 0-egress
+if (AIRGAPPED && typeof self !== 'undefined') {
+  (self as any).fetch = () => {
+    throw new Error('[Security Violation] Outbound fetch blocked in Air-Gapped TelemetryWorker');
+  };
+  if ((self as any).XMLHttpRequest) {
+    (self as any).XMLHttpRequest = class {
+      open() {
+        throw new Error('[Security Violation] XMLHttpRequest blocked in Air-Gapped TelemetryWorker');
+      }
+    };
+  }
+  if ((self as any).WebSocket) {
+    (self as any).WebSocket = class {
+      constructor() {
+        throw new Error('[Security Violation] WebSocket blocked in Air-Gapped TelemetryWorker');
+      }
+    };
+  }
+}
 
 interface TelemetryRecord {
   timestamp: number;

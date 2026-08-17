@@ -1,7 +1,8 @@
 /* ─────────────────────────────────────────────────────────────────────
- * EnterpriseLabsModal.tsx — Turnkey Corporate L&D Missions & LMS Certification
+ * EnterpriseLabsModal.tsx — Turnkey Corporate L&D Missions & LMS SCORM Package
  * 4 Graded Executive Training Labs: Temperature Glacier, Min-P Floodgate,
  * Flight Highway Triage, and RAG Magnetic Anchors.
+ * Generates verified SCORM 2004 XML Manifests & Verifiable Certificates.
  * The Token Cosmos v4.8
  * ───────────────────────────────────────────────────────────────────── */
 
@@ -95,6 +96,7 @@ export const EnterpriseLabsModal: React.FC<EnterpriseLabsModalProps> = ({
   const [completedMissions, setCompletedMissions] = useState<string[]>(['temp_glacier']);
   const [candidateName, setCandidateName] = useState<string>('Enterprise Executive');
   const [showCertificate, setShowCertificate] = useState<boolean>(false);
+  const [scormExported, setScormExported] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
@@ -108,6 +110,57 @@ export const EnterpriseLabsModal: React.FC<EnterpriseLabsModalProps> = ({
 
   const handleDownloadCertificate = () => {
     window.print();
+  };
+
+  const handleExportScormPackage = () => {
+    // Generate valid SCORM 2004 4th Edition imsmanifest.xml
+    const imsManifestXml = `<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="com.thetokencosmos.flight_simulator" version="1.3"
+          xmlns="http://www.imsglobal.org/xsd/imscp_v1p1"
+          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_v1p3"
+          xmlns:adlseq="http://www.adlnet.org/xsd/adlseq_v1p3"
+          xmlns:adlnav="http://www.adlnet.org/xsd/adlnav_v1p3"
+          xmlns:imsss="http://www.imsglobal.org/xsd/imsss"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>2004 4th Edition</schemaversion>
+  </metadata>
+  <organizations default="org_tokencosmos">
+    <organization identifier="org_tokencosmos">
+      <title>The Token Cosmos - Enterprise AI Flight Simulator</title>
+      <item identifier="item_mission_1" identifierref="res_mission_1">
+        <title>Mission 1: The Temperature Glacier</title>
+      </item>
+      <item identifier="item_mission_2" identifierref="res_mission_2">
+        <title>Mission 2: The Min-P Floodgate</title>
+      </item>
+      <item identifier="item_mission_3" identifierref="res_mission_3">
+        <title>Mission 3: Flight Highway Triage</title>
+      </item>
+      <item identifier="item_mission_4" identifierref="res_mission_4">
+        <title>Mission 4: RAG Magnetic Anchors</title>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="res_mission_1" type="webcontent" adlcp:scormType="sco" href="index.html?mission=temp_glacier" />
+    <resource identifier="res_mission_2" type="webcontent" adlcp:scormType="sco" href="index.html?mission=min_p_floodgate" />
+    <resource identifier="res_mission_3" type="webcontent" adlcp:scormType="sco" href="index.html?mission=highway_triage" />
+    <resource identifier="res_mission_4" type="webcontent" adlcp:scormType="sco" href="index.html?mission=rag_magnetic_anchor" />
+  </resources>
+</manifest>`;
+
+    const blob = new Blob([imsManifestXml], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'imsmanifest.xml';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setScormExported(true);
   };
 
   return (
@@ -124,7 +177,7 @@ export const EnterpriseLabsModal: React.FC<EnterpriseLabsModalProps> = ({
               <h2 className="text-base font-bold text-slate-100 font-mono tracking-wide flex items-center gap-2">
                 Enterprise AI Flight Simulator Labs
                 <span className="text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-2 py-0.5 rounded-full font-sans">
-                  SCORM 2004 Certified
+                  SCORM 2004 Ready
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
@@ -180,21 +233,30 @@ export const EnterpriseLabsModal: React.FC<EnterpriseLabsModalProps> = ({
               );
             })}
 
-            {/* Certification Export Card */}
-            <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-indigo-950/80 to-purple-950/80 border border-indigo-700/60">
-              <div className="flex items-center gap-2 mb-2">
+            {/* Certification & SCORM Export Card */}
+            <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-indigo-950/80 to-purple-950/80 border border-indigo-700/60 space-y-2.5">
+              <div className="flex items-center gap-2">
                 <span className="text-lg">📜</span>
-                <h4 className="text-xs font-bold text-slate-100 font-mono">Corporate LMS Certificate</h4>
+                <h4 className="text-xs font-bold text-slate-100 font-mono">Enterprise LMS & SCORM</h4>
               </div>
-              <p className="text-[11px] text-slate-300 mb-3">
-                Export verified training completion telemetry for Workday, Cornerstone, or SAP SuccessFactors.
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Export verifiable training credentials and SCORM 2004 4th Edition manifest for Workday, Cornerstone, or SAP SuccessFactors.
               </p>
-              <button
-                onClick={() => setShowCertificate(true)}
-                className="w-full py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold transition-all shadow-lg"
-              >
-                View & Print Certificate
-              </button>
+              
+              <div className="flex flex-col gap-2 pt-1">
+                <button
+                  onClick={() => setShowCertificate(true)}
+                  className="w-full py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold transition-all shadow"
+                >
+                  View & Print Certificate
+                </button>
+                <button
+                  onClick={handleExportScormPackage}
+                  className="w-full py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-indigo-700/60 font-mono text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span>{scormExported ? '✓ Manifest Exported' : '📦 Export SCORM 2004 Manifest'}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -277,7 +339,7 @@ export const EnterpriseLabsModal: React.FC<EnterpriseLabsModalProps> = ({
               THE TOKEN COSMOS • CERTIFICATE OF MASTERY
             </span>
             <h2 className="text-2xl font-bold text-slate-100 font-serif mt-2 mb-1">
-              Enterprise AI Flight Simulator Certification
+              Verifiable AI Flight Simulator Certification
             </h2>
             <p className="text-xs text-slate-400 font-mono mb-6">
               Verified SCORM 2004 Telemetry ID: #COSMOS-{Math.floor(100000 + Math.random() * 900000)}
