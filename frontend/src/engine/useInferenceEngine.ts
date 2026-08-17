@@ -210,14 +210,16 @@ export function useInferenceEngine(): InferenceEngine {
     setGeneratedTokens([]);
     setIsLoopAborted(false);
     setLoopAbortedMessage(null);
-    send({ type: 'GET_FULL_LOGITS', prompt });
+    const cleanPrompt = typeof prompt === 'string' ? prompt : '';
+    send({ type: 'GET_FULL_LOGITS', prompt: cleanPrompt });
   }, [send]);
 
   const generateSteps = useCallback((prompt: string, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) => {
     setGeneratedTokens([]);
     setIsLoopAborted(false);
     setLoopAbortedMessage(null);
-    send({ type: 'GENERATE_STEP', prompt, maxTokens, maxThinkingTokens, systemPrompt });
+    const cleanPrompt = typeof prompt === 'string' ? prompt : '';
+    send({ type: 'GENERATE_STEP', prompt: cleanPrompt, maxTokens, maxThinkingTokens, systemPrompt });
   }, [send]);
 
   const resetChat = useCallback(() => {

@@ -285,11 +285,11 @@ export const App: React.FC = () => {
 
   // Launch Prompt Evaluation Endpoint
   // Priority: WebGPU local model → BYOE API → Cloud backend → Sample data
-  const handleLaunchPrompt = async (promptOverride?: string) => {
-    const activePrompt = promptOverride !== undefined ? promptOverride : prompt;
+  const handleLaunchPrompt = async (promptOverride?: unknown) => {
+    const activePrompt = typeof promptOverride === 'string' ? promptOverride : prompt;
     
     // Reset timeline only if we are starting a completely new evaluation
-    if (promptOverride === undefined) {
+    if (typeof promptOverride !== 'string') {
       setSteps([]);
       setCurrentStepIndex(0);
       setOutputLog('');
@@ -703,7 +703,7 @@ export const App: React.FC = () => {
                 ragEnabled={ragEnabled}
                 setRagEnabled={setRagEnabled}
                 onApplyPreset={handleApplyPreset}
-                onLaunchPrompt={handleLaunchPrompt}
+                onLaunchPrompt={() => handleLaunchPrompt()}
                 onInteractFeature={notice => setActiveNotice(notice)}
                 isFetchingLogits={isInferencePending}
                 rawLogits={activeRawLogits}
@@ -766,7 +766,7 @@ export const App: React.FC = () => {
                   ragEnabled={ragEnabled}
                   setRagEnabled={setRagEnabled}
                   onApplyPreset={handleApplyPreset}
-                  onLaunchPrompt={handleLaunchPrompt}
+                  onLaunchPrompt={() => handleLaunchPrompt()}
                   onInteractFeature={notice => setActiveNotice(notice)}
                   isFetchingLogits={isInferencePending}
                   rawLogits={activeRawLogits}
