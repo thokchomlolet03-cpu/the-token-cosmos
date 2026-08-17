@@ -439,6 +439,9 @@ export const App: React.FC = () => {
       ...preset.params,
     }));
     setPrompt(preset.prompt);
+    setOutputLog('');
+    setSteps([]);
+    setCurrentStepIndex(0);
     setRagContext(preset.ragContext);
     setRagEnabled(preset.ragEnabled);
 
@@ -498,30 +501,6 @@ export const App: React.FC = () => {
     return steps.map(s => calculateTokenProbabilities(s.rawLogits, s.params));
   }, [steps]);
 
-  useEffect(() => {
-    if (processedCandidates.length > 0) {
-      setSteps(prev => {
-        if (prev.length === 0) {
-          const topToken = processedCandidates[0];
-          const initialStep: FlightStep = {
-            stepIndex: 0,
-            selectedToken: topToken,
-            promptSnippet: prompt,
-            rawLogits: activeRawLogits,
-            params,
-            ragEnabled,
-          };
-          return [initialStep];
-        }
-        return prev;
-      });
-      setCurrentStepIndex(prev => {
-        if (steps.length === 0) return 0;
-        return prev;
-      });
-    }
-  }, [baselineRawLogits, ragRawLogits, processedCandidates]);
-
   const handleSelectToken = async (token: ProcessedTokenCandidate) => {
     const newStep: FlightStep = {
       stepIndex: steps.length,
@@ -579,22 +558,8 @@ export const App: React.FC = () => {
 
   const handleResetTimeline = () => {
     setOutputLog('');
-    if (processedCandidates.length > 0) {
-      const topToken = processedCandidates[0];
-      const initialStep: FlightStep = {
-        stepIndex: 0,
-        selectedToken: topToken,
-        promptSnippet: prompt,
-        rawLogits: activeRawLogits,
-        params,
-        ragEnabled,
-      };
-      setSteps([initialStep]);
-      setCurrentStepIndex(0);
-    } else {
-      setSteps([]);
-      setCurrentStepIndex(0);
-    }
+    setSteps([]);
+    setCurrentStepIndex(0);
   };
 
   const shouldShowModelOverlay = !skipModelLoading
