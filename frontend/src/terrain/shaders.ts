@@ -182,7 +182,7 @@ void main() {
     // LoD density blending: distant points use softer Gaussian radial profile
     float densityProfile = (vViewDistance > 250.0) ? exp(-r * 2.8) : (1.0 - r);
     
-    float baseAlpha = 0.38 * perimeterFade;
+    float baseAlpha = 0.18 * perimeterFade;
     float activeAlpha = smoothstep(0.001, 1.0, max(vActiveProb, vBaseProb)) * 0.75;
     float alpha = (baseAlpha + activeAlpha) * densityProfile;
     

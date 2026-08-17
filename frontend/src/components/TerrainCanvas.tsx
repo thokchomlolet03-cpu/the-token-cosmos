@@ -226,6 +226,7 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   }, [candidates]);
   
   const thresholdRef = useRef<number>(6.0);
+  const lastTrackedTokenRef = useRef<{ id: number; text: string } | null>(null);
 
   const [isLoaded, setIsLoaded] = useState(false);
   const { vocabSize, rawCoordinates, loadForModel } = useTerrainCoordinates(modelId || undefined);
@@ -885,33 +886,45 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     material.uniforms.uMinP.value = _params.minP || 0.05;
     material.uniforms.uMaxProb.value = primeCandidate ? primeCandidate.probability : 1.0;
 
-    // Track 3D Trajectory Ribbon & Local Telemetry
+    // Track 3D Trajectory Ribbon & Local Telemetry on genuine token transitions
     if (primeCandidate && rawCoordinates && primeCandidate.token_id < vocabSize) {
-      const spread = 250.0;
-      const wx = rawCoordinates[primeCandidate.token_id * 2] * spread;
-      const wz = rawCoordinates[primeCandidate.token_id * 2 + 1] * spread;
-      const baseH = computeBaseTopologicalHeight(
-        rawCoordinates[primeCandidate.token_id * 2],
-        rawCoordinates[primeCandidate.token_id * 2 + 1]
-      );
-      const safeMaxP = Math.max(primeCandidate.probability, 1e-7);
-      const safeTemp = Math.max(_params.temperature || 1.0, 0.01);
-      const peakH = 150.0 * Math.pow(primeCandidate.probability / safeMaxP, 1.0 / safeTemp);
+      const isNewToken = !lastTrackedTokenRef.current || 
+        lastTrackedTokenRef.current.id !== primeCandidate.token_id || 
+        lastTrackedTokenRef.current.text !== primeCandidate.token_str;
 
-      if (flightPathRef.current) {
-        flightPathRef.current.addStep(
-          primeCandidate.token_str,
-          candidates.length > 0 ? 1 : 0,
-          new THREE.Vector3(wx, baseH + peakH, wz)
+      if (isNewToken) {
+        lastTrackedTokenRef.current = { id: primeCandidate.token_id, text: primeCandidate.token_str };
+        const spread = 250.0;
+        const wx = rawCoordinates[primeCandidate.token_id * 2] * spread;
+        const wz = rawCoordinates[primeCandidate.token_id * 2 + 1] * spread;
+        const baseH = computeBaseTopologicalHeight(
+          rawCoordinates[primeCandidate.token_id * 2],
+          rawCoordinates[primeCandidate.token_id * 2 + 1]
+        );
+        const safeMaxP = Math.max(primeCandidate.probability, 1e-7);
+        const safeTemp = Math.max(_params.temperature || 1.0, 0.01);
+        const peakH = 150.0 * Math.pow(primeCandidate.probability / safeMaxP, 1.0 / safeTemp);
+
+        const currentStep = flightPathRef.current ? flightPathRef.current.getHistory().length + 1 : 1;
+
+        if (flightPathRef.current) {
+          flightPathRef.current.addStep(
+            primeCandidate.token_str,
+            currentStep,
+            new THREE.Vector3(wx, baseH + peakH, wz),
+            primeCandidate.probability,
+            safeMaxP,
+            primeCandidate.rank
+          );
+        }
+
+        localTelemetry.logStep(
+          currentStep,
+          primeCandidate.token_id,
+          primeCandidate.probability,
+          0.0
         );
       }
-
-      localTelemetry.logStep(
-        candidates.length > 0 ? 1 : 0,
-        primeCandidate.token_id,
-        primeCandidate.probability,
-        0.0
-      );
     }
   }, [latestLogits, isLoaded, candidates, isThinking, vocabSize, heightMode, _params.temperature, _params.minP]);
 

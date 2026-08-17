@@ -163,3 +163,46 @@ export const SAMPLE_RAW_LOGITS_MAP: Record<string, { baseline: RawTokenCandidate
     rag: [],
   },
 };
+
+/**
+ * Aligns the active model's vocabulary against the universal semantic manifold.
+ * Handles BPE whitespace prefixes (Ġ and  ) and uses Fibonacci Golden Ratio hashing
+ * to uniformly disperse unmapped subwords into the outer halo ring ([280, 320]).
+ */
+export function alignModelTopography(
+  activeVocab: string[],
+  universalManifold: Record<string, { x: number; z: number }>
+): Float32Array {
+  const vocabSize = activeVocab.length;
+  const alignedCoords = new Float32Array(vocabSize * 2);
+  const goldenRatio = 0.61803398875;
+
+  for (let i = 0; i < vocabSize; i++) {
+    const rawToken = activeVocab[i];
+    // 1. Normalize BPE special whitespace bytes (Ġ or  )
+    let cleanToken = rawToken
+      .replace(/^[\u0120\u2581\s]+/, '')
+      .toLowerCase();
+
+    // Prevent empty string collapse for pure whitespace/formatting tokens
+    if (cleanToken.length === 0) {
+      cleanToken = `syntax_format_${rawToken}`;
+    }
+
+    let coords = universalManifold[cleanToken] || universalManifold[rawToken.toLowerCase()];
+
+    if (!coords) {
+      // 2. Fibonacci Hashing & Irrational Radial Scattering (Organic Halo Ring)
+      const normalizedAngle = (i * goldenRatio) % 1.0;
+      const angle = normalizedAngle * Math.PI * 2;
+      const radius = 280.0 + ((i * 0.14159265) % 1.0) * 40.0; // Halo radius [280, 320]
+      coords = { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius };
+    }
+
+    alignedCoords[i * 2 + 0] = coords.x;
+    alignedCoords[i * 2 + 1] = coords.z;
+  }
+
+  return alignedCoords;
+}
+

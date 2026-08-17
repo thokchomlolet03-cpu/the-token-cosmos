@@ -39,6 +39,7 @@ function markRagGrounding(
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'learn' | 'experiment' | 'labs' | 'export'>('experiment');
   const [splitView, setSplitView] = useState<boolean>(false);
+  const [showNavigator, setShowNavigator] = useState<boolean>(false);
 
   // ─── Interactive Guided Labs State ──────────────────────────────
   const [activeLab, setActiveLab] = useState<LabScenario>(LAB_SCENARIOS[0]);
@@ -655,12 +656,13 @@ export const App: React.FC = () => {
           <Header
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-        splitView={splitView}
-        setSplitView={setSplitView}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onCopySetupLink={copySetupLink}
-        // onOpenCodeExport is removed as it's handled by activeTab
-      />
+            splitView={splitView}
+            setSplitView={setSplitView}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onCopySetupLink={copySetupLink}
+            showNavigator={showNavigator}
+            setShowNavigator={setShowNavigator}
+          />
 
       {/* Main Workspace */}
       <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 sm:p-6 flex flex-col space-y-6 min-h-0 overflow-hidden">
@@ -728,9 +730,6 @@ export const App: React.FC = () => {
           </div>
         ) : activeTab === 'experiment' ? (
           <>
-            {/* Split-Reality Educational Hero Banner */}
-            <HeroBanner />
-
             {sourceError && (
               <div role="status" className="border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
                 {sourceError}
@@ -850,20 +849,22 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Free-Floating Draggable "The Navigator" AI Tourist Guide */}
-      <TheNavigator
-        params={params}
-        setParams={setParams}
-        prompt={prompt}
-        setPrompt={setPrompt}
-        ragContext={ragContext}
-        setRagContext={setRagContext}
-        ragEnabled={ragEnabled}
-        setRagEnabled={setRagEnabled}
-        topCandidateStr={processedCandidates[0]?.token_str?.trim() || 'Paris'}
-        topCandidateProb={processedCandidates[0]?.probability || 0.85}
-        activeInteractionNotice={activeNotice}
-      />
+      {/* Free-Floating Draggable "The Navigator" AI Tourist Guide (Toggled via Header) */}
+      {showNavigator && (
+        <TheNavigator
+          params={params}
+          setParams={setParams}
+          prompt={prompt}
+          setPrompt={setPrompt}
+          ragContext={ragContext}
+          setRagContext={setRagContext}
+          ragEnabled={ragEnabled}
+          setRagEnabled={setRagEnabled}
+          topCandidateStr={processedCandidates[0]?.token_str?.trim() || 'Paris'}
+          topCandidateProb={processedCandidates[0]?.probability || 0.85}
+          activeInteractionNotice={activeNotice}
+        />
+      )}
 
       {/* BYOE Engine Configuration Settings Modal */}
       <EngineSettingsModal

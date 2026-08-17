@@ -9,6 +9,8 @@ interface HeaderProps {
   onOpenSettings: () => void;
   onCopySetupLink: () => void;
   onOpenCodeExport?: () => void;
+  showNavigator?: boolean;
+  setShowNavigator?: (val: boolean) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,6 +21,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
   onCopySetupLink,
   onOpenCodeExport,
+  showNavigator,
+  setShowNavigator,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
 
@@ -41,12 +45,12 @@ export const Header: React.FC<HeaderProps> = ({
               <h1 className="whitespace-nowrap text-base font-bold text-white sm:text-xl">
                 The Token Cosmos
               </h1>
-              <span className="hidden rounded-full border border-blue-500/30 bg-blue-500/20 px-2.5 py-0.5 font-mono text-[10px] text-blue-300 sm:inline">
-                v4.1
+              <span className="hidden rounded-full border border-cyan-500/30 bg-cyan-500/20 px-2.5 py-0.5 font-mono text-[10px] text-cyan-300 sm:inline">
+                v5.0
               </span>
             </div>
             <p className="text-xs text-gray-400 hidden sm:block">
-              Interactive X-Ray & Linter for Language Model Probabilities
+              Enterprise X-Ray & Spatial Telemetry for LLM Sampling
             </p>
           </div>
         </div>
@@ -73,6 +77,23 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Settings className="h-4 w-4" />
           </button>
+
+          {/* AI Tourist Guide Toggle */}
+          {setShowNavigator && (
+            <button
+              onClick={() => setShowNavigator(!showNavigator)}
+              aria-label={showNavigator ? 'Hide AI Navigator Guide' : 'Open AI Navigator Guide'}
+              className={`flex shrink-0 items-center space-x-1.5 rounded-full p-2 text-xs font-medium transition-all sm:px-3 sm:py-1.5 ${
+                showNavigator
+                  ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50 shadow-sm'
+                  : 'btn-secondary-matte'
+              }`}
+              title="Toggle AI Tourist Guide"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+              <span className="hidden lg:inline">{showNavigator ? 'Guide Active' : 'AI Guide'}</span>
+            </button>
+          )}
 
           {/* A/B Duel Mode Toggle */}
           {activeTab === 'experiment' && (

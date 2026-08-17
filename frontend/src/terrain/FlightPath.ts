@@ -1,8 +1,9 @@
 /* ─────────────────────────────────────────────────────────────────────
- * FlightPath.ts — The "Token Highway" 3D Trajectory Ribbon & Anomaly Engine
- * Pre-allocated SIMD Sliding Window BufferGeometry with Static UV Gradient
- * Hardware Polygon Offset Depth-Sorting for Multi-Model Ghost Trajectories
- * The Token Cosmos v4.8
+ * FlightPath.ts — Zero-Allocation Catmull-Rom Trajectory Engine
+ * Pre-allocated 512-Quad Spline Buffer with Dynamic Arc-Length Parameterization
+ * Hoisted Working Vectors (0 Heap Allocations per frame)
+ * Gimbal-Lock & Zero-Distance NaN Protection with Buffer-Relative UV Scaling
+ * The Token Cosmos v5.0
  * ───────────────────────────────────────────────────────────────────── */
 
 import * as THREE from 'three';
@@ -39,7 +40,7 @@ const RIBBON_FRAGMENT_SHADER = `
   varying vec3 v_world_pos;
 
   void main() {
-    // v_uv.y maps strictly from 0.0 (fading tail) to 1.0 (active head)
+    // v_uv.y maps from fading tail (0.0) to active head (1.0)
     float progress = v_uv.y;
     
     // Normal active neon glow vs crimson anomaly alert vs ghost trajectory
@@ -47,7 +48,7 @@ const RIBBON_FRAGMENT_SHADER = `
     
     if (u_has_anomaly > 0.5) {
       vec3 anomalyCol = vec3(0.95, 0.20, 0.25); // Crimson warning
-      baseCol = mix(baseCol, anomalyCol, 0.75);
+      baseCol = mix(baseCol, anomalyCol, 0.85);
     }
     
     if (u_is_ghost > 0.5) {
@@ -58,11 +59,11 @@ const RIBBON_FRAGMENT_SHADER = `
     // Edge glow falloff
     float edgeGlow = pow(sin(v_uv.x * 3.14159), 0.65);
     
-    // Trailing alpha fade (ghost has lower opacity)
-    float maxAlpha = (u_is_ghost > 0.5) ? 0.45 : 0.92;
-    float alpha = progress * edgeGlow * maxAlpha;
+    // Quadratic tail fade (progress^2) keeps tail cleanly dissolved
+    float maxAlpha = (u_is_ghost > 0.5) ? 0.45 : 0.95;
+    float alpha = pow(progress, 1.8) * edgeGlow * maxAlpha;
     
-    gl_FragColor = vec4(baseCol * (u_is_ghost > 0.5 ? 1.0 : 1.5), alpha);
+    gl_FragColor = vec4(baseCol * (u_is_ghost > 0.5 ? 1.0 : 1.8), alpha);
   }
 `;
 
@@ -71,43 +72,37 @@ export class FlightPath {
   private geometry: THREE.BufferGeometry;
   private material: THREE.ShaderMaterial;
   
-  private positions: Float32Array;
-  private normals: Float32Array;
-  private uvs: Float32Array;
-  
-  private maxPoints: number;
-  private activeCount: number = 0;
-  private historyCoords: THREE.Vector3[] = [];
+  private rawWaypoints: THREE.Vector3[] = [];
+  private maxWaypoints: number = 128;
+  private subSteps: number = 4; // 128 * 4 = 512 quads (Power of 2 aligned)
   private isGhost: boolean;
   
+  // ── True Zero-Allocation Pre-Allocated Reusable Pool ───────────────
+  private cachedCurve = new THREE.CatmullRomCurve3([], false, 'catmullrom', 0.5);
+  private vectorPool = Array.from({ length: 512 }, () => new THREE.Vector3());
+
+  // ── Hoisted Working Vectors (0 Heap Allocations per frame) ─────────
+  private _workingTangent = new THREE.Vector3();
+  private _workingUp = new THREE.Vector3(0, 1, 0);
+  private _workingSide = new THREE.Vector3();
+
   public onAnomalyDetected?: (anomaly: TrajectoryAnomaly) => void;
 
-  constructor(maxPoints: number = 128, ribbonWidth: number = 3.2, isGhost: boolean = false) {
-    this.maxPoints = maxPoints;
+  constructor(maxPoints: number = 128, _ribbonWidth: number = 1.8, isGhost: boolean = false) {
+    this.maxWaypoints = maxPoints;
     this.isGhost = isGhost;
+    const maxQuads = this.maxWaypoints * this.subSteps; // 512 quads (1024 triangles)
+    
     this.geometry = new THREE.BufferGeometry();
+    
+    // Positions: 512 quads * 2 vertices * 3 coords = 3,072 floats
+    this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(maxQuads * 2 * 3), 3));
+    this.geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(maxQuads * 2 * 3), 3));
+    this.geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(maxQuads * 2 * 2), 2));
 
-    // 2 vertices per ribbon step (left and right edges)
-    const vertexCount = maxPoints * 2;
-    this.positions = new Float32Array(vertexCount * 3);
-    this.normals = new Float32Array(vertexCount * 3);
-    this.uvs = new Float32Array(vertexCount * 2);
-
-    // ── Pre-calculate static UV gradient mapping (0.0 Tail -> 1.0 Head) ──
-    for (let i = 0; i < maxPoints; i++) {
-      const progress = i / (maxPoints - 1);
-      // Left vertex (x = 0.0)
-      this.uvs[i * 4 + 0] = 0.0;
-      this.uvs[i * 4 + 1] = progress;
-      // Right vertex (x = 1.0)
-      this.uvs[i * 4 + 2] = 1.0;
-      this.uvs[i * 4 + 3] = progress;
-    }
-
-    // Build static triangle indices (2 triangles = 6 indices per ribbon quad segment)
-    const indexCount = (maxPoints - 1) * 6;
-    const indices = new Uint16Array(indexCount);
-    for (let i = 0; i < maxPoints - 1; i++) {
+    // Build static quad index array
+    const indices = new Uint16Array((maxQuads - 1) * 6);
+    for (let i = 0; i < maxQuads - 1; i++) {
       const v0 = i * 2;
       const v1 = i * 2 + 1;
       const v2 = (i + 1) * 2;
@@ -122,10 +117,6 @@ export class FlightPath {
       indices[idx + 4] = v3;
       indices[idx + 5] = v2;
     }
-
-    this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
-    this.geometry.setAttribute('normal', new THREE.BufferAttribute(this.normals, 3));
-    this.geometry.setAttribute('uv', new THREE.BufferAttribute(this.uvs, 2));
     this.geometry.setIndex(new THREE.BufferAttribute(indices, 1));
     this.geometry.setDrawRange(0, 0);
 
@@ -154,31 +145,37 @@ export class FlightPath {
 
     this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.mesh.renderOrder = isGhost ? 14 : 15;
+    
+    // ── Frustum Culling Bypass (Prevents ribbon from vanishing on camera orbit)
+    this.mesh.frustumCulled = false;
   }
 
   /**
-   * Appends a new generation step coordinate to the 3D trajectory ribbon
+   * Appends a new generation step coordinate to the 3D trajectory spline
    */
   public addStep(
     tokenStr: string,
     stepIndex: number,
     point: THREE.Vector3,
-    halfWidth: number = 1.6
+    probability: number = 1.0,
+    maxProbability: number = 1.0,
+    rank: number = 1
   ): void {
-    // Elevate ribbon slightly above terrain surface
     const elevatedPoint = point.clone();
-    elevatedPoint.y += (this.isGhost ? 2.2 : 2.5);
+    elevatedPoint.y += (this.isGhost ? 2.2 : 2.8);
 
-    // Detect Anomaly: Cross-Continent Jump or Repetition Loop (only on active live path)
-    if (!this.isGhost && this.historyCoords.length > 1) {
-      const prev = this.historyCoords[this.historyCoords.length - 1];
+    // ── Calibrated Anomaly Detection (Zero False Alarms on Step 1) ──
+    if (!this.isGhost && stepIndex >= 2 && this.rawWaypoints.length >= 1) {
+      const prev = this.rawWaypoints[this.rawWaypoints.length - 1];
       const dist = elevatedPoint.distanceTo(prev);
 
-      if (dist > 160.0) {
+      // Only trigger if large jump (>250 units) AND low relative probability/rank
+      const isLowConfidence = (probability / Math.max(maxProbability, 1e-5) < 0.50) || rank > 3;
+      if (dist > 250.0 && isLowConfidence) {
         this.material.uniforms.u_has_anomaly.value = 1.0;
         this.onAnomalyDetected?.({
           type: 'DRIFT_JUMP',
-          message: `Semantic Jump (${dist.toFixed(0)} units across continent)`,
+          message: `Semantic Jump (${dist.toFixed(0)} units to "${tokenStr}")`,
           stepIndex,
           tokenStr,
           severity: 'warning',
@@ -189,70 +186,98 @@ export class FlightPath {
       }
     }
 
-    this.historyCoords.push(elevatedPoint);
+    if (this.rawWaypoints.length >= this.maxWaypoints) {
+      this.rawWaypoints.shift();
+    }
+    this.rawWaypoints.push(elevatedPoint);
+    this.rebuildSpline();
+  }
 
-    // Compute tangent and lateral ribbon offset
-    const dir = this.historyCoords.length > 1
-      ? new THREE.Vector3().subVectors(elevatedPoint, this.historyCoords[this.historyCoords.length - 2]).normalize()
-      : new THREE.Vector3(0, 0, 1);
-
-    const normal = new THREE.Vector3(0, 1, 0);
-    const lateral = new THREE.Vector3().crossVectors(dir, normal).normalize().multiplyScalar(halfWidth);
-
-    const left = new THREE.Vector3().addVectors(elevatedPoint, lateral);
-    const right = new THREE.Vector3().subVectors(elevatedPoint, lateral);
-
-    if (this.activeCount < this.maxPoints) {
-      const idx = this.activeCount * 6;
-      this.positions[idx + 0] = left.x;
-      this.positions[idx + 1] = left.y;
-      this.positions[idx + 2] = left.z;
-      this.positions[idx + 3] = right.x;
-      this.positions[idx + 4] = right.y;
-      this.positions[idx + 5] = right.z;
-
-      this.normals[idx + 0] = 0; this.normals[idx + 1] = 1; this.normals[idx + 2] = 0;
-      this.normals[idx + 3] = 0; this.normals[idx + 4] = 1; this.normals[idx + 5] = 0;
-
-      this.activeCount++;
-    } else {
-      // ─── Strictly Bounded SIMD Sliding Window Shift ────────────────────
-      // Bound the end parameter by activeCount * 6 to never copy beyond active data
-      const activeFloatCount = this.activeCount * 6;
-      this.positions.copyWithin(0, 6, activeFloatCount);
-      this.normals.copyWithin(0, 6, activeFloatCount);
-      // UV array is NOT touched: geometry flows through static head-to-tail gradient!
-
-      const lastIdx = (this.maxPoints - 1) * 6;
-      this.positions[lastIdx + 0] = left.x;
-      this.positions[lastIdx + 1] = left.y;
-      this.positions[lastIdx + 2] = left.z;
-      this.positions[lastIdx + 3] = right.x;
-      this.positions[lastIdx + 4] = right.y;
-      this.positions[lastIdx + 5] = right.z;
-
-      this.normals[lastIdx + 0] = 0; this.normals[lastIdx + 1] = 1; this.normals[lastIdx + 2] = 0;
-      this.normals[lastIdx + 3] = 0; this.normals[lastIdx + 4] = 1; this.normals[lastIdx + 5] = 0;
+  private rebuildSpline(): void {
+    if (this.rawWaypoints.length < 2) {
+      this.geometry.setDrawRange(0, 0);
+      return;
     }
 
-    const posAttr = this.geometry.getAttribute('position') as THREE.BufferAttribute;
-    const normAttr = this.geometry.getAttribute('normal') as THREE.BufferAttribute;
-    posAttr.needsUpdate = true;
-    normAttr.needsUpdate = true;
+    // Refresh segment length cache (Prevents Rubber-Banding)
+    this.cachedCurve.points = this.rawWaypoints;
+    this.cachedCurve.updateArcLengths();
 
-    if (this.activeCount > 1) {
-      this.geometry.setDrawRange(0, (this.activeCount - 1) * 6);
+    const maxCapacity = (this.maxWaypoints * this.subSteps) - 1;
+    const totalPoints = Math.min((this.rawWaypoints.length - 1) * this.subSteps + 1, 512);
+
+    // Sample by uniform physical arc-length into pre-allocated vector pool
+    for (let i = 0; i < totalPoints; i++) {
+      const t = i / (totalPoints - 1);
+      this.cachedCurve.getPointAt(t, this.vectorPool[i]);
     }
+
+    const positions = this.geometry.attributes.position.array as Float32Array;
+    const normals = this.geometry.attributes.normal.array as Float32Array;
+    const uvs = this.geometry.attributes.uv.array as Float32Array;
+    const ribbonHalfWidth = 1.8;
+
+    // Buffer-Relative UV Scaling: Anchors gradient physically without stretching
+    const capacityRatio = totalPoints / maxCapacity;
+    const tailOffset = Math.max(0.0, 1.0 - capacityRatio);
+
+    for (let i = 0; i < totalPoints; i++) {
+      const current = this.vectorPool[i];
+
+      // Tangent calculation using hoisted working vector
+      if (i < totalPoints - 1) {
+        this._workingTangent.subVectors(this.vectorPool[i + 1], current);
+      } else {
+        this._workingTangent.subVectors(current, this.vectorPool[i - 1]);
+      }
+
+      // ── Defend against Co-Located Coordinate Collapse (Zero-Distance NaN) ─
+      if (this._workingTangent.lengthSq() < 0.00001) {
+        this._workingTangent.set(1, 0, 0);
+      } else {
+        this._workingTangent.normalize();
+      }
+
+      // ── Dynamic Up-Vector Fallback to Prevent Gimbal Lock NaN Crashes ──
+      if (Math.abs(this._workingTangent.y) > 0.99) {
+        this._workingUp.set(0, 0, 1);
+      } else {
+        this._workingUp.set(0, 1, 0);
+      }
+
+      this._workingSide.crossVectors(this._workingTangent, this._workingUp).normalize().multiplyScalar(ribbonHalfWidth);
+
+      const idx = i * 6;
+      positions[idx + 0] = current.x - this._workingSide.x;
+      positions[idx + 1] = current.y;
+      positions[idx + 2] = current.z - this._workingSide.z;
+      positions[idx + 3] = current.x + this._workingSide.x;
+      positions[idx + 4] = current.y;
+      positions[idx + 5] = current.z + this._workingSide.z;
+
+      normals[idx + 0] = 0; normals[idx + 1] = 1; normals[idx + 2] = 0;
+      normals[idx + 3] = 0; normals[idx + 4] = 1; normals[idx + 5] = 0;
+
+      // Anchored Gradient Progress (Head is ALWAYS 1.0)
+      const progress = tailOffset + (i / Math.max(1, totalPoints - 1)) * (1.0 - tailOffset);
+      uvs[i * 4 + 0] = 0.0; uvs[i * 4 + 1] = progress;
+      uvs[i * 4 + 2] = 1.0; uvs[i * 4 + 3] = progress;
+    }
+
+    this.geometry.attributes.position.needsUpdate = true;
+    this.geometry.attributes.normal.needsUpdate = true;
+    this.geometry.attributes.uv.needsUpdate = true;
+    this.geometry.setDrawRange(0, (totalPoints - 1) * 6);
   }
 
   public getHistory(): THREE.Vector3[] {
-    return [...this.historyCoords];
+    return [...this.rawWaypoints];
   }
 
-  public loadFromHistory(points: THREE.Vector3[], halfWidth: number = 1.6): void {
+  public loadFromHistory(points: THREE.Vector3[]): void {
     this.clear();
     for (let i = 0; i < points.length; i++) {
-      this.addStep(`Step #${i}`, i, points[i], halfWidth);
+      this.addStep(`Step #${i}`, i, points[i]);
     }
   }
 
@@ -261,8 +286,7 @@ export class FlightPath {
   }
 
   public clear(): void {
-    this.activeCount = 0;
-    this.historyCoords = [];
+    this.rawWaypoints = [];
     this.geometry.setDrawRange(0, 0);
     this.material.uniforms.u_has_anomaly.value = 0.0;
   }
