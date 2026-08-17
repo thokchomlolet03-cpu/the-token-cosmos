@@ -225,14 +225,61 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          {/* Height Mode Switcher */}
+          <div className="flex bg-white/5 rounded-lg border border-white/10 p-0.5 pointer-events-auto">
+            <button
+              onClick={() => setHeightMode('linear')}
+              className={`px-2 py-0.5 text-[9px] font-mono font-bold rounded transition-all ${
+                heightMode === 'linear'
+                  ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40 shadow'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Linear Probabilities"
+            >
+              Linear
+            </button>
+            <button
+              onClick={() => setHeightMode('log')}
+              className={`px-2 py-0.5 text-[9px] font-mono font-bold rounded transition-all ${
+                heightMode === 'log'
+                  ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40 shadow'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Enhanced Log-Scale 3D Mountains"
+            >
+              3D Mountains
+            </button>
+            <button
+              onClick={() => setHeightMode('logit')}
+              className={`px-2 py-0.5 text-[9px] font-mono font-bold rounded transition-all ${
+                heightMode === 'logit'
+                  ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40 shadow'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Raw Pre-Softmax Logits"
+            >
+              Logits
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit Full Screen" : "Go Full Screen"}
+            className="flex items-center space-x-1 px-2 py-1 text-[9px] font-mono font-bold rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white transition-all shadow pointer-events-auto"
+          >
+            {isFullscreen ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+            <span className="hidden sm:inline">{isFullscreen ? 'Exit Zen' : 'Zen'}</span>
+          </button>
+
           <div className="flex items-center space-x-1.5 bg-white/5 rounded-lg px-2 py-1">
             <Search className="h-3 w-3 text-slate-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search tokens..."
-              className="bg-transparent text-xs text-white placeholder:text-gray-600 outline-none w-28 font-mono"
+              placeholder="Search..."
+              className="bg-transparent text-xs text-white placeholder:text-gray-600 outline-none w-20 font-mono"
             />
           </div>
         </div>
@@ -256,75 +303,9 @@ export const TokenCosmosGraph: React.FC<TokenCosmosGraphProps> = ({
           isThinking={isThinking}
           candidates={candidates}
           heightMode={heightMode}
+          steps={steps}
+          currentStepIndex={currentStepIndex}
         />
-        
-        {/* Floating Height Mode & Zen Mode Controls */}
-        <div className="absolute top-4 left-4 z-10 flex items-center space-x-2">
-          <div className="flex bg-black/60 backdrop-blur-md rounded-lg border border-white/10 p-0.5 pointer-events-auto shadow-lg">
-            <button
-              onClick={() => setHeightMode('linear')}
-              className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
-                heightMode === 'linear'
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-              }`}
-            >
-              Standard View
-            </button>
-            <button
-              onClick={() => setHeightMode('log')}
-              className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
-                heightMode === 'log'
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-              }`}
-            >
-              Enhanced 3D
-            </button>
-            <button
-              onClick={() => setHeightMode('logit')}
-              className={`px-2.5 py-1 text-[9px] font-mono font-bold rounded-md transition-all ${
-                heightMode === 'logit'
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-              }`}
-            >
-              Raw Data
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={toggleFullscreen}
-            title={isFullscreen ? "Exit Full Screen" : "Go Full Screen"}
-            className="flex items-center space-x-1 px-2 py-1 text-[9px] font-mono font-bold rounded-lg bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 text-gray-400 hover:text-white transition-all shadow-lg pointer-events-auto"
-          >
-            {isFullscreen ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
-            <span>{isFullscreen ? 'Exit Zen' : 'Zen Mode'}</span>
-          </button>
-        </div>
-        
-        {/* Floating Top 10 Overlay */}
-        <div className="absolute top-4 right-4 w-64 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 overflow-hidden pointer-events-none">
-          <div className="px-3 py-1.5 bg-white/5 border-b border-white/10">
-            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Most Likely Next Words</span>
-          </div>
-          <div className="p-2 space-y-1">
-            {candidates.slice(0, 10).map((c, i) => {
-              const opacity = Math.max(0.3, 1.0 - i * 0.07);
-              return (
-                <div key={i} className="flex items-center justify-between" style={{ opacity }}>
-                  <span className="text-[10px] font-mono text-slate-100 font-medium truncate mr-2">
-                    {c.token_str.trim() || '—'}
-                  </span>
-                  <span className="text-[9px] font-mono text-slate-400">
-                    {(c.probability * 100).toFixed(1)}%
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
       {/* ─── Legend ─── */}

@@ -521,9 +521,6 @@ export const App: React.FC = () => {
   }, [baselineRawLogits, ragRawLogits, processedCandidates]);
 
   const handleSelectToken = async (token: ProcessedTokenCandidate) => {
-    const updatedPrompt = prompt + token.token_str;
-    setPrompt(updatedPrompt);
-    
     const newStep: FlightStep = {
       stepIndex: steps.length,
       selectedToken: token,
@@ -545,7 +542,8 @@ export const App: React.FC = () => {
       timestamp: Date.now(),
     });
 
-    await handleLaunchPrompt(updatedPrompt);
+    const fullHistoryText = prompt + updated.map(s => s.selectedToken.token_str).join('');
+    await handleLaunchPrompt(fullHistoryText);
   };
 
   // Continuous auto-play loop for generation
