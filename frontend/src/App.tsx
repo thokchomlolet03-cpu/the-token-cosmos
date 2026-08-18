@@ -285,11 +285,10 @@ export const App: React.FC = () => {
 
   // Launch Prompt Evaluation Endpoint
   // Priority: WebGPU local model → BYOE API → Cloud backend → Sample data
-  const handleLaunchPrompt = async (promptOverride?: unknown) => {
-    const activePrompt = typeof promptOverride === 'string' ? promptOverride : prompt;
+  const handleLaunchPrompt = async (historyStepsOverride?: FlightStep[]) => {
     
     // Reset timeline only if we are starting a completely new evaluation
-    if (typeof promptOverride !== 'string') {
+    if (!historyStepsOverride) {
       setSteps([]);
       setCurrentStepIndex(0);
       setOutputLog('');
@@ -300,19 +299,28 @@ export const App: React.FC = () => {
     try {
       // Route 1: WebGPU local model (full vocab logits or stream)
       if (inferenceEngine.isModelLoaded) {
-        const fullPrompt = ragEnabled && ragContext.trim()
-          ? `Context: ${ragContext}\n\nQuestion: ${activePrompt}`
-          : activePrompt;
+        const messages: Array<{ role: string; content: string }> = [];
+        
+        let userContent = prompt;
+        if (ragEnabled && ragContext.trim()) {
+           userContent = `Context: ${ragContext}\n\nQuestion: ${prompt}`;
+        }
+        messages.push({ role: 'user', content: userContent });
+        
+        const activeSteps = historyStepsOverride || [];
+        if (activeSteps.length > 0) {
+            messages.push({ role: 'assistant', content: activeSteps.map(s => s.selectedToken.token_str).join('') });
+        }
         
         const isReasoning = inferenceEngine.availableModels.find(m => m.id === inferenceEngine.state.modelId)?.isReasoning;
         
         if (isReasoning) {
             // For reasoning models, we want to watch the stream to see the thinking phase
             // We pass the thinking budget. The total tokens can be budget + some fixed output buffer
-            inferenceEngine.generateSteps(fullPrompt, (params.maxThinkingTokens || 2048) + 1024, params.maxThinkingTokens, systemPrompt);
+            inferenceEngine.generateSteps(messages, (params.maxThinkingTokens || 2048) + 1024, params.maxThinkingTokens, systemPrompt);
         } else {
             // Standard models evaluate with context-preserving prompts
-            inferenceEngine.getLogits(fullPrompt);
+            inferenceEngine.getLogits(messages, systemPrompt);
         }
         setDataSource(`Local WebGPU - ${inferenceEngine.state.modelId}`);
         return;
@@ -342,11 +350,16 @@ export const App: React.FC = () => {
         if (systemPrompt.trim()) {
           messages.push({ role: 'system', content: systemPrompt.trim() });
         }
-        let userContent = activePrompt;
+        let userContent = prompt;
         if (ragEnabled && ragContext.trim()) {
-          userContent = `Retrieved Context: ${ragContext}\n\nUser Question: ${activePrompt}`;
+          userContent = `Retrieved Context: ${ragContext}\n\nUser Question: ${prompt}`;
         }
         messages.push({ role: 'user', content: userContent });
+
+        const activeSteps = historyStepsOverride || [];
+        if (activeSteps.length > 0) {
+            messages.push({ role: 'assistant', content: activeSteps.map(s => s.selectedToken.token_str).join('') });
+        }
 
         const bodyPayload = {
           model: modelName || 'gpt-4o',
@@ -380,7 +393,8 @@ export const App: React.FC = () => {
       // Route 3: If in sample data mode (no model loaded, no BYOE),
       // go straight to synthetic fallback — don't waste time hitting a backend that may not exist.
       if (useSampleData) {
-        const synthetic = generateSyntheticLogits(activePrompt, ragContext, ragEnabled, systemPrompt);
+        const activePromptString = prompt + (historyStepsOverride || []).map(s => s.selectedToken.token_str).join('');
+        const synthetic = generateSyntheticLogits(activePromptString, ragContext, ragEnabled, systemPrompt);
         setBaselineRawLogits(synthetic.baseline);
         setRagRawLogits(synthetic.rag);
         setDataSource('Sample data');
@@ -391,12 +405,14 @@ export const App: React.FC = () => {
       const abortCtrl = new AbortController();
       const timeoutId = setTimeout(() => abortCtrl.abort(), 5000);
 
+      const activePromptString = prompt + (historyStepsOverride || []).map(s => s.selectedToken.token_str).join('');
+
       try {
         const res = await fetch('/api/logits', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt: activePrompt,
+            prompt: activePromptString,
             system_prompt: systemPrompt || null,
             rag_context: ragEnabled ? ragContext : null,
             top_n: 50,
@@ -421,7 +437,8 @@ export const App: React.FC = () => {
         clearTimeout(timeoutId);
       }
     } catch (error) {
-      const synthetic = generateSyntheticLogits(prompt, ragContext, ragEnabled, systemPrompt);
+      const activePromptString = prompt + (historyStepsOverride || []).map(s => s.selectedToken.token_str).join('');
+      const synthetic = generateSyntheticLogits(activePromptString, ragContext, ragEnabled, systemPrompt);
       setBaselineRawLogits(synthetic.baseline);
       setRagRawLogits(synthetic.rag);
       const message = error instanceof Error ? error.message : 'Unknown inference error';
@@ -524,8 +541,7 @@ export const App: React.FC = () => {
       timestamp: Date.now(),
     });
 
-    const fullHistoryText = prompt + updated.map(s => s.selectedToken.token_str).join('');
-    await handleLaunchPrompt(fullHistoryText);
+    await handleLaunchPrompt(updated);
   };
 
   // Continuous auto-play loop for generation

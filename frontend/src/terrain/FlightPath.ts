@@ -224,12 +224,9 @@ export class FlightPath {
     for (let i = 0; i < totalPoints; i++) {
       const current = this.vectorPool[i];
 
-      // Tangent calculation using hoisted working vector
-      if (i < totalPoints - 1) {
-        this._workingTangent.subVectors(this.vectorPool[i + 1], current);
-      } else {
-        this._workingTangent.subVectors(current, this.vectorPool[i - 1]);
-      }
+      const t = i / Math.max(1, totalPoints - 1);
+      // Analytic tangent calculation from the cached curve
+      this.cachedCurve.getTangent(t, this._workingTangent);
 
       // ── Defend against Co-Located Coordinate Collapse (Zero-Distance NaN) ─
       if (this._workingTangent.lengthSq() < 0.00001) {

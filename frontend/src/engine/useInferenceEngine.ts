@@ -35,8 +35,8 @@ export interface InferenceEngine {
 
   // Actions
   loadModel: (modelId: string) => void;
-  getLogits: (prompt: string) => void;
-  generateSteps: (prompt: string, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) => void;
+  getLogits: (messages: Array<{ role: string; content: string }>, systemPrompt?: string) => void;
+  generateSteps: (messages: Array<{ role: string; content: string }>, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) => void;
   resetChat: () => void;
   abort: () => void;
   unload: () => void;
@@ -206,20 +206,18 @@ export function useInferenceEngine(): InferenceEngine {
     send({ type: 'LOAD_MODEL', modelId });
   }, [send]);
 
-  const getLogits = useCallback((prompt: string) => {
+  const getLogits = useCallback((messages: Array<{ role: string; content: string }>, systemPrompt?: string) => {
     setGeneratedTokens([]);
     setIsLoopAborted(false);
     setLoopAbortedMessage(null);
-    const cleanPrompt = typeof prompt === 'string' ? prompt : '';
-    send({ type: 'GET_FULL_LOGITS', prompt: cleanPrompt });
+    send({ type: 'GET_FULL_LOGITS', messages, systemPrompt });
   }, [send]);
 
-  const generateSteps = useCallback((prompt: string, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) => {
+  const generateSteps = useCallback((messages: Array<{ role: string; content: string }>, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) => {
     setGeneratedTokens([]);
     setIsLoopAborted(false);
     setLoopAbortedMessage(null);
-    const cleanPrompt = typeof prompt === 'string' ? prompt : '';
-    send({ type: 'GENERATE_STEP', prompt: cleanPrompt, maxTokens, maxThinkingTokens, systemPrompt });
+    send({ type: 'GENERATE_STEP', messages, maxTokens, maxThinkingTokens, systemPrompt });
   }, [send]);
 
   const resetChat = useCallback(() => {
@@ -249,30 +247,56 @@ export function useInferenceEngine(): InferenceEngine {
 
   const logitsToRawCandidates = useCallback(
     (logits: Float32Array, ragTokens?: Set<string>): RawTokenCandidate[] => {
-      const candidates: RawTokenCandidate[] = [];
-
-      // Full vocab logits are retained for terrain rendering. The decoded top
-      // candidates provided by WebLLM are used for readable labels in the UI.
+      // Find top 200 indices without allocating objects for every token
+      const topK = 200;
+      const topIndices: number[] = [];
+      const topLogits: number[] = [];
+      
       for (let i = 0; i < logits.length; i++) {
         const logit = logits[i];
-
-        // Skip -Infinity logits (padding tokens, etc.)
         if (!isFinite(logit) || logit < -1e6) continue;
+        
+        if (topIndices.length < topK) {
+            topIndices.push(i);
+            topLogits.push(logit);
+            if (topIndices.length === topK) {
+                // Initial sort when filled
+                for (let j = 0; j < topK; j++) {
+                    for (let k = j + 1; k < topK; k++) {
+                        if (topLogits[k] > topLogits[j]) {
+                            const tmpLogit = topLogits[j]; topLogits[j] = topLogits[k]; topLogits[k] = tmpLogit;
+                            const tmpIdx = topIndices[j]; topIndices[j] = topIndices[k]; topIndices[k] = tmpIdx;
+                        }
+                    }
+                }
+            }
+        } else if (logit > topLogits[topK - 1]) {
+            // Insert in sorted position
+            let pos = topK - 1;
+            while (pos > 0 && logit > topLogits[pos - 1]) {
+                topLogits[pos] = topLogits[pos - 1];
+                topIndices[pos] = topIndices[pos - 1];
+                pos--;
+            }
+            topLogits[pos] = logit;
+            topIndices[pos] = i;
+        }
+      }
 
-        // Use vocab map if available, otherwise fall back to index
-        const tokenStr = vocabMapRef.current?.[i] ?? `Token #${i}`;
-
+      const candidates: RawTokenCandidate[] = [];
+      for (let i = 0; i < topIndices.length; i++) {
+        const idx = topIndices[i];
+        const logit = topLogits[i];
+        const tokenStr = vocabMapRef.current?.[idx] ?? `Token #${idx}`;
         candidates.push({
-          token_id: i,
+          token_id: idx,
           token_str: tokenStr,
           raw_logit: logit,
           is_rag_grounded: ragTokens?.has(tokenStr.toLowerCase()) ?? false,
         });
       }
 
-      // Sort by raw_logit descending and take top 200 for visualization
-      candidates.sort((a, b) => b.raw_logit - a.raw_logit);
-      return candidates.slice(0, 200);
+      return candidates;
     },
     []
   );

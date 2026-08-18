@@ -519,29 +519,6 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
             
             if (needsTextureUpdate) {
                 texture.needsUpdate = true;
-                
-                const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
-                const positions = positionsAttr.array as Float32Array;
-                const maxHeight = 150.0;
-                
-                const smoothStep = (e0: number, e1: number, x: number) => {
-                  const t = Math.max(0.0, Math.min(1.0, (x - e0) / (e1 - e0)));
-                  return t * t * (3.0 - 2.0 * t);
-                };
-                
-                for (let i = 0; i < tokenCount; i++) {
-                    const activeProb = data[i * 2];
-                    const x = rawCoordinates[i * 2];
-                    const y = rawCoordinates[i * 2 + 1];
-                    const baseH = computeBaseTopologicalHeight(x, y);
-
-                    const activeSummit = smoothStep(0.001, 0.08, activeProb) * (maxHeight * 0.25) + 
-                                         smoothStep(0.08, 1.0, activeProb) * (maxHeight * 0.75);
-                    const targetElevation = baseH + activeSummit;
-                    
-                    positions[i * 3 + 1] += (targetElevation - positions[i * 3 + 1]) * lerpFactor;
-                }
-                positionsAttr.needsUpdate = true;
             }
         }
         
@@ -594,8 +571,6 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
 
         // ─── 2. Project Dynamic HTML overlays for Top 8 active candidates ───
         const container = labelsContainerRef.current;
-        const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
-        const positions = positionsAttr.array as Float32Array;
         
         if (container && cameraRef.current && containerRef.current && candidatesRef.current && rawCoordinates) {
             const camera = cameraRef.current;
@@ -617,9 +592,25 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
                 const tid = c.token_id;
                 
                 if (tid >= 0 && tid < vocabSize) {
-                    const px = rawCoordinates[tid * 2] * spread;
-                    const pz = rawCoordinates[tid * 2 + 1] * spread;
-                    const py = positions[tid * 3 + 1];
+                    const material = points.material as THREE.ShaderMaterial;
+                    const texture = material.uniforms.probabilityTexture.value as THREE.DataTexture;
+                    const probData = texture.image.data as Float32Array;
+                    const activeProb = probData[tid * 2];
+                    
+                    const x = rawCoordinates[tid * 2];
+                    const y = rawCoordinates[tid * 2 + 1];
+                    const baseH = computeBaseTopologicalHeight(x, y);
+                    
+                    const maxHeight = 150.0;
+                    const safeMaxProb = Math.max(material.uniforms.uMaxProb.value, 1e-7);
+                    const safeProbRatio = Math.max(activeProb / safeMaxProb, 1e-7);
+                    const safeTemp = Math.max(material.uniforms.uTemperature.value, 0.01);
+                    
+                    const activeSummit = (activeProb > 0.0001) ? (maxHeight * Math.pow(safeProbRatio, 1.0 / safeTemp)) : 0.0;
+                    
+                    const px = x * spread;
+                    const pz = y * spread;
+                    const py = baseH + activeSummit;
                     
                     const vec = new THREE.Vector3(px, py, pz);
                     vec.project(camera);
@@ -779,10 +770,20 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     const x = rawCoordinates[argmaxIndexRef.current * 2];
     const y = rawCoordinates[argmaxIndexRef.current * 2 + 1];
     
-    const points = pointsRef.current;
-    const positionsAttr = points.geometry.getAttribute('position') as THREE.BufferAttribute;
-    const positions = positionsAttr.array as Float32Array;
-    const elevation = positions[argmaxIndexRef.current * 3 + 1];
+    // Compute elevation manually since we deleted the CPU loop that updated positionsAttr
+    const baseH = computeBaseTopologicalHeight(x, y);
+    const material = pointsRef.current.material as THREE.ShaderMaterial;
+    const texture = material.uniforms.probabilityTexture.value as THREE.DataTexture;
+    const probData = texture.image.data as Float32Array;
+    const activeProb = probData[argmaxIndexRef.current * 2];
+    
+    const maxHeight = 150.0;
+    const safeMaxProb = Math.max(material.uniforms.uMaxProb.value, 1e-7);
+    const safeProbRatio = Math.max(activeProb / safeMaxProb, 1e-7);
+    const safeTemp = Math.max(material.uniforms.uTemperature.value, 0.01);
+    
+    const activeSummit = (activeProb > 0.0001) ? (maxHeight * Math.pow(safeProbRatio, 1.0 / safeTemp)) : 0.0;
+    const elevation = baseH + activeSummit;
     
     const spread = 250.0;
     const targetLook = new THREE.Vector3(x * spread, elevation, y * spread);

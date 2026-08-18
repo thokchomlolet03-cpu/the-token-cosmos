@@ -28,6 +28,14 @@ export class LocalTelemetryClient {
     this.currentBatch = this.acquireBuffer();
     this.initWorker();
     this.requestDurableStorage();
+    
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          this.flush();
+        }
+      });
+    }
   }
 
   /**

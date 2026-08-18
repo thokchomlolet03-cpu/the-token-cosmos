@@ -217,7 +217,7 @@ async function loadModel(modelId: string) {
 
 // ─── Full Logit Extraction (single forward pass) ────────────────────
 
-async function getFullLogits(prompt: string) {
+async function getFullLogits(messages: Array<{ role: string; content: string }>, systemPrompt?: string) {
   if (!engine || !currentModelId) {
     post({ type: 'ERROR', message: 'No model loaded' });
     return;
@@ -230,14 +230,16 @@ async function getFullLogits(prompt: string) {
     capturedLogits = null;
 
     // Instruct model framing: ensure direct completion without conversational filler
-    const messages: Array<{ role: string; content: string }> = [
-      { role: 'system', content: 'You are a precise AI assistant. Complete user requests directly and concisely.' },
-      { role: 'user', content: prompt },
-    ];
+    const currentMessages: Array<{ role: string; content: string }> = [];
+    const sysPrompt = (systemPrompt && systemPrompt.trim().length > 0)
+      ? systemPrompt.trim()
+      : 'You are a precise AI assistant. Complete user requests directly and concisely.';
+    currentMessages.push({ role: 'system', content: sysPrompt });
+    currentMessages.push(...messages);
 
     // Single-token generation to capture the logit distribution for the NEXT token
     const response = await engine.chat.completions.create({
-      messages: messages as any,
+      messages: currentMessages as any,
       max_tokens: 1,
       temperature: 1.0, // Temperature doesn't affect raw logits, only sampling
       logprobs: true,
@@ -262,7 +264,7 @@ async function getFullLogits(prompt: string) {
       rawLogitsBuffer: buffer,
       tokenId: -1, // We don't get token IDs from chat API directly
       tokenStr,
-      prompt,
+      prompt: messages.map(m => m.content).join('\n'), // Pass combined text for UI fallback logging if needed
       isThinking: false, // Initial token is never inside <think>
       timestamp: Date.now(),
       topCandidates: decodeTopCandidates(response.choices?.[0]?.logprobs?.content?.[0]?.top_logprobs),
@@ -306,7 +308,7 @@ function checkRepetitionLoop(tokens: string[]): { detected: boolean; phrase: str
 
 // ─── Multi-Step Generation ──────────────────────────────────────────
 
-async function generateSteps(prompt: string, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) {
+async function generateSteps(messages: Array<{ role: string; content: string }>, maxTokens: number, maxThinkingTokens?: number, systemPrompt?: string) {
   if (!engine || !currentModelId) {
     post({ type: 'ERROR', message: 'No model loaded' });
     return;
@@ -328,7 +330,7 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
       ? systemPrompt.trim()
       : 'You are a precise AI assistant. Complete user requests directly and concisely.';
     currentMessages.push({ role: 'system', content: sysPrompt });
-    currentMessages.push({ role: 'user', content: prompt });
+    currentMessages.push(...messages);
 
     let hasTruncated = false;
     let totalSteps = 0;
@@ -385,7 +387,7 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
             rawLogitsBuffer: buffer,
             tokenId: -1,
             tokenStr: delta,
-            prompt,
+            prompt: messages.map(m => m.content).join('\n'), // Pass combined text for UI fallback logging if needed
             isThinking,
             timestamp: Date.now(),
             topCandidates: decodeTopCandidates(chunk.choices?.[0]?.logprobs?.content?.[0]?.top_logprobs),
@@ -424,7 +426,7 @@ async function generateSteps(prompt: string, maxTokens: number, maxThinkingToken
           if (systemPrompt && systemPrompt.trim().length > 0) {
             continuationMessages.push({ role: 'system', content: systemPrompt.trim() });
           }
-          continuationMessages.push({ role: 'user', content: prompt });
+          continuationMessages.push(...messages);
           continuationMessages.push({ role: 'assistant', content: accumulatedText });
           
           isThinking = false;
@@ -468,7 +470,7 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
       break;
 
     case 'GET_FULL_LOGITS':
-      await getFullLogits(msg.prompt);
+      await getFullLogits(msg.messages, msg.systemPrompt);
       break;
 
     case 'RETURN_BUFFER':
@@ -478,7 +480,7 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
       break;
 
     case 'GENERATE_STEP':
-      await generateSteps(msg.prompt, msg.maxTokens, msg.maxThinkingTokens, msg.systemPrompt);
+      await generateSteps(msg.messages, msg.maxTokens, msg.maxThinkingTokens, msg.systemPrompt);
       break;
 
     case 'RESET_CHAT':
