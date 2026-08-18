@@ -1,6 +1,6 @@
 {
   "dora": {
-    "deploymentFrequency": "4 / week",
+    "deploymentFrequency": "3 / week",
     "leadTimeForChanges": "45 mins",
     "changeFailureRate": "86.7%",
     "timeToRestoreService": "12 mins"
@@ -11,6 +11,20 @@
     "efficiency": 88
   },
   "deployments": [
+    {
+      "id": "32103916349",
+      "sha": "38938a5",
+      "status": "failure",
+      "timestamp": "2026-08-18T05:42:27Z",
+      "duration": "0m 4s"
+    },
+    {
+      "id": "32103080014",
+      "sha": "9916e7e",
+      "status": "success",
+      "timestamp": "2026-08-18T05:29:30Z",
+      "duration": "1m 3s"
+    },
     {
       "id": "32102790309",
       "sha": "9916e7e",
@@ -66,20 +80,6 @@
       "status": "failure",
       "timestamp": "2026-08-17T23:26:46Z",
       "duration": "0m 55s"
-    },
-    {
-      "id": "32079811425",
-      "sha": "4cdf56d",
-      "status": "failure",
-      "timestamp": "2026-08-17T23:17:38Z",
-      "duration": "1m 2s"
-    },
-    {
-      "id": "32079372439",
-      "sha": "6351018",
-      "status": "failure",
-      "timestamp": "2026-08-17T23:11:24Z",
-      "duration": "0m 55s"
     }
   ],
   "adrs": [
@@ -96,5 +96,5 @@
       "date": "2026-08-18"
     }
   ],
-  "lastUpdated": "2026-08-18T05:29:18.405523+00:00"
+  "lastUpdated": "2026-08-18T05:42:37.209847+00:00"
 }
