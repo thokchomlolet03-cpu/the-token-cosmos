@@ -1,6 +1,6 @@
 {
   "dora": {
-    "deploymentFrequency": "3 / week",
+    "deploymentFrequency": "4 / week",
     "leadTimeForChanges": "45 mins",
     "changeFailureRate": "86.7%",
     "timeToRestoreService": "12 mins"
@@ -14,9 +14,9 @@
     {
       "id": "32102790309",
       "sha": "9916e7e",
-      "status": "failure",
+      "status": "success",
       "timestamp": "2026-08-18T05:25:02Z",
-      "duration": "0m 4s"
+      "duration": "1m 2s"
     },
     {
       "id": "32102298213",
@@ -96,5 +96,5 @@
       "date": "2026-08-18"
     }
   ],
-  "lastUpdated": "2026-08-18T05:25:08.799036+00:00"
+  "lastUpdated": "2026-08-18T05:29:18.405523+00:00"
 }
