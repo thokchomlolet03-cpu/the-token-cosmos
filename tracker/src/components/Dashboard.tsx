@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { fetchTrackerData, TrackerData } from '../lib/github';
+import { useEffect, useState } from 'react';
+import { fetchTrackerData, type TrackerData } from '../lib/github';
 import { Activity, GitMerge, CheckCircle, XCircle, Clock, BookOpen, Layers, Zap } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
