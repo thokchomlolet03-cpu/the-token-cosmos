@@ -602,6 +602,8 @@ async function generateSteps(messages: Array<{ role: string; content: string }>,
           }
           continuationMessages.push(...messages);
           continuationMessages.push({ role: 'assistant', content: accumulatedText });
+          // Add a user prompt to satisfy WebLLM's message order validation and force it to stop thinking
+          continuationMessages.push({ role: 'user', content: 'Your thought process has been truncated to save time. Please continue and provide the final answer immediately, without using <think> tags.' });
           
           isThinking = false;
           stream = await engine.chat.completions.create({
