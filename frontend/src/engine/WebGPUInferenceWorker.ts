@@ -291,15 +291,15 @@ async function getFullLogits(messages: Array<{ role: string; content: string }>,
 // ─── Loop Cycle Detection ───────────────────────────────────────────
 
 function checkRepetitionLoop(tokens: string[]): { detected: boolean; phrase: string } | null {
-  if (tokens.length < 12) return null;
+  if (tokens.length < 4) return null;
 
-  for (const n of [3, 4, 5]) {
+  for (const n of [1, 2, 3, 4, 5]) {
     if (tokens.length < n * 3) continue;
     const lastN = tokens.slice(-n).join('');
     const prevN = tokens.slice(-2 * n, -n).join('');
     const prevPrevN = tokens.slice(-3 * n, -2 * n).join('');
 
-    if (lastN.length > 2 && lastN === prevN && prevN === prevPrevN) {
+    if (lastN.length > 0 && lastN === prevN && prevN === prevPrevN) {
       return { detected: true, phrase: lastN.trim() };
     }
   }

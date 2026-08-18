@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Header } from './components/Header';
 import { MissionControl } from './components/MissionControl';
 import { TokenCosmosGraph } from './components/TokenCosmosGraph';
@@ -113,12 +113,25 @@ export const App: React.FC = () => {
   const [ragEnabled, setRagEnabled] = useState<boolean>(PRESET_SCENARIOS[0].ragEnabled);
   const [isFetchingLogits, setIsFetchingLogits] = useState<boolean>(false);
 
+  // Tracks the exact prompt string evaluated in the current generation session
+  const lastEvaluatedPromptRef = useRef<string>('');
+
+  const handlePromptChange = (newPrompt: string) => {
+    setPrompt(newPrompt);
+    if (newPrompt !== prompt) {
+      setSteps([]);
+      setCurrentStepIndex(0);
+      setOutputLog('');
+      lastEvaluatedPromptRef.current = '';
+    }
+  };
+
   // Sync state to URL Query String for shareable setups
   const { copySetupLink } = useUrlState({
     params,
     setParams,
     prompt,
-    setPrompt,
+    setPrompt: handlePromptChange,
     systemPrompt,
     setSystemPrompt,
     ragContext,
@@ -165,6 +178,10 @@ export const App: React.FC = () => {
 
   // Handle model selection from the loading overlay
   const handleSelectModel = (modelId: string) => {
+    setSteps([]);
+    setCurrentStepIndex(0);
+    setOutputLog('');
+    lastEvaluatedPromptRef.current = '';
     if (modelId === '__SAMPLE_DATA__') {
       inferenceEngine.unload();
       setUseSampleData(true);
@@ -292,6 +309,7 @@ export const App: React.FC = () => {
       setSteps([]);
       setCurrentStepIndex(0);
       setOutputLog('');
+      lastEvaluatedPromptRef.current = prompt;
     }
 
     setIsFetchingLogits(true);
@@ -461,6 +479,7 @@ export const App: React.FC = () => {
     setCurrentStepIndex(0);
     setRagContext(preset.ragContext);
     setRagEnabled(preset.ragEnabled);
+    lastEvaluatedPromptRef.current = '';
 
     if (preset.id === 'factual-roboticist') {
       setBaselineRawLogits(SAMPLE_RAW_LOGITS_MAP['capital-france'].baseline);
@@ -564,8 +583,10 @@ export const App: React.FC = () => {
   const handleTogglePlay = () => {
     if (!isPlaying) {
       setIsPlaying(true);
-      if (processedCandidates.length === 0 && prompt.trim()) {
-        handleLaunchPrompt();
+      if ((steps.length === 0 && lastEvaluatedPromptRef.current !== prompt) || processedCandidates.length === 0) {
+        if (prompt.trim()) {
+          handleLaunchPrompt();
+        }
       }
     } else {
       setIsPlaying(false);
@@ -573,7 +594,8 @@ export const App: React.FC = () => {
   };
 
   const handleGenerateNextStep = () => {
-    if (processedCandidates.length === 0 && prompt.trim()) {
+    if (!prompt.trim()) return;
+    if ((steps.length === 0 && lastEvaluatedPromptRef.current !== prompt) || processedCandidates.length === 0) {
       handleLaunchPrompt();
       return;
     }
@@ -591,6 +613,7 @@ export const App: React.FC = () => {
     setOutputLog('');
     setSteps([]);
     setCurrentStepIndex(0);
+    lastEvaluatedPromptRef.current = '';
   };
 
   const shouldShowModelOverlay = !skipModelLoading
@@ -753,7 +776,7 @@ export const App: React.FC = () => {
                   params={params}
                   setParams={setParams}
                   prompt={prompt}
-                  setPrompt={setPrompt}
+                  setPrompt={handlePromptChange}
                   outputLog={outputLog}
                   onClearOutputLog={() => setOutputLog('')}
                   systemPrompt={systemPrompt}
@@ -830,7 +853,7 @@ export const App: React.FC = () => {
                       latestLogits={inferenceEngine.latestLogits}
                       isThinking={inferenceEngine.latestSnapshot?.isThinking}
                       isPlaying={isPlaying}
-                      onTogglePlay={() => setIsPlaying(!isPlaying)}
+                      onTogglePlay={handleTogglePlay}
                     />
                   )}
                 </div>
@@ -871,7 +894,7 @@ export const App: React.FC = () => {
           params={params}
           setParams={setParams}
           prompt={prompt}
-          setPrompt={setPrompt}
+          setPrompt={handlePromptChange}
           ragContext={ragContext}
           setRagContext={setRagContext}
           ragEnabled={ragEnabled}
