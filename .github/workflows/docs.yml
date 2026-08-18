@@ -146,6 +146,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
           force_compile: true
+          keep_files: true
 
       - name: Emit SDLC Telemetry
         if: always()

@@ -56,3 +56,4 @@ jobs:
           publish_dir: ./tracker/dist
           destination_dir: tracker
           force_compile: true
+          keep_files: true
