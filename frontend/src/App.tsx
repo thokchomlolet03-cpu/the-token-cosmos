@@ -173,6 +173,9 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (inferenceEngine.state.error) {
       setSourceError(inferenceEngine.state.error);
+      setIsGenerating(false);
+      setIsPlaying(false);
+      setIsFetchingLogits(false);
     }
   }, [inferenceEngine.state.error]);
 

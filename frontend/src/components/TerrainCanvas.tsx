@@ -421,6 +421,8 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     });
 
     const points = new THREE.Points(geometry, material);
+    points.frustumCulled = false;
+    geometry.computeBoundingSphere();
     scene.add(points);
     pointsRef.current = points;
 
@@ -791,9 +793,38 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     targetFocusRef.current = { position: targetPos, lookAt: targetLook };
   };
 
+  // ─── Frustum Culling Bypass (Prevents terrain point cloud & ribbons from vanishing on camera orbit) ──
+  useEffect(() => {
+    if (pointsRef.current) {
+      // Prevent the 152k point cloud from disappearing at grazing camera angles
+      pointsRef.current.frustumCulled = false;
+      pointsRef.current.geometry.computeBoundingSphere();
+    }
+    
+    if (flightPathRef.current?.mesh) {
+      // Ensure the Catmull-Rom trajectory ribbon also never gets culled
+      flightPathRef.current.mesh.frustumCulled = false;
+    }
+
+    if (ghostFlightPathRef.current?.mesh) {
+      ghostFlightPathRef.current.mesh.frustumCulled = false;
+    }
+  }, [isLoaded]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '')) return;
+      // 1. DOM Target Quarantine
+      const activeElement = document.activeElement;
+      const isEditingText =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement?.getAttribute('contenteditable') === 'true' ||
+        ['INPUT', 'TEXTAREA'].includes(activeElement?.tagName || '');
+
+      // Disregard canvas navigation keys if the user is typing a prompt
+      if (isEditingText) return;
+
+      // 2. Original shortcut logic
       if (e.code === 'Space') {
         e.preventDefault();
         focusOnGreedyAnchor();

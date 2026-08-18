@@ -11,6 +11,7 @@ import {
   type AppConfig,
   type InitProgressReport,
   type LogitProcessor,
+  type ChatCompletionMessageParam,
 } from '@mlc-ai/web-llm';
 
 import type {
@@ -18,6 +19,23 @@ import type {
   WorkerOutbound,
   LogitSnapshotTransfer,
 } from './types';
+
+export const CHATML_STOP_SEQUENCES = [
+  '<|im_end|>',
+  '<|endoftext|>',
+  '<|im_start|>',
+  '\n<|im_start|>',
+  '\n<|im_end|>',
+];
+
+export interface SamplingConfig {
+  temperature?: number;
+  top_p?: number;
+  max_tokens?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  logit_bias?: Record<string, number>;
+}
 
 // ─── Custom Model Registration ──────────────────────────────────────
 
@@ -46,7 +64,7 @@ const CUSTOM_APP_CONFIG: AppConfig = {
 
 let engine: MLCEngine | null = null;
 let currentModelId: string | null = null;
-let abortController: AbortController | null = null;
+let activeAbortController: AbortController | null = null;
 
 // Logit capture buffer — filled by LogitProcessor, read after each step
 let capturedLogits: Float32Array | null = null;
@@ -114,11 +132,60 @@ function decodeTopCandidates(
   }));
 }
 
+/**
+ * Proactively initializes WebGPU context and registers the device.lost event listener.
+ * Broadcasts ENGINE_ERROR and error status to the main thread upon VRAM exhaustion / context loss.
+ */
+export async function initializeWebGPUContext(): Promise<any> {
+  if (typeof navigator === 'undefined' || !(navigator as any).gpu) {
+    throw new Error('WebGPU is not supported on this browser.');
+  }
+
+  const adapter = await (navigator as any).gpu.requestAdapter();
+  if (!adapter) {
+    throw new Error('No appropriate GPU adapter found.');
+  }
+
+  const device = await adapter.requestDevice();
+
+  // 1. Trap the inevitable device loss event
+  device.lost.then((info: any) => {
+    const reasonStr = info?.reason ?? 'unknown';
+    const messageStr = info?.message ?? 'GPU device context dropped.';
+    console.error(`[WebGPUWorker] Device Lost: ${messageStr} (Reason: ${reasonStr})`);
+    
+    // 2. Broadcast the fatal error to the React main thread
+    post({
+      type: 'ENGINE_ERROR',
+      payload: {
+        code: 'WEBGPU_DEVICE_LOST',
+        message: `GPU context was lost (${reasonStr}): ${messageStr}. Please reload the application.`,
+      },
+    });
+
+    post({
+      type: 'STATUS',
+      status: 'error',
+      progress: 0,
+      text: `WebGPU Device Lost (${reasonStr}): ${messageStr}`,
+    });
+  });
+
+  return device;
+}
+
 // ─── Model Loading ──────────────────────────────────────────────────
 
 async function loadModel(modelId: string) {
   try {
     post({ type: 'STATUS', status: 'downloading', progress: 0, text: `Downloading ${modelId}...` });
+
+    // Initialize WebGPU context and register device.lost listeners
+    try {
+      await initializeWebGPUContext();
+    } catch (gpuErr) {
+      console.warn('[WebGPUWorker] initializeWebGPUContext notice:', gpuErr);
+    }
 
     // Always unload any previous engine instance cleanly
     if (engine) {
@@ -215,6 +282,77 @@ async function loadModel(modelId: string) {
   }
 }
 
+/**
+ * Executes chat completion with explicit stop sequence trapping and signal cancellation.
+ */
+export async function executeInferenceStep(
+  engineInstance: MLCEngine,
+  messages: ChatCompletionMessageParam[],
+  params: SamplingConfig,
+  onTokenChunk?: (chunk: string) => void
+) {
+  // 1. Abort any active in-flight generation task
+  if (activeAbortController) {
+    activeAbortController.abort();
+    activeAbortController = null;
+  }
+
+  // 2. Instantiate a fresh controller for the current session
+  activeAbortController = new AbortController();
+  const currentSignal = activeAbortController.signal;
+
+  try {
+    const response = await engineInstance.chat.completions.create({
+      messages,
+      temperature: params.temperature ?? 0.7,
+      top_p: params.top_p ?? 0.95,
+      max_tokens: params.max_tokens ?? 256,
+      frequency_penalty: params.frequency_penalty ?? 0.0,
+      presence_penalty: params.presence_penalty ?? 0.0,
+      logit_bias: params.logit_bias ?? {},
+      // Explicit ChatML delimiters to prevent runaway repetition loops
+      stop: [
+        "<|im_end|>",
+        "<|endoftext|>",
+        "<|im_start|>",
+        "\n<|im_start|>",
+        "\n<|im_end|>"
+      ],
+      stream: true,
+    });
+
+    let fullGeneratedText = "";
+
+    for await (const chunk of response) {
+      if (currentSignal.aborted) {
+        break;
+      }
+      const token = chunk.choices[0]?.delta?.content || "";
+      if (token) {
+        fullGeneratedText += token;
+        if (onTokenChunk) {
+          onTokenChunk(token);
+        }
+      }
+    }
+
+    return fullGeneratedText;
+  } catch (error: any) {
+    // Gracefully catch abort signals without emitting worker-level errors
+    if (error?.name === "AbortError" || currentSignal.aborted) {
+      console.info("[WebGPUWorker] In-flight inference cleanly cancelled.");
+      return null;
+    }
+    console.error("[WebGPUWorker] Inference execution error:", error);
+    throw error;
+  } finally {
+    // Release controller reference if this was the active task
+    if (activeAbortController?.signal === currentSignal) {
+      activeAbortController = null;
+    }
+  }
+}
+
 // ─── Full Logit Extraction (single forward pass) ────────────────────
 
 async function getFullLogits(messages: Array<{ role: string; content: string }>, systemPrompt?: string) {
@@ -222,6 +360,14 @@ async function getFullLogits(messages: Array<{ role: string; content: string }>,
     post({ type: 'ERROR', message: 'No model loaded' });
     return;
   }
+
+  // Abort any active in-flight task
+  if (activeAbortController) {
+    activeAbortController.abort();
+    activeAbortController = null;
+  }
+  activeAbortController = new AbortController();
+  const currentSignal = activeAbortController.signal;
 
   try {
     post({ type: 'STATUS', status: 'generating', progress: 0, text: 'Computing logits...' });
@@ -244,7 +390,14 @@ async function getFullLogits(messages: Array<{ role: string; content: string }>,
       temperature: 1.0, // Temperature doesn't affect raw logits, only sampling
       logprobs: true,
       top_logprobs: 5,
+      stop: CHATML_STOP_SEQUENCES,
     });
+
+    if (currentSignal.aborted) {
+      console.info('[WebGPUWorker] In-flight inference cleanly cancelled.');
+      post({ type: 'STATUS', status: 'ready', progress: 100, text: 'Computation cancelled' });
+      return;
+    }
 
     if (!capturedLogits) {
       post({ type: 'ERROR', message: 'LogitProcessor did not fire — no logits captured' });
@@ -281,10 +434,19 @@ async function getFullLogits(messages: Array<{ role: string; content: string }>,
       progress: 100,
       text: `Logits ready (${captured.length.toLocaleString()} tokens)`,
     });
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === 'AbortError' || currentSignal.aborted) {
+      console.info('[WebGPUWorker] In-flight inference cleanly cancelled.');
+      post({ type: 'STATUS', status: 'ready', progress: 100, text: 'Computation cancelled' });
+      return;
+    }
     const message = err instanceof Error ? err.message : String(err);
     post({ type: 'ERROR', message: `Logit extraction failed: ${message}` });
     post({ type: 'STATUS', status: 'error', progress: 0, text: message });
+  } finally {
+    if (activeAbortController?.signal === currentSignal) {
+      activeAbortController = null;
+    }
   }
 }
 
@@ -314,10 +476,19 @@ async function generateSteps(messages: Array<{ role: string; content: string }>,
     return;
   }
 
+  // 1. Abort any active in-flight generation task
+  if (activeAbortController) {
+    activeAbortController.abort();
+    activeAbortController = null;
+  }
+
+  // 2. Instantiate a fresh controller for the current session
+  activeAbortController = new AbortController();
+  const currentSignal = activeAbortController.signal;
+
   try {
     post({ type: 'STATUS', status: 'generating', progress: 0, text: 'Generating...' });
 
-    abortController = new AbortController();
     capturedStepIndex = 0;
     
     let isThinking = false;
@@ -335,19 +506,20 @@ async function generateSteps(messages: Array<{ role: string; content: string }>,
     let hasTruncated = false;
     let totalSteps = 0;
 
-    // Use streaming to capture logits at each step
+    // Use streaming to capture logits at each step with explicit stop sequences and signal
     let stream = await engine.chat.completions.create({
       messages: currentMessages as any,
       max_tokens: maxTokens,
       temperature: 1.0,
       logprobs: true,
       top_logprobs: 5,
+      stop: CHATML_STOP_SEQUENCES,
       stream: true,
     });
 
     while (true) {
       for await (const chunk of stream) {
-        if (abortController?.signal.aborted) break;
+        if (currentSignal.aborted) break;
 
         const delta = chunk.choices?.[0]?.delta?.content;
         if (delta && capturedLogits) {
@@ -357,7 +529,9 @@ async function generateSteps(messages: Array<{ role: string; content: string }>,
           // In-Worker Loop Detection
           const loop = checkRepetitionLoop(generatedTokens);
           if (loop) {
-            abortController?.abort();
+            if (activeAbortController) {
+              activeAbortController.abort();
+            }
             if (engine) {
               await engine.interruptGenerate();
               await engine.resetChat();
@@ -416,7 +590,7 @@ async function generateSteps(messages: Array<{ role: string; content: string }>,
         }
       }
       
-      if (abortController?.signal.aborted) break;
+      if (currentSignal.aborted) break;
       
       if (hasTruncated) {
           hasTruncated = false;
@@ -431,12 +605,13 @@ async function generateSteps(messages: Array<{ role: string; content: string }>,
           
           isThinking = false;
           stream = await engine.chat.completions.create({
-              messages: continuationMessages as any,
-              max_tokens: maxTokens - capturedStepIndex,
-              temperature: 1.0,
-              logprobs: true,
-              top_logprobs: 5,
-              stream: true,
+            messages: continuationMessages as any,
+            max_tokens: maxTokens - capturedStepIndex,
+            temperature: 1.0,
+            logprobs: true,
+            top_logprobs: 5,
+            stop: CHATML_STOP_SEQUENCES,
+            stream: true,
           });
           continue;
       }
@@ -444,10 +619,17 @@ async function generateSteps(messages: Array<{ role: string; content: string }>,
       break; // Generation completed normally
     }
 
+    if (currentSignal.aborted) {
+      console.info('[WebGPUWorker] In-flight inference cleanly cancelled.');
+      post({ type: 'STATUS', status: 'ready', progress: 100, text: 'Generation aborted' });
+      return;
+    }
+
     post({ type: 'GENERATION_COMPLETE', totalSteps });
     post({ type: 'STATUS', status: 'ready', progress: 100, text: 'Generation complete' });
-  } catch (err) {
-    if (abortController?.signal.aborted) {
+  } catch (err: any) {
+    if (err?.name === 'AbortError' || currentSignal.aborted) {
+      console.info('[WebGPUWorker] In-flight inference cleanly cancelled.');
       post({ type: 'STATUS', status: 'ready', progress: 100, text: 'Generation aborted' });
       return;
     }
@@ -455,7 +637,9 @@ async function generateSteps(messages: Array<{ role: string; content: string }>,
     post({ type: 'ERROR', message: `Generation failed: ${message}` });
     post({ type: 'STATUS', status: 'error', progress: 0, text: message });
   } finally {
-    abortController = null;
+    if (activeAbortController?.signal === currentSignal) {
+      activeAbortController = null;
+    }
   }
 }
 
@@ -493,7 +677,10 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
       break;
 
     case 'ABORT':
-      abortController?.abort();
+      if (activeAbortController) {
+        activeAbortController.abort();
+        activeAbortController = null;
+      }
       if (engine) {
         await engine.interruptGenerate();
         await engine.resetChat();
@@ -502,6 +689,10 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
       break;
 
     case 'UNLOAD':
+      if (activeAbortController) {
+        activeAbortController.abort();
+        activeAbortController = null;
+      }
       if (engine) {
         await engine.unload();
         engine = null;
@@ -511,4 +702,27 @@ self.onmessage = async (event: MessageEvent<WorkerInbound>) => {
       break;
   }
 };
+
+// ─── Global Error & WebGPU Rejection Traps ───────────────────────────
+
+self.addEventListener('unhandledrejection', (event) => {
+  const reason = (event as PromiseRejectionEvent).reason;
+  const msg = reason instanceof Error ? reason.message : String(reason);
+  if (msg.toLowerCase().includes('device lost') || msg.toLowerCase().includes('device is lost') || msg.toLowerCase().includes('webgpu')) {
+    console.error('[WebGPUWorker] Unhandled WebGPU rejection caught:', reason);
+    post({
+      type: 'ENGINE_ERROR',
+      payload: {
+        code: 'WEBGPU_DEVICE_LOST',
+        message: `GPU context was lost: ${msg}. Please reload the application.`,
+      },
+    });
+    post({
+      type: 'STATUS',
+      status: 'error',
+      progress: 0,
+      text: `WebGPU Device Error: ${msg}`,
+    });
+  }
+});
 

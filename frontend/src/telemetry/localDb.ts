@@ -28,14 +28,35 @@ export class LocalTelemetryClient {
     this.currentBatch = this.acquireBuffer();
     this.initWorker();
     this.requestDurableStorage();
-    
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          this.flush();
-        }
-      });
-    }
+    this.registerLifecycleListeners();
+  }
+
+  /**
+   * Binds the telemetry flush sequence to browser lifecycle events to guarantee
+   * zero data loss when the tab is backgrounded, suspended, or forcefully closed.
+   */
+  public registerLifecycleListeners(): void {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const safeFlush = () => {
+      // Only trigger if there are actual pending records in the buffer
+      if (this.currentRecordCount > 0) {
+        this.flush();
+      }
+    };
+
+    // 1. Primary Modern Standard: Triggers when tab is backgrounded or closed
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        safeFlush();
+      }
+    });
+
+    // 2. Secondary Mobile/Webkit Safeguard: Triggers on aggressive OS teardowns
+    window.addEventListener('pagehide', safeFlush);
+
+    // 3. Legacy Desktop Fallback
+    window.addEventListener('beforeunload', safeFlush);
   }
 
   /**

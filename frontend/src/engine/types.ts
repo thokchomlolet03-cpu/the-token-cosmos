@@ -70,6 +70,7 @@ export type WorkerOutbound =
   | { type: 'TOKEN_GENERATED'; tokenId: number; tokenStr: string; stepIndex: number }
   | { type: 'LOOP_ABORTED'; message: string; repeatedPhrase: string }
   | { type: 'GENERATION_COMPLETE'; totalSteps: number }
+  | { type: 'ENGINE_ERROR'; payload: { code: string; message: string } }
   | { type: 'ERROR'; message: string };
 
 // Transferable version of LogitSnapshot (ArrayBuffer instead of Float32Array)

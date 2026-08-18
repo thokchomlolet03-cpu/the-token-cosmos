@@ -86,6 +86,15 @@ export const LassoSelectionTool: React.FC<LassoSelectionToolProps> = ({
   // Keyboard Shift Listeners (Dynamically toggle pointer-events & lock camera)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      const isEditingText =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement?.getAttribute('contenteditable') === 'true' ||
+        ['INPUT', 'TEXTAREA'].includes(activeElement?.tagName || '');
+
+      if (isEditingText) return;
+
       if (e.key === 'Shift') {
         isShiftPressedRef.current = true;
         setIsInteractive(true);

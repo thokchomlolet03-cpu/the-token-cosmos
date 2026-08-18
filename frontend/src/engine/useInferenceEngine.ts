@@ -159,6 +159,15 @@ export function useInferenceEngine(): InferenceEngine {
           // State already updated by STATUS message
           break;
 
+        case 'ENGINE_ERROR':
+          setState(prev => ({
+            ...prev,
+            status: 'error',
+            error: msg.payload.message,
+            progressText: msg.payload.message,
+          }));
+          break;
+
         case 'ERROR':
           setState(prev => ({
             ...prev,
