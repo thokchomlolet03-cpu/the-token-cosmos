@@ -1563,8 +1563,8 @@
 <ul>
 <li><strong>Google Cloud Run Dashboard</strong>: Displays instance count, request volume, CPU/memory utilization, latency percentiles (p50, p95, p99), and container errors.</li>
 <li><strong>Log Explorer Query</strong>: Inspects runtime Python errors and HTTP request codes.
-  <div class="language-sql highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">resource</span><span class="p">.</span><span class="k">type</span><span class="o">=</span><span class="ss">&quot;cloud_run_revision&quot;</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">resource</span><span class="p">.</span><span class="n">labels</span><span class="p">.</span><span class="n">service_name</span><span class="o">=</span><span class="ss">&quot;the-token-cosmos&quot;</span>
+  <div class="language-sql highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">resource</span><span class="p">.</span><span class="k">type</span><span class="o">=</span><span class="ss">"cloud_run_revision"</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">resource</span><span class="p">.</span><span class="n">labels</span><span class="p">.</span><span class="n">service_name</span><span class="o">=</span><span class="ss">"the-token-cosmos"</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">severity</span><span class="o">&gt;=</span><span class="n">ERROR</span>
 </span></code></pre></div></li>
 </ul>
@@ -1660,9 +1660,9 @@
 <li><strong>Endpoint</strong>: <code>GET /api/health</code></li>
 <li><strong>Response Format</strong>:
   <div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;online&quot;</span><span class="p">,</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&quot;app&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;The Token Cosmos API&quot;</span><span class="p">,</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">&quot;engine&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;llama-cpp&quot;</span><span class="w"> </span><span class="c1">// or &quot;synthetic-cosmos-engine&quot;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"online"</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The Token Cosmos API"</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">"engine"</span><span class="p">:</span><span class="w"> </span><span class="s2">"llama-cpp"</span><span class="w"> </span><span class="c1">// or "synthetic-cosmos-engine"</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
 </span></code></pre></div>
 The uptime monitor (e.g. Google Cloud Monitoring Uptime Check) polls <code>/api/health</code> every 60 seconds to assert a <code>200 OK</code> status.</li>

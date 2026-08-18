@@ -1609,12 +1609,12 @@
 <h2 id="3-incident-response-playbook">3. Incident Response Playbook</h2>
 <p>Follow these steps when responding to an active outage:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    A[&quot;Outage Alert Triggered\n(p95 Latency / 5xx Errors)&quot;] --&gt; B[&quot;Step 1: Check health endpoint\n/api/health&quot;]
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    A["Outage Alert Triggered\n(p95 Latency / 5xx Errors)"] --&gt; B["Step 1: Check health endpoint\n/api/health"]
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    B --&gt; C{Endpoint responsive?}
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    C --&gt;|No| D[&quot;Step 2: Rollback revision\nto last stable tag&quot;]
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    C --&gt;|Yes| E[&quot;Step 3: Check browser logs\nfor WebGPU failures&quot;]
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    D --&gt; F[&quot;Step 4: Inspect Cloud Logs\n(main.py stacktrace)&quot;]
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    E --&gt; G[&quot;Step 5: File Hotfix PR&quot;]
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    C --&gt;|No| D["Step 2: Rollback revision\nto last stable tag"]
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    C --&gt;|Yes| E["Step 3: Check browser logs\nfor WebGPU failures"]
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    D --&gt; F["Step 4: Inspect Cloud Logs\n(main.py stacktrace)"]
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    E --&gt; G["Step 5: File Hotfix PR"]
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    F --&gt; G
 </span></code></pre></div>
 <ol>

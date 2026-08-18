@@ -1741,7 +1741,7 @@
 </span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">COPY</span><span class="w"> </span>backend/main.py<span class="w"> </span>./main.py
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>builder<span class="w"> </span>/app/frontend/dist<span class="w"> </span>./static
 </span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">EXPOSE</span><span class="w"> </span><span class="s">8080</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;sh&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;uvicorn main:app --host 0.0.0.0 --port ${PORT}&quot;</span><span class="p">]</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">"sh"</span><span class="p">,</span><span class="w"> </span><span class="s2">"-c"</span><span class="p">,</span><span class="w"> </span><span class="s2">"uvicorn main:app --host 0.0.0.0 --port ${PORT}"</span><span class="p">]</span>
 </span></code></pre></div>
 <hr />
 <h2 id="2-google-cloud-run-configuration">2. Google Cloud Run Configuration</h2>
@@ -1785,7 +1785,7 @@
 <ul>
 <li>Sets up Node.js 20 and runs <code>npm ci</code> and <code>npm run build</code> in the <code>/frontend</code> directory to ensure there are no compilation errors.</li>
 <li>Sets up Python 3.11 and runs unittest suite in the <code>/backend</code> directory:
-  <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>.<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;test_*.py&#39;</span>
+  <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>.<span class="w"> </span>-p<span class="w"> </span><span class="s1">'test_*.py'</span>
 </span></code></pre></div></li>
 </ul>
 <h3 id="2-deployment-stage">2. Deployment Stage</h3>
@@ -1818,12 +1818,12 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>gcloud<span class="w"> </span>artifacts<span class="w"> </span>repositories<span class="w"> </span>create<span class="w"> </span>cosmos-repo<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--repository-format<span class="o">=</span>docker<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--location<span class="o">=</span>us-central1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--description<span class="o">=</span><span class="s2">&quot;Docker Repository for The Token Cosmos&quot;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--description<span class="o">=</span><span class="s2">"Docker Repository for The Token Cosmos"</span>
 </span></code></pre></div></p>
 <h4 id="step-c-create-bigquery-telemetry-dataset">Step C: Create BigQuery Telemetry Dataset</h4>
 <p>Create a dataset to host telemetry tables, restricted to the <code>us-central1</code> region:
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>bq<span class="w"> </span>--location<span class="o">=</span>us-central1<span class="w"> </span>mk<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--description<span class="w"> </span><span class="s2">&quot;Telemetry performance data and friction analysis metrics&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--description<span class="w"> </span><span class="s2">"Telemetry performance data and friction analysis metrics"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>cosmos_telemetry
 </span></code></pre></div></p>
 <h4 id="step-d-create-partitioned-tables">Step D: Create Partitioned Tables</h4>

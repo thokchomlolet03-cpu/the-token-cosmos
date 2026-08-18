@@ -1509,7 +1509,7 @@ We use <code>npm ci</code> instead of <code>npm install</code> to ensure that pa
 <h2 id="5-running-automated-tests">5. Running Automated Tests</h2>
 <p>Before pushing code changes to your branch, verify that the backend tests pass successfully:</p>
 <p><div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">cd</span><span class="w"> </span>backend
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>.<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;test_*.py&#39;</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>.<span class="w"> </span>-p<span class="w"> </span><span class="s1">'test_*.py'</span>
 </span></code></pre></div>
 The CI/CD pipeline runs this exact command on every pull request.</p>
 
