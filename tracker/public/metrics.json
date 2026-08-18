@@ -1,0 +1,29 @@
+{
+  "dora": {
+    "deploymentFrequency": "0 / day",
+    "leadTimeForChanges": "N/A",
+    "changeFailureRate": "0%",
+    "timeToRestoreService": "N/A"
+  },
+  "space": {
+    "satisfaction": 94,
+    "activity": 130,
+    "efficiency": 88
+  },
+  "deployments": [],
+  "adrs": [
+    {
+      "id": "0001",
+      "title": "Edge-AI WebGPU Inference Architecture",
+      "status": "Approved",
+      "date": "2026-08-15"
+    },
+    {
+      "id": "0002",
+      "title": "SDLC Tracking via GitHub Actions",
+      "status": "Approved",
+      "date": "2026-08-18"
+    }
+  ],
+  "lastUpdated": "2026-08-18T05:03:36.202138+00:00"
+}

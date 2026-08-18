@@ -1,0 +1,58 @@
+name: SDLC Metrics Engine & Dashboard Deploy
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Run every hour
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'tracker/**'
+      - 'scripts/generate_sdlc_metrics.py'
+      - '.github/workflows/sdlc-engine.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate Static SDLC Metrics
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python scripts/generate_sdlc_metrics.py
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: tracker/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: tracker
+        run: npm ci
+
+      - name: Build Tracker Dashboard
+        working-directory: tracker
+        run: npm run build
+
+      - name: Deploy Tracker to GitHub Pages (Subfolder)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./tracker/dist
+          destination_dir: tracker
+          force_compile: true

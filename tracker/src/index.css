@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0f1115;
+  --foreground: #e2e8f0;
+  --card: #1a1d24;
+  --card-foreground: #e2e8f0;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --muted: #1f2937;
+  --muted-foreground: #9ca3af;
+  --border: #374151;
+  --accent: #10b981;
+  --destructive: #ef4444;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
