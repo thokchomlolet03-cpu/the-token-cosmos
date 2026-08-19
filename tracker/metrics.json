@@ -1,8 +1,8 @@
 {
   "dora": {
-    "deploymentFrequency": "6 / week",
+    "deploymentFrequency": "9 / week",
     "leadTimeForChanges": "45 mins",
-    "changeFailureRate": "80.0%",
+    "changeFailureRate": "70.0%",
     "timeToRestoreService": "12 mins"
   },
   "space": {
@@ -11,6 +11,27 @@
     "efficiency": 88
   },
   "deployments": [
+    {
+      "id": "32202047009",
+      "sha": "b6f2d84",
+      "status": "success",
+      "timestamp": "2026-08-19T00:39:08Z",
+      "duration": "0m 50s"
+    },
+    {
+      "id": "32201510353",
+      "sha": "a836394",
+      "status": "success",
+      "timestamp": "2026-08-19T00:30:34Z",
+      "duration": "0m 51s"
+    },
+    {
+      "id": "32200447235",
+      "sha": "6b41cbc",
+      "status": "success",
+      "timestamp": "2026-08-19T00:14:10Z",
+      "duration": "1m 4s"
+    },
     {
       "id": "32107889208",
       "sha": "94bb346",
@@ -59,27 +80,6 @@
       "status": "failure",
       "timestamp": "2026-08-18T05:16:49Z",
       "duration": "0m 53s"
-    },
-    {
-      "id": "32101826360",
-      "sha": "a7b3d46",
-      "status": "failure",
-      "timestamp": "2026-08-18T05:09:59Z",
-      "duration": "1m 16s"
-    },
-    {
-      "id": "32099208019",
-      "sha": "351860c",
-      "status": "failure",
-      "timestamp": "2026-08-18T04:27:23Z",
-      "duration": "1m 7s"
-    },
-    {
-      "id": "32096190857",
-      "sha": "5028aa1",
-      "status": "failure",
-      "timestamp": "2026-08-18T03:38:14Z",
-      "duration": "0m 59s"
     }
   ],
   "adrs": [
@@ -96,5 +96,5 @@
       "date": "2026-08-18"
     }
   ],
-  "lastUpdated": "2026-08-18T23:20:53.586029+00:00"
+  "lastUpdated": "2026-08-19T01:12:14.463252+00:00"
 }
