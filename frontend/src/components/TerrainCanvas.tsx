@@ -114,6 +114,8 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
     setScreenCentroid(centroid);
   };
 
+  const [is2DView, setIs2DView] = useState<boolean>(false);
+
   const handleCameraLockChange = (locked: boolean) => {
     if (controlsRef.current) {
       controlsRef.current.enabled = !locked;
@@ -123,6 +125,31 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
   const handleResetCamera = () => {
     if (cameraRef.current && controlsRef.current) {
       cameraRef.current.position.set(0, 160, 260);
+      controlsRef.current.target.set(0, 0, 0);
+      controlsRef.current.update();
+      setIs2DView(false);
+    }
+  };
+
+  const handleToggle2DView = () => {
+    if (cameraRef.current && controlsRef.current) {
+      if (!is2DView) {
+        cameraRef.current.position.set(0, 340, 0.001);
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+        setIs2DView(true);
+      } else {
+        cameraRef.current.position.set(0, 160, 260);
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+        setIs2DView(false);
+      }
+    }
+  };
+
+  const handleResetNorth = () => {
+    if (cameraRef.current && controlsRef.current) {
+      cameraRef.current.position.set(0, is2DView ? 340 : 160, is2DView ? 0.001 : 260);
       controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.update();
     }
@@ -999,6 +1026,9 @@ export const TerrainCanvas: React.FC<TerrainCanvasProps> = ({
           persona={persona}
           temperature={_params.temperature || 1.0}
           minP={_params.minP || 0.05}
+          is2DView={is2DView}
+          onToggle2DView={handleToggle2DView}
+          onResetNorth={handleResetNorth}
           onToggleLasso={() => setIsLassoActive(!isLassoActive)}
           onResetCamera={handleResetCamera}
           onToggleFullscreen={handleToggleFullscreen}

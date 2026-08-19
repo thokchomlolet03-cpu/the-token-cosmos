@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Github, Layers, BookOpen, Orbit, Settings, Share2, Check, Swords, Code2, GraduationCap } from 'lucide-react';
+import { Sparkles, Github, Layers, BookOpen, Compass, Settings, Share2, Check, Swords, Code2, GraduationCap } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'learn' | 'experiment' | 'labs' | 'export';
@@ -33,24 +33,24 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#1c1c21]/95 border-b border-white/5 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full bg-[#0f172a]/95 border-b border-white/10 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:flex-nowrap sm:px-6 sm:py-3">
         {/* Brand logo & title */}
         <div className="flex min-w-0 flex-1 items-center space-x-3 sm:flex-none">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 border border-blue-500/30">
-            <Orbit className="h-4 w-4 text-blue-400" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 border border-sky-500/30">
+            <Compass className="h-4 w-4 text-sky-400" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="whitespace-nowrap text-base font-bold text-white sm:text-xl">
                 The Token Cosmos
               </h1>
-              <span className="hidden rounded-full border border-cyan-500/30 bg-cyan-500/20 px-2.5 py-0.5 font-mono text-[10px] text-cyan-300 sm:inline">
-                v5.0
+              <span className="hidden rounded-full border border-sky-500/30 bg-sky-500/20 px-2.5 py-0.5 font-mono text-[10px] text-sky-300 sm:inline">
+                Atlas v6.0
               </span>
             </div>
-            <p className="text-xs text-gray-400 hidden sm:block">
-              Enterprise X-Ray & Spatial Telemetry for LLM Sampling
+            <p className="text-xs text-slate-400 hidden sm:block">
+              Latent Space Navigation Atlas & Cartographic LLM Visualizer
             </p>
           </div>
         </div>

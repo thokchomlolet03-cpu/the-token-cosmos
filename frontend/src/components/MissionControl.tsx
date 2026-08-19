@@ -579,7 +579,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                   <div className="flex justify-between text-xs">
                     <label htmlFor="temp-slider" className="font-semibold text-gray-200 flex items-center space-x-1">
                       <Flame className="h-3.5 w-3.5 text-amber-400" />
-                      <span>Creativity vs. Focus (Temperature)</span>
+                      <span>Thermal Weather (Temperature)</span>
                     </label>
                     <span className="font-mono font-bold text-amber-400">{params.temperature.toFixed(2)}</span>
                   </div>
@@ -602,17 +602,17 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                     {params.temperature <= 0.3 ? (
                       <span className="rounded-md bg-blue-500/15 text-blue-300 border border-blue-500/30 px-2 py-0.5 text-[10px] font-mono font-bold flex items-center space-x-1">
                         <ShieldCheck className="h-3 w-3 text-blue-400" />
-                        <span>Factual Precision (Legal / Code) ❄️</span>
+                        <span>Glacial Needle (Deterministic Spires) ❄️</span>
                       </span>
                     ) : params.temperature > 0.9 ? (
                       <span className="rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 px-2 py-0.5 text-[10px] font-mono font-bold flex items-center space-x-1">
                         <Flame className="h-3 w-3 text-rose-400" />
-                        <span>Creative Chaos (Brainstorm / Fiction) 🔥</span>
+                        <span>Volcanic Melting (Thermal Erosion / Drift) 🔥</span>
                       </span>
                     ) : (
                       <span className="rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 text-[10px] font-mono font-medium flex items-center space-x-1">
                         <Zap className="h-3 w-3 text-cyan-400" />
-                        <span>Balanced Reasoning (General QA) ⚡</span>
+                        <span>Temperate Climate (Balanced Mountain Peaks) ⚡</span>
                       </span>
                     )}
                   </div>
@@ -621,7 +621,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                 {/* Top-K Slider */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <label htmlFor="topk-slider" className="font-semibold text-gray-200">Word Limit (Top-K)</label>
+                    <label htmlFor="topk-slider" className="font-semibold text-gray-200">Municipal Boundary (Top-K Geofence)</label>
                     <span className="font-mono font-bold text-blue-400">{params.topK}</span>
                   </div>
                   <input
@@ -647,7 +647,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                 {/* Top-P Slider */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <label htmlFor="topp-slider" className="font-semibold text-gray-200">Confidence Cutoff (Top-P)</label>
+                    <label htmlFor="topp-slider" className="font-semibold text-gray-200">Probability Horizon (Top-P Mass)</label>
                     <span className="font-mono font-bold text-blue-400">{(params.topP * 100).toFixed(0)}%</span>
                   </div>
                   <input
@@ -673,7 +673,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                 {/* Min-P Slider */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <label htmlFor="minp-slider" className="font-semibold text-gray-200">Ignore Wild Guesses (Min-P)</label>
+                    <label htmlFor="minp-slider" className="font-semibold text-gray-200">Ocean Sea Level (Min-P Floodgate)</label>
                     <span className="font-mono font-bold text-blue-400">{(params.minP * 100).toFixed(1)}%</span>
                   </div>
                   <input
@@ -692,7 +692,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                     className="w-full"
                   />
                   <p className="text-[10px] text-gray-400 font-mono">
-                    Waterline flood cutoff. Discards tokens with probability below P% of the top candidate.
+                    Waterline flood cutoff. Submerges foothill tokens with probability below P% of the top peak.
                   </p>
                 </div>
               </div>
@@ -716,7 +716,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
             {/* Frequency Penalty */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <label htmlFor="freq-penalty-slider" className="font-semibold text-gray-200">Exhaustion Meter (Frequency Penalty)</label>
+                <label htmlFor="freq-penalty-slider" className="font-semibold text-gray-200">Terrain Erosion (Frequency Penalty)</label>
                 <span className="font-mono font-bold text-purple-400">{params.frequencyPenalty.toFixed(2)}</span>
               </div>
               <input
@@ -735,14 +735,14 @@ export const MissionControl: React.FC<MissionControlProps> = ({
                 className="w-full"
               />
               <p className="text-[10px] text-gray-400 font-mono">
-                Penalizes tokens proportionally to their exact count in history. Breaks repetitive phrase loops.
+                Penalizes tokens proportionally to their count in history. Breaks repetitive phrase vortex loops.
               </p>
             </div>
 
             {/* Presence Penalty */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <label htmlFor="presence-penalty-slider" className="font-semibold text-gray-200">Horizon Booster (Presence Penalty)</label>
+                <label htmlFor="presence-penalty-slider" className="font-semibold text-gray-200">Cross-Continental Exploration (Presence Penalty)</label>
                 <span className="font-mono font-bold text-purple-400">{params.presencePenalty.toFixed(2)}</span>
               </div>
               <input

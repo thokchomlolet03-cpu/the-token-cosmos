@@ -94,7 +94,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = () => {
               </div>
             </div>
             <p className="text-[11px] text-gray-300 leading-relaxed">
-              <strong className="text-white">LLMs compute a probability galaxy</strong> of 50,000+ vocabulary candidates for every single word. Tune Temperature, Top-K, and RAG to force factual certainty or spark creative leaps!
+              <strong className="text-white">LLMs navigate a vast latent continent</strong> of 50,000+ vocabulary candidates for every single word. Tune Thermal Weather (Temperature), Ocean Sea Level (Min-P), and RAG Lighthouses to force factual certainty or explore creative pathways!
             </p>
           </div>
         </div>
