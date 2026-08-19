@@ -1396,14 +1396,22 @@
 <p>We decided to implement a <strong>hybrid client-first execution model</strong>:
 - <strong>Primary Engine</strong>: Runs full model inference (SmolLM2, Qwen2.5) directly inside the user's browser using <strong>WebGPU</strong> via the <code>@mlc-ai/web-llm</code> framework, offloaded to a background WebWorker thread.
 - <strong>Fail-safe Engine</strong>: Falls back to a stateless, CPU-based FastAPI server hosted on Google Cloud Run configured to scale to zero instances ($0.00 idle cost), which serves synthetic or cached logits when WebGPU is not supported by the client browser.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>                  EDGE-AI ARCHITECTURE CRITERIA
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>      DEDICATED CLOUD GPU                  LOCAL CLIENT WEBGPU
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  ┌─────────────────────────┐         ┌─────────────────────────┐
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  │ ❌ $150+/month constant  │         │  ✅ $0.00 infrastructure│
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  │ ❌ Network Latency Jitter│    vs   │  ✅ Real-time VRAM access│
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  │ ❌ Prompts sent to cloud│         │  ✅ Prompts stay in web │
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  └─────────────────────────┘         └─────────────────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph Comparison["Architecture Decision Evaluation"]
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        subgraph CloudGPU["❌ Dedicated Cloud GPU (EC2 / Replicate)"]
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>            direction TB
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>            C1["❌ $150+/month continuous cost"]
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>            C2["❌ Network latency &amp;amp; jitter"]
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>            C3["❌ Prompts sent to external cloud"]
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        end
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        subgraph EdgeWebGPU["✅ Local Client WebGPU (@mlc-ai/web-llm)"]
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>            direction TB
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>            E1["✅ $0.00 scale-to-zero infrastructure"]
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>            E2["✅ Real-time 60 FPS VRAM access"]
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>            E3["✅ Prompts stay in private browser tab"]
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        end
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    end
 </span></code></pre></div>
 <h2 id="consequences">Consequences</h2>
 <ul>

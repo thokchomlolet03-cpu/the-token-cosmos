@@ -1584,23 +1584,10 @@
 <hr />
 <h2 id="2-database-downtime-resilience">2. Database Downtime &amp; Resilience</h2>
 <p>Many applications suffer catastrophic failures when their relational databases (PostgreSQL, MySQL) fail or experience high latency. </p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>            RESILIENT STATELESS FALLBACK METAPHOR
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>   ┌───────────────────────────────────────────────────────┐
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>   │                  CLIENT REQUEST                       │
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>   └───────────────────────────────────────────────────────┘
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>                               |
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>                               v
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>   ┌───────────────────────────────────────────────────────┐
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>   │             CHECK GGUF MODEL / ENGINE                 │
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>   └───────────────────────────────────────────────────────┘
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>            |                               |
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    (Model Loaded)                  (Model Fails/Missing)
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>            v                               v
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>   ┌─────────────────┐             ┌───────────────────────┐
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>   │ Llama.cpp Engine│             │ Synthetic Fallback    │
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>   │  Returns Logits │             │   (Always Online)     │
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>   └─────────────────┘             └───────────────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    Req("Client Request") --&gt; Check{"Check GGUF Model / Engine"}
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    Check -- "Model Loaded" --&gt; Llama["Llama.cpp Engine&lt;br/&gt;(Returns Logits)"]
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    Check -- "Model Fails / Missing" --&gt; Synth["Synthetic Fallback&lt;br/&gt;(Always Online)"]
 </span></code></pre></div>
 <p>The Token Cosmos mitigates database issues via its <strong>stateless architectural design</strong>:
 - <strong>No Transactional Database</strong>: The system operates without an attached database, making it immune to connection pool saturation, deadlocks, and data loss.

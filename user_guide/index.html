@@ -1537,15 +1537,15 @@
 <hr />
 <h2 id="1-mission-control-adjusting-llm-sampling-parameters">1. Mission Control: Adjusting LLM Sampling Parameters</h2>
 <p>The sidebar panel, <strong>Mission Control</strong>, allows you to customize the mathematical filters that dictate how the model chooses the next token.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>+───────────────────────────────────────────────────────────+
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>|                    MISSION CONTROL                        |
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>+───────────────────────────────────────────────────────────+
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>|  [===o=======]  Temperature (0.00 - 2.00)                 |
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>|  [=======o===]  Top-K (1 - 100)                           |
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>|  [=========o─]  Top-P (0.00 - 1.00)                       |
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>|  [=o─────────]  Min-P (0.00 - 1.00)                       |
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>|  [───o───────]  Presence &amp; Frequency Penalties            |
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>+───────────────────────────────────────────────────────────+
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph MissionControl["MISSION CONTROL SAMPLING CONTROLS"]
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction TB
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        T["Temperature (0.00 - 2.00)&lt;br/&gt;Controls output randomness"]
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        TK["Top-K (1 - 100)&lt;br/&gt;Hard vocabulary cutoff"]
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        TP["Top-P (0.00 - 1.00)&lt;br/&gt;Nucleus cumulative probability"]
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        MP["Min-P (0.00 - 1.00)&lt;br/&gt;Relative confidence threshold"]
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        P["Penalties&lt;br/&gt;Presence &amp;amp; Frequency modifiers"]
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
 </span></code></pre></div>
 <h3 id="parameter-explanations-practical-advice">Parameter Explanations &amp; Practical Advice</h3>
 <ul>
@@ -1566,12 +1566,14 @@
 <hr />
 <h2 id="2-interpreting-the-3d-particle-starfield-semantic-terrain">2. Interpreting the 3D Particle Starfield &amp; Semantic Terrain</h2>
 <p>The main viewport renders vocabulary tokens as celestial bodies mapping the model's inner thoughts.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>       3D CELESTIAL METAPHOR DEFINITIONS
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>      ☼   Supergiant Star = High-probability candidate (&gt;40%)
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>      *   Asteroid        = Low-probability candidate (&lt;1%)
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>      ─── Cyan Laser      = RAG Grounding factual anchor
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>      ═══ Constellation   = Generated sentence flight path
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart LR
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph Metaphors["3D CELESTIAL METAPHOR DEFINITIONS"]
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        direction TB
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        Star["☼ Supergiant Star"] --- StarDesc["High-probability candidate (&amp;gt;40%)"]
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        Ast["* Asteroid"] --- AstDesc["Low-probability candidate (&amp;lt;1%)"]
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        Laser["Cyan Laser Beam"] --- LaserDesc["RAG Grounding factual anchor"]
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        Const["Orbital Constellation"] --- ConstDesc["Generated sentence flight path"]
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    end
 </span></code></pre></div>
 <h3 id="navigating-the-viewports">Navigating the Viewports</h3>
 <ul>

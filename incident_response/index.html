@@ -1536,18 +1536,11 @@
 <hr />
 <h2 id="2-operational-response-phases-sev1-protocol">2. Operational Response Phases (Sev1 Protocol)</h2>
 <p>When a Sev1 incident is triggered by PagerDuty alerts, the team enters the following incident lifecycle:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>                  INCIDENT RESPONSE LIFECYCLE
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  │ 1. TRIAGE    │ ───&gt; │ 2. CONTAIN   │ ───&gt; │ 3. RECOVER   │
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  │ - Assign IC  │      │ - Rollback   │      │ - Apply Fix  │
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  └──────────────┘      │ - Isolate API│      └──────────────┘
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                        └──────────────┘             │
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                                                     v
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  ┌──────────────┐                             ┌──────────────┐
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  │ Post-Mortem  │ &lt;────────────────────────── │ 4. VERIFY    │
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  │  (48 Hours)  │                             │ - Telemetry  │
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  └──────────────┘                             └──────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart LR
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Triage["1. TRIAGE&lt;br/&gt;• Assign IC&lt;br/&gt;• Verify Uptime"] --&gt; Contain["2. CONTAIN&lt;br/&gt;• Rollback Revision&lt;br/&gt;• Isolate Model"]
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    Contain --&gt; Recover["3. RECOVER&lt;br/&gt;• Analyze Logs&lt;br/&gt;• Deploy Hotfix"]
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Recover --&gt; Verify["4. VERIFY&lt;br/&gt;• Check Telemetry&lt;br/&gt;• Assert 200 OK"]
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    Verify --&gt; PostMortem["5. POST-MORTEM&lt;br/&gt;(Within 48 Hours)"]
 </span></code></pre></div>
 <h3 id="phase-a-triage-identification">Phase A: Triage &amp; Identification</h3>
 <ol>

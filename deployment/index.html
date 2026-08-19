@@ -1768,18 +1768,12 @@
 <hr />
 <h2 id="3-github-actions-cicd-pipeline-deployyml">3. GitHub Actions CI/CD Pipeline (<code>deploy.yml</code>)</h2>
 <p>The deployment process is completely automated. When a developer pushes code to <code>main</code> or <code>master</code>, GitHub Actions performs verification checks and deploys the container.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>                  CI/CD DEPLOYMENT WORKFLOW
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a> ┌──────────────┐      ┌────────────────┐      ┌─────────────────┐
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a> │ Push to main │ ───&gt; │ Verify Stage   │ ───&gt; │ OIDC Google     │
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a> │    Branch    │      │ - Build React  │      │ Authentication  │
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a> └──────────────┘      │ - Run PyTests  │      └─────────────────┘
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>                       └────────────────┘               |
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>                                                        v
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a> ┌──────────────┐      ┌────────────────┐      ┌─────────────────┐
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a> │ Deploy to    │ &lt;─── │ Push Image     │ &lt;─── │ Build Container │
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a> │  Cloud Run   │      │ (Artifact Reg) │      │  (Dockerfile)   │
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a> └──────────────┘      └────────────────┘      └─────────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart LR
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    Push["Push to main Branch"] --&gt; Verify["Verify Stage&lt;br/&gt;• Build React&lt;br/&gt;• Run PyTests"]
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    Verify --&gt; OIDC["OIDC Google Authentication"]
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    OIDC --&gt; Build["Build Container&lt;br/&gt;(Dockerfile)"]
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    Build --&gt; PushImg["Push Image&lt;br/&gt;(Artifact Registry)"]
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    PushImg --&gt; Deploy["Deploy to Cloud Run"]
 </span></code></pre></div>
 <h3 id="1-verification-stage">1. Verification Stage</h3>
 <ul>

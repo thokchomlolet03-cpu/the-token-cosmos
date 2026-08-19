@@ -1697,13 +1697,9 @@ The configuration uses <code>allow_credentials=False</code> because the wild-car
 <hr />
 <h2 id="5-secrets-credentials-management-strategy">5. Secrets &amp; Credentials Management Strategy</h2>
 <p>To prevent credential leakage and comply with enterprise security auditing, The Token Cosmos implements a strict <strong>Zero-Key Policy</strong>.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>                   SECRET INGESTION FLOW
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>   Local Workspace          GitHub Actions          GCP Runtime (Production)
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>   ┌───────────────┐       ┌───────────────┐       ┌────────────────────────┐
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>   │ pre-commit    │ ────&gt; │ detect-secrets│ ────&gt; │ GCP Secret Manager     │
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>   │ secrets check │       │  action run   │       │ (Mounted via IAM role) │
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>   └───────────────┘       └───────────────┘       └────────────────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart LR
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    Local["Local Workspace&lt;br/&gt;• pre-commit secrets check"] --&gt; CI["GitHub Actions&lt;br/&gt;• detect-secrets / gitleaks"]
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    CI --&gt; GCP["GCP Runtime (Production)&lt;br/&gt;• GCP Secret Manager&lt;br/&gt;(Mounted via IAM role)"]
 </span></code></pre></div>
 <h3 id="1-automated-detection-pre-commit-ci">1. Automated Detection (Pre-Commit &amp; CI)</h3>
 <ul>

@@ -1525,18 +1525,10 @@
 <hr />
 <h2 id="1-overview-architecture">1. Overview &amp; Architecture</h2>
 <p><code>cosmos-lint</code> acts as an automated prompt linter for software engineering teams. It evaluates prompt candidates locally against mathematical sampling metrics without sending prompt text to third-party cloud APIs.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>                         CLI WORKFLOW ARCHITECTURE
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  ┌───────────────────────┐      ┌─────────────────────────┐      ┌─────────────────────────┐
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  │ Local Prompt Input    │ ───&gt; │ Statistical Friction    │ ───&gt; │ Colorized Terminal      │
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  │ (prompts.json / stdin)│      │ Math Engine (σ-drops)   │      │ Report &amp; JSON / CSV     │
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  └───────────────────────┘      └─────────────────────────┘      └─────────────────────────┘
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                                              |
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                                              v (Optional Anonymized Batch Relay)
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>                                 ┌─────────────────────────┐
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>                                 │ Cloud Run Gateway       │
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>                                 │ (BigQuery 90-day TTL)   │
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>                                 └─────────────────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Input["Local Prompt Input&lt;br/&gt;(prompts.json / stdin)"] --&gt; Engine["Statistical Friction&lt;br/&gt;Math Engine (σ-drops)"]
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    Engine --&gt; Output["Colorized Terminal&lt;br/&gt;Report &amp;amp; JSON / CSV"]
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Engine -. "Optional Anonymized Batch Relay" .-&gt; CloudRun["Cloud Run Gateway&lt;br/&gt;(BigQuery 90-day TTL)"]
 </span></code></pre></div>
 <hr />
 <h2 id="2-execution-tiers-performance-characteristics">2. Execution Tiers &amp; Performance Characteristics</h2>
