@@ -1069,7 +1069,7 @@
   <a href="#temperature-t" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Temperature ($T$)
+        Temperature (\(T\))
       
     </span>
   </a>
@@ -1485,7 +1485,7 @@
   <a href="#temperature-t" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Temperature ($T$)
+        Temperature (\(T\))
       
     </span>
   </a>
@@ -1637,18 +1637,18 @@
 <h3 id="logit">Logit</h3>
 <p>The raw, unnormalized prediction score output by the final linear layer of a Transformer model for each token in the vocabulary. Logits range from negative infinity to positive infinity; higher values indicate that the model believes that token is a more likely continuation.</p>
 <h3 id="softmax">Softmax</h3>
-<p>The mathematical activation function that maps raw logits $z$ to a probability distribution $P$ where all values are between 0 and 1, and sum up to 1.0:
-$$P(x_i) = \frac{e^{z_i}}{\sum_j e^{z_j}}$$</p>
-<h3 id="temperature-t">Temperature ($T$)</h3>
-<p>A scaling factor applied to logits before the Softmax function: $z_i' = z_i / T$. 
+<p>The mathematical activation function that maps raw logits <span class="arithmatex">\(z\)</span> to a probability distribution <span class="arithmatex">\(P\)</span> where all values are between 0 and 1, and sum up to 1.0:</p>
+<div class="arithmatex">\[P(x_i) = \frac{e^{z_i}}{\sum_j e^{z_j}}\]</div>
+<h3 id="temperature-t">Temperature (<span class="arithmatex">\(T\)</span>)</h3>
+<p>A scaling factor applied to logits before the Softmax function: <span class="arithmatex">\(z_i' = z_i / T\)</span>. 
 - Higher values flatten the probability distribution, making outputs more diverse but less coherent.
 - Lower values sharpen the distribution around the top choice, making outputs more predictable.</p>
 <h3 id="top-k">Top-K</h3>
-<p>A sampling filter that restricts selection to the $K$ candidates with the highest probabilities. For example, if $K=50$, only the top 50 tokens are evaluated, and all others are ignored.</p>
+<p>A sampling filter that restricts selection to the <span class="arithmatex">\(K\)</span> candidates with the highest probabilities. For example, if <span class="arithmatex">\(K=50\)</span>, only the top 50 tokens are evaluated, and all others are ignored.</p>
 <h3 id="top-p-nucleus-sampling">Top-P (Nucleus Sampling)</h3>
-<p>A sampling filter that selects the smallest set of tokens whose cumulative probability exceeds the threshold $P$. If $P=0.90$, the candidate list is restricted to the top tokens that together represent 90% of the probability weight.</p>
+<p>A sampling filter that selects the smallest set of tokens whose cumulative probability exceeds the threshold <span class="arithmatex">\(P\)</span>. If <span class="arithmatex">\(P=0.90\)</span>, the candidate list is restricted to the top tokens that together represent 90% of the probability weight.</p>
 <h3 id="min-p">Min-P</h3>
-<p>A relative probability threshold filter. It discards tokens whose probability is less than a fraction $p$ of the highest token's probability ($P_{\max}$). If $P_{\max} = 0.60$ and Min-P is set to $0.05$, only tokens with probabilities $\ge 0.03$ are kept.</p>
+<p>A relative probability threshold filter. It discards tokens whose probability is less than a fraction <span class="arithmatex">\(p\)</span> of the highest token's probability (<span class="arithmatex">\(P_{\max}\)</span>). If <span class="arithmatex">\(P_{\max} = 0.60\)</span> and Min-P is set to <span class="arithmatex">\(0.05\)</span>, only tokens with probabilities <span class="arithmatex">\(\ge 0.03\)</span> are kept.</p>
 <h3 id="entropy-bits">Entropy (bits)</h3>
 <p>A measurement of the randomness or uncertainty in the token probability distribution. Higher entropy indicates the model is unsure of the next word (many candidates are equally likely); low entropy indicates the model is highly confident (one or two candidates dominate).</p>
 <hr />
@@ -1660,7 +1660,7 @@ $$P(x_i) = \frac{e^{z_i}}{\sum_j e^{z_j}}$$</p>
 <h3 id="rag-retrieval-augmented-generation">RAG (Retrieval-Augmented Generation)</h3>
 <p>An architectural pattern where relevant external documents/context are retrieved and appended to the model's prompt. In the visualizer, RAG grounding is shown as glowing laser lines pulling fact-backed tokens to the center orbit.</p>
 <h3 id="kv-cache-key-value-cache">KV-Cache (Key-Value Cache)</h3>
-<p>A memory optimization used during autoregressive generation. Instead of recalculating key and value vectors for all previous tokens in transformer self-attention blocks, these vectors are cached in memory, reducing processing times from $O(N^2)$ to $O(N)$ per generated token.</p>
+<p>A memory optimization used during autoregressive generation. Instead of recalculating key and value vectors for all previous tokens in transformer self-attention blocks, these vectors are cached in memory, reducing processing times from <span class="arithmatex">\(O(N^2)\)</span> to <span class="arithmatex">\(O(N)\)</span> per generated token.</p>
 <h3 id="umap-uniform-manifold-approximation-and-projection">UMAP (Uniform Manifold Approximation and Projection)</h3>
 <p>A non-linear dimension reduction technique. In this application, it is used to compress high-dimensional token embeddings (typically 1024+ dimensions) into 2D coordinates so they can be plotted on the canvas as a semantic map.</p>
 
@@ -1716,6 +1716,10 @@ $$P(x_i) = \frac{e^{z_i}}{\sum_j e^{z_j}}$$</p>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

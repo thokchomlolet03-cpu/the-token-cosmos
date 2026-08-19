@@ -1517,7 +1517,7 @@
 <li><code>Min-P</code>: <code>0.00</code></li>
 <li><code>Frequency Penalty</code>: <code>0.00</code></li>
 <li><code>Presence Penalty</code>: <code>0.00</code></li>
-<li><strong>Objective</strong>: Eliminate repeated 4-gram token sequences by raising the Frequency Penalty ($\ge 0.4$) and Min-P ($\ge 0.05$).</li>
+<li><strong>Objective</strong>: Eliminate repeated 4-gram token sequences by raising the Frequency Penalty (<span class="arithmatex">\(\ge 0.4\)</span>) and Min-P (<span class="arithmatex">\(\ge 0.05\)</span>).</li>
 <li><strong>Verification Rule</strong>: Output buffer contains zero repetitive 4-gram sequences.</li>
 <li><strong>Worker Safeguard</strong>: If an endless loop is generated, the WebWorker in-thread cycle detector automatically interrupts the engine via <code>engine.interruptGenerate()</code> and cleanly flushes the KV cache via <code>engine.resetChat()</code>.</li>
 </ul>
@@ -1531,8 +1531,8 @@
 <li><code>Temperature</code>: <code>1.30</code></li>
 <li><code>Top-P</code>: <code>0.98</code></li>
 <li><code>Min-P</code>: <code>0.00</code></li>
-<li><strong>Objective</strong>: Lower Temperature ($\le 0.50$) and raise Min-P ($\ge 0.08$) until context grounding overlap exceeds $70\%$.</li>
-<li><strong>Verification Rule</strong>: Grounding overlap ratio $\ge 70\%$ against the Tier 2 Verification Policy document.</li>
+<li><strong>Objective</strong>: Lower Temperature (<span class="arithmatex">\(\le 0.50\)</span>) and raise Min-P (<span class="arithmatex">\(\ge 0.08\)</span>) until context grounding overlap exceeds <span class="arithmatex">\(70\%\)</span>.</li>
+<li><strong>Verification Rule</strong>: Grounding overlap ratio <span class="arithmatex">\(\ge 70\%\)</span> against the Tier 2 Verification Policy document.</li>
 <li><strong>Visual Cue</strong>: Observe the cyan laser beams connecting candidate tokens directly to the retrieved RAG context.</li>
 </ul>
 <hr />
@@ -1545,8 +1545,8 @@
 <li><code>Temperature</code>: <code>1.40</code></li>
 <li><code>Top-P</code>: <code>0.99</code></li>
 <li><code>Min-P</code>: <code>0.00</code></li>
-<li><strong>Objective</strong>: Compress entropy ($\text{Avg } H &lt; 0.6 \text{ bits}$) by setting near-greedy sampling ($T \le 0.30$) to guarantee deterministic schema syntax.</li>
-<li><strong>Verification Rule</strong>: Average Shannon Entropy $\le 0.6$ bits across generated tokens.</li>
+<li><strong>Objective</strong>: Compress entropy (<span class="arithmatex">\(\text{Avg } H &lt; 0.6 \text{ bits}\)</span>) by setting near-greedy sampling (<span class="arithmatex">\(T \le 0.30\)</span>) to guarantee deterministic schema syntax.</li>
+<li><strong>Verification Rule</strong>: Average Shannon Entropy <span class="arithmatex">\(\le 0.6\)</span> bits across generated tokens.</li>
 </ul>
 <hr />
 <h3 id="lab-4-the-cognitive-orbit-x-ray">Lab 4: The Cognitive Orbit X-Ray</h3>
@@ -1561,13 +1561,17 @@
 <h2 id="3-programmatic-evaluation-engine">3. Programmatic Evaluation Engine</h2>
 <p>The lab verification engine (<a href="file:///Users/lolet/The%20Token%20Cosmos/frontend/src/components/InteractiveLabs/useLabVerifier.ts">useLabVerifier.ts</a>) performs real-time mathematical validation against the token stream:</p>
 <ol>
-<li><strong>Repetition N-Gram Check</strong>:
-   $$\text{RepeatCount} = \sum_{i} \mathbb{I}(\text{token}<em>{i:i+n} == \text{token}</em>{j:j+n})$$</li>
-<li><strong>Grounding Ratio</strong>:
-   $$\text{GroundingRatio} = \frac{|\text{Tokens} \cap \text{RAG Context Words}|}{|\text{Total Generated Tokens}|}$$</li>
-<li><strong>Shannon Entropy</strong>:
-   $$H = -\sum_{k} p_k \log_2(p_k)$$</li>
+<li><strong>Repetition N-Gram Check</strong>:</li>
 </ol>
+<p>$<span class="arithmatex">\(\text{RepeatCount} = \sum_{i} \mathbb{I}(\text{token}_{i:i+n} == \text{token}_{j:j+n})\)</span>$</p>
+<ol>
+<li><strong>Grounding Ratio</strong>:</li>
+</ol>
+<p>$<span class="arithmatex">\(\text{GroundingRatio} = \frac{|\text{Tokens} \cap \text{RAG Context Words}|}{|\text{Total Generated Tokens}|}\)</span>$</p>
+<ol>
+<li><strong>Shannon Entropy</strong>:</li>
+</ol>
+<p>$<span class="arithmatex">\(H = -\sum_{k} p_k \log_2(p_k)\)</span>$</p>
 <hr />
 <h2 id="4-local-offline-operation">4. Local &amp; Offline Operation</h2>
 <p>All interactive labs run <strong>100% client-side</strong> using <code>@mlc-ai/web-llm</code> over local WebGPU or synthetic mathematical fallbacks. Zero user prompt data or telemetry leaves the local browser environment.</p>
@@ -1624,6 +1628,10 @@
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

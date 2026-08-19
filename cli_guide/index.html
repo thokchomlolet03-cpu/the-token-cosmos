@@ -1555,22 +1555,22 @@
 <tr>
 <td style="text-align: left;"><strong>Statistical Linter</strong></td>
 <td style="text-align: left;">Pure Mathematical Vector Engine</td>
-<td style="text-align: center;">$&lt; 50\text{ ms}$</td>
-<td style="text-align: center;">$0\text{ MB}$</td>
+<td style="text-align: center;"><span class="arithmatex">\(&lt; 50\text{ ms}\)</span></td>
+<td style="text-align: center;"><span class="arithmatex">\(0\text{ MB}\)</span></td>
 <td style="text-align: left;">Fast pre-commit hooks, CI/CD prompt regression tests, and local parameter linting.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Standalone Deno Binary</strong></td>
 <td style="text-align: left;">Deno V8 / WebGPU Native Engine</td>
 <td style="text-align: center;">Sub-second</td>
-<td style="text-align: center;">$0-180\text{ MB}$</td>
+<td style="text-align: center;"><span class="arithmatex">\(0-180\text{ MB}\)</span></td>
 <td style="text-align: left;">Single-binary air-gapped terminal deployment (<code>deno compile --unstable-webgpu</code>).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Neural Web Studio</strong></td>
 <td style="text-align: left;"><code>@mlc-ai/web-llm</code> WebWorker</td>
-<td style="text-align: center;">$1.5 - 3.0\text{ s}$</td>
-<td style="text-align: center;">$180 - 950\text{ MB}$</td>
+<td style="text-align: center;"><span class="arithmatex">\(1.5 - 3.0\text{ s}\)</span></td>
+<td style="text-align: center;"><span class="arithmatex">\(180 - 950\text{ MB}\)</span></td>
 <td style="text-align: left;">Interactive 3D celestial starfield visualizer and real-time prompt steering.</td>
 </tr>
 </tbody>
@@ -1670,14 +1670,18 @@
 <h2 id="5-mathematical-friction-engine">5. Mathematical Friction Engine</h2>
 <p><code>cosmos-lint</code> analyzes the transition drop between consecutive token logits:</p>
 <ol>
-<li><strong>Consecutive Logit Drop ($D_i$)</strong>:
-   $$D_i = \max(0, \text{logit}_{i-1} - \text{logit}_i)$$</li>
-<li><strong>Standard Deviation ($\sigma_D$)</strong>:
-   $$\sigma_D = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (D_i - \mu_D)^2}$$</li>
-<li><strong>$\sigma$-Distance Anomaly Score</strong>:
-   $$\text{Score}_i = \frac{D_i - \mu_D}{\sigma_D}$$</li>
+<li><strong>Consecutive Logit Drop (<span class="arithmatex">\(D_i\)</span>)</strong>:</li>
 </ol>
-<p>Tokens exhibiting an anomaly score $\text{Score}_i &gt; 2.5\sigma$ or Shannon entropy $H &gt; 2.5\text{ bits}$ are flagged with actionable remediation recommendations (e.g. tightening Min-P or raising Frequency Penalties).</p>
+<p>$<span class="arithmatex">\(D_i = \max(0, \text{logit}_{i-1} - \text{logit}_i)\)</span>$</p>
+<ol>
+<li><strong>Standard Deviation (<span class="arithmatex">\(\sigma_D\)</span>)</strong>:</li>
+</ol>
+<p>$<span class="arithmatex">\(\sigma_D = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (D_i - \mu_D)^2}\)</span>$</p>
+<ol>
+<li><strong><span class="arithmatex">\(\sigma\)</span>-Distance Anomaly Score</strong>:</li>
+</ol>
+<p>$<span class="arithmatex">\(\text{Score}_i = \frac{D_i - \mu_D}{\sigma_D}\)</span>$</p>
+<p>Tokens exhibiting an anomaly score <span class="arithmatex">\(\text{Score}_i &gt; 2.5\sigma\)</span> or Shannon entropy <span class="arithmatex">\(H &gt; 2.5\text{ bits}\)</span> are flagged with actionable remediation recommendations (e.g. tightening Min-P or raising Frequency Penalties).</p>
 <hr />
 <h2 id="6-headless-cicd-operation">6. Headless &amp; CI/CD Operation</h2>
 <p>For automated execution in GitHub Actions, GitLab CI, or headless WSL2 environments where interactive graphical keyrings are unavailable:</p>
@@ -1740,6 +1744,10 @@
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

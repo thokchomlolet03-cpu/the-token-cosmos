@@ -1691,8 +1691,8 @@
 <p>The <strong>Friction Hunter</strong> is a diagnostic bridge that analyzes the logical flow of text sequences. It monitors points where the mathematical transition probability drops abruptly between consecutive phrases. This pipeline, including the client-side buffers and the BigQuery synchronization script backend, was deployed in <strong>August 2026</strong> alongside the version <code>v4.1.0</code> release.</p>
 <h3 id="ingestion-flow-buffering">Ingestion Flow &amp; Buffering</h3>
 <ol>
-<li><strong>Calculation</strong>: The client-side logic calculates consecutive log-probability differences $D_i$ at 60 FPS.</li>
-<li><strong>Detection</strong>: Friction points are flagged if $D_i$ exceeds the $\sigma$-based sensitivity threshold (formula: $D_i &gt; \mu + \theta_\sigma \times \sigma \times 0.5$).</li>
+<li><strong>Calculation</strong>: The client-side logic calculates consecutive log-probability differences <span class="arithmatex">\(D_i\)</span> at 60 FPS.</li>
+<li><strong>Detection</strong>: Friction points are flagged if <span class="arithmatex">\(D_i\)</span> exceeds the <span class="arithmatex">\(\sigma\)</span>-based sensitivity threshold (formula: <span class="arithmatex">\(D_i &gt; \mu + \theta_\sigma \times \sigma \times 0.5\)</span>).</li>
 <li><strong>Buffering</strong>: To prevent spamming HTTP connections, the client buffers these events in memory. When the buffer reaches 5 events, or the user navigates away, the client streams the payload via <code>POST /api/telemetry/friction</code>.</li>
 <li><strong>Backend Routing</strong>: FastAPI receives the JSON payload, validates it, and streams the events into BigQuery.</li>
 </ol>
@@ -1735,7 +1735,7 @@
 <td style="text-align: left;"><code>log_prob_drop</code></td>
 <td style="text-align: center;"><code>FLOAT</code></td>
 <td style="text-align: center;">Required</td>
-<td style="text-align: left;">The logit difference $D_i$.</td>
+<td style="text-align: left;">The logit difference <span class="arithmatex">\(D_i\)</span>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>previous_log_prob</code></td>
@@ -1820,6 +1820,10 @@
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

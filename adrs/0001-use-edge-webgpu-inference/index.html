@@ -1389,7 +1389,7 @@
 <p>Approved</p>
 <h2 id="context">Context</h2>
 <p>Exposing Large Language Model (LLM) logits for real-time visualization requires executing transformer forward passes. The traditional approach of running a GPU-enabled backend server (e.g. AWS EC2 with NVIDIA T4/A10G, or hosted serverless APIs like Replicate) introduces significant complications:
-1. <strong>High Infrastructure Cost</strong>: Dedicated GPU nodes run continuously and bill $150-$500/month even when idle.
+1. <strong>High Infrastructure Cost</strong>: Dedicated GPU nodes run continuously and bill <span class="arithmatex">\(150-\)</span>500/month even when idle.
 2. <strong>Network Latency &amp; Jitter</strong>: Fetching logits over the network on every token generation step introduces latency and ruins the 60 FPS slider responsiveness.
 3. <strong>Data Security</strong>: Sending proprietary or private prompts to external third-party servers raises data privacy and compliance risks for enterprise customers.</p>
 <h2 id="decision">Decision</h2>
@@ -1468,6 +1468,10 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

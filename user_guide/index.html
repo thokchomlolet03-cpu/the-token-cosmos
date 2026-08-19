@@ -1549,16 +1549,16 @@
 </span></code></pre></div>
 <h3 id="parameter-explanations-practical-advice">Parameter Explanations &amp; Practical Advice</h3>
 <ul>
-<li><strong>Temperature ($T$)</strong>: Controls the randomness of the model's output.</li>
-<li><em>Setting to $\le 0.1$</em>: Generates extremely deterministic, predictable text (Greedy sampling). Useful for coding and structured data.</li>
-<li><em>Setting to $0.7 - 0.9$</em>: Standard balance of creativity and coherence.</li>
-<li><em>Setting to $&gt; 1.2$</em>: Increases creativity and randomness. High temperatures can lead to grammatical breakdown and hallucination.</li>
+<li><strong>Temperature (<span class="arithmatex">\(T\)</span>)</strong>: Controls the randomness of the model's output.</li>
+<li><em>Setting to <span class="arithmatex">\(\le 0.1\)</span></em>: Generates extremely deterministic, predictable text (Greedy sampling). Useful for coding and structured data.</li>
+<li><em>Setting to <span class="arithmatex">\(0.7 - 0.9\)</span></em>: Standard balance of creativity and coherence.</li>
+<li><em>Setting to <span class="arithmatex">\(&gt; 1.2\)</span></em>: Increases creativity and randomness. High temperatures can lead to grammatical breakdown and hallucination.</li>
 <li><strong>Top-K</strong>: Caps the number of candidate tokens to evaluate.</li>
 <li><em>Example</em>: Setting Top-K to 50 means only the 50 highest probability tokens are considered for selection, and the other 49,000+ vocabulary tokens are discarded.</li>
 <li><strong>Top-P (Nucleus)</strong>: Discards candidate tokens dynamically based on their cumulative probability.</li>
 <li><em>Example</em>: Setting Top-P to 0.90 keeps the smallest subset of tokens whose summed probabilities equal or exceed 90%. If the model is confident in 2 tokens, only those 2 are kept; if it is confused, 100 tokens might be kept.</li>
 <li><strong>Min-P (Relative Thresholding)</strong>: Filters out tokens whose probability is lower than a percentage of the highest token's probability.</li>
-<li><em>Example</em>: Setting Min-P to 0.05 and if the top token has a probability of 60% ($0.60$), any token with a probability below $0.05 \times 0.60 = 3\%$ ($0.03$) is discarded. Min-P is highly recommended over Top-P because it preserves vocabulary diversity when the model is uncertain, yet truncates noise when the model is confident.</li>
+<li><em>Example</em>: Setting Min-P to 0.05 and if the top token has a probability of 60% (<span class="arithmatex">\(0.60\)</span>), any token with a probability below <span class="arithmatex">\(0.05 \times 0.60 = 3\%\)</span> (<span class="arithmatex">\(0.03\)</span>) is discarded. Min-P is highly recommended over Top-P because it preserves vocabulary diversity when the model is uncertain, yet truncates noise when the model is confident.</li>
 <li><strong>Penalties</strong>:</li>
 <li><em>Presence Penalty</em>: Deducts a flat score from a token's logit if it has already appeared in the generated text. Prevents repetition.</li>
 <li><em>Frequency Penalty</em>: Deducts a score proportional to the absolute count of a token's occurrences. Forces the model to use wider vocabulary.</li>
@@ -1685,6 +1685,10 @@
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>
