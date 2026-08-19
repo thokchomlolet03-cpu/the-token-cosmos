@@ -89,10 +89,15 @@ deno task compile
 `cosmos-lint` analyzes the transition drop between consecutive token logits:
 
 1. **Consecutive Logit Drop ($D_i$)**:
+
    $$D_i = \max(0, \text{logit}_{i-1} - \text{logit}_i)$$
+
 2. **Standard Deviation ($\sigma_D$)**:
+
    $$\sigma_D = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (D_i - \mu_D)^2}$$
+
 3. **$\sigma$-Distance Anomaly Score**:
+
    $$\text{Score}_i = \frac{D_i - \mu_D}{\sigma_D}$$
 
 Tokens exhibiting an anomaly score $\text{Score}_i > 2.5\sigma$ or Shannon entropy $H > 2.5\text{ bits}$ are flagged with actionable remediation recommendations (e.g. tightening Min-P or raising Frequency Penalties).

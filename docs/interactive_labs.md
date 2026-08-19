@@ -85,10 +85,15 @@ Each lab presents:
 The lab verification engine ([useLabVerifier.ts](file:///Users/lolet/The%20Token%20Cosmos/frontend/src/components/InteractiveLabs/useLabVerifier.ts)) performs real-time mathematical validation against the token stream:
 
 1. **Repetition N-Gram Check**:
+
    $$\text{RepeatCount} = \sum_{i} \mathbb{I}(\text{token}_{i:i+n} == \text{token}_{j:j+n})$$
+
 2. **Grounding Ratio**:
+
    $$\text{GroundingRatio} = \frac{|\text{Tokens} \cap \text{RAG Context Words}|}{|\text{Total Generated Tokens}|}$$
+
 3. **Shannon Entropy**:
+
    $$H = -\sum_{k} p_k \log_2(p_k)$$
 
 ---

@@ -11,6 +11,7 @@ The raw, unnormalized prediction score output by the final linear layer of a Tra
 
 ### Softmax
 The mathematical activation function that maps raw logits $z$ to a probability distribution $P$ where all values are between 0 and 1, and sum up to 1.0:
+
 $$P(x_i) = \frac{e^{z_i}}{\sum_j e^{z_j}}$$
 
 ### Temperature ($T$)

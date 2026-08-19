@@ -62,14 +62,18 @@ The client math pipeline runs in browser memory at 60 FPS, updating the visual p
 
 ### Step 1: Logit Bias & Penalties
 We modify the raw logits $z_i$ received from the model based on user-defined biases and penalties:
+
 $$z_i' = z_i + \text{bias}_i - (\text{presence\_penalty} \times p(x_i) + \text{frequency\_penalty} \times c(x_i))$$
+
 - $\text{bias}_i$ is the Logit Bias added to token $i$.
 - $p(x_i) \in \{0, 1\}$ indicates if token $i$ is present in the historical output.
 - $c(x_i)$ is the frequency count of token $i$ in the output.
 
 ### Step 2: Temperature Scaling & Softmax
 To convert scaled logits into probabilities, we use a **Numerically Stable Softmax** with the **Log-Sum-Exp Trick** to avoid overflow/underflow errors in JavaScript:
+
 $$P(x_i) = \frac{\exp\left(\frac{z_i' - z_{\max}}{T}\right)}{\sum_j \exp\left(\frac{z_j' - z_{\max}}{T}\right)}$$
+
 - $T$ is the Temperature parameter.
 - $z_{\max} = \max_j(z_j')$ is subtracted from each logit to keep exponents $\le 0$.
 - **Greedy Fallback**: If $T \le 0.01$, we bypass the softmax and set the highest logit token to $1.0$ (100%), setting all others to $0.0$.
