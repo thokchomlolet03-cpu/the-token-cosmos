@@ -153,6 +153,14 @@ export async function initializeWebGPUContext(): Promise<any> {
     const reasonStr = info?.reason ?? 'unknown';
     const messageStr = info?.message ?? 'GPU device context dropped.';
     console.error(`[WebGPUWorker] Device Lost: ${messageStr} (Reason: ${reasonStr})`);
+
+    // Cleanly tear down engine state to prevent re-entry on a dead GPU context
+    engine = null;
+    currentModelId = null;
+    if (activeAbortController) {
+      activeAbortController.abort();
+      activeAbortController = null;
+    }
     
     // 2. Broadcast the fatal error to the React main thread
     post({
@@ -383,6 +391,12 @@ async function getFullLogits(messages: Array<{ role: string; content: string }>,
     currentMessages.push({ role: 'system', content: sysPrompt });
     currentMessages.push(...messages);
 
+    // Defensive sanitization: WebLLM requires the last message to be 'user' or 'tool'
+    const lastMsg = currentMessages[currentMessages.length - 1];
+    if (lastMsg && lastMsg.role === 'assistant') {
+      currentMessages.push({ role: 'user', content: 'Continue.' });
+    }
+
     // Single-token generation to capture the logit distribution for the NEXT token
     const response = await engine.chat.completions.create({
       messages: currentMessages as any,
@@ -502,6 +516,12 @@ async function generateSteps(messages: Array<{ role: string; content: string }>,
       : 'You are a precise AI assistant. Complete user requests directly and concisely.';
     currentMessages.push({ role: 'system', content: sysPrompt });
     currentMessages.push(...messages);
+
+    // Defensive sanitization: WebLLM requires the last message to be 'user' or 'tool'
+    const lastMsg = currentMessages[currentMessages.length - 1];
+    if (lastMsg && lastMsg.role === 'assistant') {
+      currentMessages.push({ role: 'user', content: 'Continue.' });
+    }
 
     let hasTruncated = false;
     let totalSteps = 0;

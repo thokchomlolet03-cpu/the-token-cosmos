@@ -331,6 +331,8 @@ export const App: React.FC = () => {
         const activeSteps = historyStepsOverride || [];
         if (activeSteps.length > 0) {
             messages.push({ role: 'assistant', content: activeSteps.map(s => s.selectedToken.token_str).join('') });
+            // Satisfy WebLLM / OpenAI ChatML constraint: last message must be user or tool
+            messages.push({ role: 'user', content: 'Continue from where you left off.' });
         }
         
         const isReasoning = inferenceEngine.availableModels.find(m => m.id === inferenceEngine.state.modelId)?.isReasoning;
@@ -344,7 +346,8 @@ export const App: React.FC = () => {
             inferenceEngine.getLogits(messages, systemPrompt);
         }
         setDataSource(`Local WebGPU - ${inferenceEngine.state.modelId}`);
-        return;
+        // NOTE: Do NOT return early — let control flow reach the outer finally block
+        // so that isFetchingLogits is properly cleared via the status sync below.
       }
 
       // Route 2: BYOE external API
@@ -380,6 +383,8 @@ export const App: React.FC = () => {
         const activeSteps = historyStepsOverride || [];
         if (activeSteps.length > 0) {
             messages.push({ role: 'assistant', content: activeSteps.map(s => s.selectedToken.token_str).join('') });
+            // Satisfy OpenAI ChatML constraint: last message must be user or tool
+            messages.push({ role: 'user', content: 'Continue from where you left off.' });
         }
 
         const bodyPayload = {
