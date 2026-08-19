@@ -20,19 +20,12 @@ Incidents are classified into three severity tiers to allocate engineering resou
 
 When a Sev1 incident is triggered by PagerDuty alerts, the team enters the following incident lifecycle:
 
-```
-                  INCIDENT RESPONSE LIFECYCLE
-                  
-  ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-  │ 1. TRIAGE    │ ───> │ 2. CONTAIN   │ ───> │ 3. RECOVER   │
-  │ - Assign IC  │      │ - Rollback   │      │ - Apply Fix  │
-  └──────────────┘      │ - Isolate API│      └──────────────┘
-                        └──────────────┘             │
-                                                     v
-  ┌──────────────┐                             ┌──────────────┐
-  │ Post-Mortem  │ <────────────────────────── │ 4. VERIFY    │
-  │  (48 Hours)  │                             │ - Telemetry  │
-  └──────────────┘                             └──────────────┘
+```mermaid
+flowchart LR
+    Triage["1. TRIAGE<br/>• Assign IC<br/>• Verify Uptime"] --> Contain["2. CONTAIN<br/>• Rollback Revision<br/>• Isolate Model"]
+    Contain --> Recover["3. RECOVER<br/>• Analyze Logs<br/>• Deploy Hotfix"]
+    Recover --> Verify["4. VERIFY<br/>• Check Telemetry<br/>• Assert 200 OK"]
+    Verify --> PostMortem["5. POST-MORTEM<br/>(Within 48 Hours)"]
 ```
 
 ### Phase A: Triage & Identification

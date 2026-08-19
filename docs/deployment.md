@@ -71,19 +71,13 @@ gcloud run deploy the-token-cosmos \
 
 The deployment process is completely automated. When a developer pushes code to `main` or `master`, GitHub Actions performs verification checks and deploys the container.
 
-```
-                  CI/CD DEPLOYMENT WORKFLOW
-                  
- ┌──────────────┐      ┌────────────────┐      ┌─────────────────┐
- │ Push to main │ ───> │ Verify Stage   │ ───> │ OIDC Google     │
- │    Branch    │      │ - Build React  │      │ Authentication  │
- └──────────────┘      │ - Run PyTests  │      └─────────────────┘
-                       └────────────────┘               |
-                                                        v
- ┌──────────────┐      ┌────────────────┐      ┌─────────────────┐
- │ Deploy to    │ <─── │ Push Image     │ <─── │ Build Container │
- │  Cloud Run   │      │ (Artifact Reg) │      │  (Dockerfile)   │
- └──────────────┘      └────────────────┘      └─────────────────┘
+```mermaid
+flowchart LR
+    Push["Push to main Branch"] --> Verify["Verify Stage<br/>• Build React<br/>• Run PyTests"]
+    Verify --> OIDC["OIDC Google Authentication"]
+    OIDC --> Build["Build Container<br/>(Dockerfile)"]
+    Build --> PushImg["Push Image<br/>(Artifact Registry)"]
+    PushImg --> Deploy["Deploy to Cloud Run"]
 ```
 
 ### 1. Verification Stage

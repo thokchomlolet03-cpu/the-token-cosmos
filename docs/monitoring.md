@@ -71,25 +71,14 @@ The uptime monitor (e.g. Google Cloud Monitoring Uptime Check) polls `/api/healt
 
 To ensure client-side WebGPU failures or backend uncaught exceptions do not go unnoticed, The Token Cosmos implements an automated runtime error tracking and alert dispatching flow.
 
-```
-                     ERROR AGGREGATION & ALERTS
-                     
-   Client / Browser Errors             Backend API Errors
-   (WebGPU Crash, Device Lost)         (500 Exceptions, OOM)
-              │                                  │
-              ▼                                  ▼
-   ┌─────────────────────────────────────────────────────────┐
-   │         Sentry / GCP Error Ingestion Gateway            │
-   └─────────────────────────────────────────────────────────┘
-                                │
-               ┌────────────────┴────────────────┐
-               ▼                                 ▼
-       [P1: Critical Outage]             [P2: Degradation]
-      (Healthcheck failure)             (WebGPU OOM > 10%)
-               │                                 │
-               ▼                                 ▼
-         PagerDuty Alert                    Slack Alert
-      (SLA: Ack < 15 mins)            (#cosmos-degradation)
+```mermaid
+flowchart TD
+    Client["Client / Browser Errors<br/>(WebGPU Crash, Device Lost)"] --> Gateway["Sentry / GCP Error Ingestion Gateway"]
+    Backend["Backend API Errors<br/>(500 Exceptions, OOM)"] --> Gateway
+    Gateway --> P1["P1: Critical Outage<br/>(Healthcheck failure)"]
+    Gateway --> P2["P2: Degradation<br/>(WebGPU OOM &gt; 10%)"]
+    P1 --> PagerDuty["PagerDuty Alert<br/>(SLA: Ack &lt; 15 mins)"]
+    P2 --> Slack["Slack Alert<br/>(#cosmos-degradation)"]
 ```
 
 ### 1. Client & Server Error Aggregation

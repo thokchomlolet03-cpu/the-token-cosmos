@@ -40,23 +40,17 @@ To ensure operational excellence and clear communication across the team, this m
 
 When issues arise in production or during deployment, follow this escalation protocol:
 
-```
-                      ESCALATION WORKFLOW
-                      
-  ┌────────────────────────┐      ┌────────────────────────┐
-  │  Deploy / Infrastructure │ ───> │ DevOps / Cloud Architect│
-  │        Failure         │      │     (DO Escapes)       │
-  └────────────────────────┘      └────────────────────────┘
-  
-  ┌────────────────────────┐      ┌────────────────────────┐
-  │  WebGPU / Math Logic   │ ───> │  Principal AI Engineer │
-  │        Anomaly         │      │      (AIE Escapes)     │
-  └────────────────────────┘      └────────────────────────┘
-  
-  ┌────────────────────────┐      ┌────────────────────────┐
-  │  UI Layout / Slider    │ ───> │   Frontend Developer   │
-  │        Glitch          │      │     (FED Escapes)      │
-  └────────────────────────┘      └────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph DeployFailure["Infrastructure Issues"]
+        D1["Deploy / Infrastructure Failure"] --> D2["DevOps / Cloud Architect<br/>(DO Escapes)"]
+    end
+    subgraph MathAnomaly["Inference & Math Issues"]
+        M1["WebGPU / Math Logic Anomaly"] --> M2["Principal AI Engineer<br/>(AIE Escapes)"]
+    end
+    subgraph UIGlitch["Interface Issues"]
+        U1["UI Layout / Slider Glitch"] --> U2["Frontend Developer<br/>(FED Escapes)"]
+    end
 ```
 
 - **Build/Deployment Failures**: Direct immediately to **DevOps (DO)**.

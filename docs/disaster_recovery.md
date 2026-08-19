@@ -37,24 +37,11 @@ You can instantly route all traffic back to a previous revision.
 
 Many applications suffer catastrophic failures when their relational databases (PostgreSQL, MySQL) fail or experience high latency. 
 
-```
-            RESILIENT STATELESS FALLBACK METAPHOR
-            
-   ┌───────────────────────────────────────────────────────┐
-   │                  CLIENT REQUEST                       │
-   └───────────────────────────────────────────────────────┘
-                               |
-                               v
-   ┌───────────────────────────────────────────────────────┐
-   │             CHECK GGUF MODEL / ENGINE                 │
-   └───────────────────────────────────────────────────────┘
-            |                               |
-    (Model Loaded)                  (Model Fails/Missing)
-            v                               v
-   ┌─────────────────┐             ┌───────────────────────┐
-   │ Llama.cpp Engine│             │ Synthetic Fallback    │
-   │  Returns Logits │             │   (Always Online)     │
-   └─────────────────┘             └───────────────────────┘
+```mermaid
+flowchart TD
+    Req("Client Request") --> Check{"Check GGUF Model / Engine"}
+    Check -- "Model Loaded" --> Llama["Llama.cpp Engine<br/>(Returns Logits)"]
+    Check -- "Model Fails / Missing" --> Synth["Synthetic Fallback<br/>(Always Online)"]
 ```
 
 The Token Cosmos mitigates database issues via its **stateless architectural design**:

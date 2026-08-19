@@ -14,14 +14,11 @@ Each lab presents:
 3. **The 3D Celestial X-Ray**: Visualizing the token distribution, entropy manifold, and RAG grounding lasers in real time.
 4. **Programmatic Assertion Rules**: Automated verification checking if the output buffer meets strict quantitative quality criteria.
 
-```
-                          LAB SOLVING WORKFLOW
-                          
-   1. Select Challenge        2. Observe Malfunction        3. Calibrate Sampling        4. Programmatic Pass
-  ┌───────────────────┐      ┌─────────────────────┐       ┌────────────────────┐       ┌──────────────────┐
-  │ Lab Briefing &    │ ───> │ Broken Prompt Emits │ ────> │ Adjust Min-P, Temp,│ ────> │ Output satisfies │
-  │ Target Objective  │      │ Loops/Hallucinations│       │ Freq/Pres Penalties│       │ Assertion Rules  │
-  └───────────────────┘      └─────────────────────┘       └────────────────────┘       └──────────────────┘
+```mermaid
+flowchart LR
+    Step1["1. Select Challenge<br/>• Lab Briefing<br/>• Target Objective"] --> Step2["2. Observe Malfunction<br/>• Broken Prompt Emits<br/>• Loops / Hallucinations"]
+    Step2 --> Step3["3. Calibrate Sampling<br/>• Adjust Min-P, Temp<br/>• Freq / Pres Penalties"]
+    Step3 --> Step4["4. Programmatic Pass<br/>• Output satisfies<br/>• Assertion Rules"]
 ```
 
 ---

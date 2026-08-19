@@ -8,19 +8,11 @@
 
 `cosmos-lint` acts as an automated prompt linter for software engineering teams. It evaluates prompt candidates locally against mathematical sampling metrics without sending prompt text to third-party cloud APIs.
 
-```
-                         CLI WORKFLOW ARCHITECTURE
-                         
-  ┌───────────────────────┐      ┌─────────────────────────┐      ┌─────────────────────────┐
-  │ Local Prompt Input    │ ───> │ Statistical Friction    │ ───> │ Colorized Terminal      │
-  │ (prompts.json / stdin)│      │ Math Engine (σ-drops)   │      │ Report & JSON / CSV     │
-  └───────────────────────┘      └─────────────────────────┘      └─────────────────────────┘
-                                              |
-                                              v (Optional Anonymized Batch Relay)
-                                 ┌─────────────────────────┐
-                                 │ Cloud Run Gateway       │
-                                 │ (BigQuery 90-day TTL)   │
-                                 └─────────────────────────┘
+```mermaid
+flowchart TD
+    Input["Local Prompt Input<br/>(prompts.json / stdin)"] --> Engine["Statistical Friction<br/>Math Engine (σ-drops)"]
+    Engine --> Output["Colorized Terminal<br/>Report &amp; JSON / CSV"]
+    Engine -. "Optional Anonymized Batch Relay" .-> CloudRun["Cloud Run Gateway<br/>(BigQuery 90-day TTL)"]
 ```
 
 ---

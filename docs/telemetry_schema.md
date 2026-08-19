@@ -8,16 +8,11 @@ This document outlines the data schemas, retention guidelines, and service authe
 
 To track model performance and parameter configurations across various clients, the system is designed to stream anonymized usage data to **Google Cloud BigQuery** in real-time.
 
-```
-                  TELEMETRY PIPELINE DESIGN
-                  
-   ┌───────────────────┐        ┌──────────────────┐        ┌─────────────────┐
-   │ Client Telemetry  │ ────-> │   FastAPI Host   │ ────-> │  Google Cloud   │
-   │ (VRAM, Speed, UI) │        │ (Metadata Service│        │    BigQuery     │
-   └───────────────────┘        └──────────────────┘        └─────────────────┘
-                                         |
-                                         v
-                                  (PII Stripped)
+```mermaid
+flowchart LR
+    Client["Client Telemetry<br/>(VRAM, Speed, UI)"] --> Host["FastAPI Host<br/>(Metadata Service)"]
+    Host --> BigQuery["Google Cloud BigQuery<br/>(cosmos_telemetry)"]
+    Host -. "PII &amp; Prompts Stripped" .-> Sec["Zero-Egress Security Gate"]
 ```
 
 > [!IMPORTANT]

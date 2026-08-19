@@ -32,18 +32,14 @@ The Token Cosmos supports execution of several pre-trained open weights LLMs. De
 
 Enterprise security audits require assurance that proprietary prompts (source code, contract agreements, customer data) are not leaked to external servers.
 
-```
-       LOCAL EDGE-AI PRIVACY METAPHOR (No Network Leak)
-       
-   ┌───────────────────────────────────────────────┐
-   │             USER WEB BROWSER                  │
-   │  [User Prompts] ---> [Local VRAM Execution]    │
-   │                          |                    │
-   │                  (Processed Locally)          │
-   │                          v                    │
-   │                  [Generated Tokens]           │
-   └───────────────────────────────────────────────┘
-          ❌ No prompts sent to external servers!
+```mermaid
+flowchart TD
+    subgraph Browser["USER WEB BROWSER (Isolated Client Sandbox)"]
+        direction LR
+        Prompt["User Prompts"] --> VRAM["Local VRAM Execution<br/>(@mlc-ai/web-llm)"]
+        VRAM --> Tokens["Generated Tokens &amp; Logits"]
+    end
+    Browser -. "Zero Network Egress" .-> Blocked["❌ Third-Party Servers Blocked"]
 ```
 
 ### Data Isolation Guarantees

@@ -73,14 +73,10 @@ To ensure security vulnerabilities are caught early, the repository integrates t
 
 To prevent credential leakage and comply with enterprise security auditing, The Token Cosmos implements a strict **Zero-Key Policy**.
 
-```
-                   SECRET INGESTION FLOW
-                   
-   Local Workspace          GitHub Actions          GCP Runtime (Production)
-   ┌───────────────┐       ┌───────────────┐       ┌────────────────────────┐
-   │ pre-commit    │ ────> │ detect-secrets│ ────> │ GCP Secret Manager     │
-   │ secrets check │       │  action run   │       │ (Mounted via IAM role) │
-   └───────────────┘       └───────────────┘       └────────────────────────┘
+```mermaid
+flowchart LR
+    Local["Local Workspace<br/>• pre-commit secrets check"] --> CI["GitHub Actions<br/>• detect-secrets / gitleaks"]
+    CI --> GCP["GCP Runtime (Production)<br/>• GCP Secret Manager<br/>(Mounted via IAM role)"]
 ```
 
 ### 1. Automated Detection (Pre-Commit & CI)

@@ -8,16 +8,16 @@ This manual provides an operational guide for end-users, product managers, and a
 
 The sidebar panel, **Mission Control**, allows you to customize the mathematical filters that dictate how the model chooses the next token.
 
-```
-+───────────────────────────────────────────────────────────+
-|                    MISSION CONTROL                        |
-+───────────────────────────────────────────────────────────+
-|  [===o=======]  Temperature (0.00 - 2.00)                 |
-|  [=======o===]  Top-K (1 - 100)                           |
-|  [=========o─]  Top-P (0.00 - 1.00)                       |
-|  [=o─────────]  Min-P (0.00 - 1.00)                       |
-|  [───o───────]  Presence & Frequency Penalties            |
-+───────────────────────────────────────────────────────────+
+```mermaid
+flowchart TD
+    subgraph MissionControl["MISSION CONTROL SAMPLING CONTROLS"]
+        direction TB
+        T["Temperature (0.00 - 2.00)<br/>Controls output randomness"]
+        TK["Top-K (1 - 100)<br/>Hard vocabulary cutoff"]
+        TP["Top-P (0.00 - 1.00)<br/>Nucleus cumulative probability"]
+        MP["Min-P (0.00 - 1.00)<br/>Relative confidence threshold"]
+        P["Penalties<br/>Presence &amp; Frequency modifiers"]
+    end
 ```
 
 ### Parameter Explanations & Practical Advice
@@ -42,13 +42,15 @@ The sidebar panel, **Mission Control**, allows you to customize the mathematical
 
 The main viewport renders vocabulary tokens as celestial bodies mapping the model's inner thoughts.
 
-```
-       3D CELESTIAL METAPHOR DEFINITIONS
-       
-      ☼   Supergiant Star = High-probability candidate (>40%)
-      *   Asteroid        = Low-probability candidate (<1%)
-      ─── Cyan Laser      = RAG Grounding factual anchor
-      ═══ Constellation   = Generated sentence flight path
+```mermaid
+flowchart LR
+    subgraph Metaphors["3D CELESTIAL METAPHOR DEFINITIONS"]
+        direction TB
+        Star["☼ Supergiant Star"] --- StarDesc["High-probability candidate (&gt;40%)"]
+        Ast["* Asteroid"] --- AstDesc["Low-probability candidate (&lt;1%)"]
+        Laser["Cyan Laser Beam"] --- LaserDesc["RAG Grounding factual anchor"]
+        Const["Orbital Constellation"] --- ConstDesc["Generated sentence flight path"]
+    end
 ```
 
 ### Navigating the Viewports

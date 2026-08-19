@@ -115,25 +115,11 @@ In version 4.1, the application introduces a decoupled real-time streaming model
 ### Reasoning Model (`<think>`) Parsing
 Reasoning-capable models structure their outputs by prefixing thinking sequences with `<think>` and concluding with `</think>`. The Token Cosmos handles this structural separation at the state layer:
 
-```
-                  REASONING STATE ROUTING
-                  
-             ┌─────────────────────────────────┐
-             │    WebGPU Token Generation      │
-             └─────────────────────────────────┘
-                              |
-                              v
-             ┌─────────────────────────────────┐
-             │   Worker checks <think> State   │
-             └─────────────────────────────────┘
-             /                                 \
-      (Inside <think>)                  (Outside <think>)
-             v                                 v
-┌─────────────────────────┐       ┌─────────────────────────┐
-│  - isThinking = True    │       │  - isThinking = False   │
-│  - Route to Thought Log │       │  - Route to Output UI   │
-│  - Render Dim Asteroids │       │  - Render Main Stars    │
-└─────────────────────────┘       └─────────────────────────┘
+```mermaid
+flowchart TD
+    A["WebGPU Token Generation"] --> B{"Worker checks &lt;think&gt; State"}
+    B -- "Inside &lt;think&gt;" --> C["isThinking = True<br/>Route to Thought Log<br/>Render Dim Asteroids"]
+    B -- "Outside &lt;think&gt;" --> D["isThinking = False<br/>Route to Output UI<br/>Render Main Stars"]
 ```
 
 - **State Flags**: The worker monitors token streams. Upon encountering `<think>`, it sets the `isThinking` flag to `true` in all subsequent `LogitSnapshot` payloads. It reverts the flag to `false` when `</think>` is detected.
@@ -147,32 +133,13 @@ Reasoning-capable models structure their outputs by prefixing thinking sequences
 
 To guarantee platform resilience on legacy browsers, mobile devices, or hardware with constrained graphical resources, **The Token Cosmos** implements a progressive, three-tier hardware degradation cascade.
 
-```
-                   PROGRESSIVE DEGRADATION CASCADE
-                   
-   ┌────────────────────────────────────────────────────────┐
-   │                  App Initialization                    │
-   └────────────────────────────────────────────────────────┘
-                               │
-               ┌───────────────┴───────────────┐
-      [WebGPU Supported]              [Unsupported / OOM]
-               │                               │
-               ▼                               ▼
-     ┌───────────────────┐           ┌───────────────────┐
-     │  Tier 1: WebGPU   │           │   Tier 2: WASM    │
-     │  In-VRAM LLM Run  │           │  CPU-Threaded Run │
-     │  (> 35 tokens/s)  │           │  (5-10 tokens/s)  │
-     └───────────────────┘           └───────────────────┘
-                                               │
-                                       [WASM Load Error /
-                                        Strict RAM Cap]
-                                               │
-                                               ▼
-                                     ┌───────────────────┐
-                                     │  Tier 3: Backend  │
-                                     │  FastAPI API /    │
-                                     │  Synthetic Logits │
-                                     └───────────────────┘
+```mermaid
+flowchart TD
+    Init("App Initialization") --> CheckGPU{"WebGPU Supported?"}
+    CheckGPU -- "Supported" --> Tier1["Tier 1: WebGPU<br/>In-VRAM LLM Run<br/>(&gt; 35 tokens/s)"]
+    CheckGPU -- "Unsupported / OOM" --> CheckWASM{"WASM Initialization"}
+    CheckWASM -- "Success" --> Tier2["Tier 2: WASM<br/>CPU-Threaded Run<br/>(5-10 tokens/s)"]
+    CheckWASM -- "Load Error / Strict RAM Cap" --> Tier3["Tier 3: Backend<br/>FastAPI API / Synthetic Logits"]
 ```
 
 ### 1. Cascade Degradation Tiers

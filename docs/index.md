@@ -8,23 +8,10 @@ Welcome to the **The Token Cosmos Master Documentation Suite**. This suite serve
 
 **The Token Cosmos** is an interactive, full-stack LLM probability visualizer and educational platform. It demystifies the "black box" of Large Language Model (LLM) sampling algorithms and Retrieval-Augmented Generation (RAG) grounding mechanics. By converting raw logits into high-fidelity celestial visual metaphors, it bridges the gap between complex mathematical theory and practical AI engineering.
 
-```
-                  THE TOKEN COSMOS — VALUE PROPOSITION
-                  
-   ┌──────────────────────┐          ┌──────────────────────┐
-   │    THE PROBLEM       │          │     THE SOLUTION     │
-   │  LLM sampling is a   │  ──────> │  Interactive 60 FPS  │
-   │  black box; token    │          │  visual simulation   │
-   │  waste costs bills.  │          │  of parameter math.  │
-   └──────────────────────┘          └──────────────────────┘
-                               |
-                               v
-                   ┌───────────────────────┐
-                   │    BUSINESS VALUE     │
-                   │  - 30% API Cost Cut   │
-                   │  - $0.00 Idle Cost    │
-                   │  - Fast Onboarding    │
-                   └───────────────────────┘
+```mermaid
+flowchart TD
+    Prob["<b>THE PROBLEM</b><br/>LLM sampling is a black box;<br/>token waste costs bills."] --> Sol["<b>THE SOLUTION</b><br/>Interactive 60 FPS visual simulation<br/>of parameter math."]
+    Sol --> Val["<b>BUSINESS VALUE</b><br/>• 30% API Cost Cut<br/>• $0.00 Idle Cost<br/>• Fast Onboarding"]
 ```
 
 ---
