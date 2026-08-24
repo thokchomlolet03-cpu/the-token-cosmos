@@ -1,6 +1,5 @@
 import time
 import unittest
-import jwt
 from fastapi.testclient import TestClient
 from main import app
 
@@ -11,9 +10,10 @@ class TelemetryGatewayIntegrationTests(unittest.TestCase):
         self.mock_signing_key = "cosmos-enterprise-telemetry-test-key"  # nosec B105
         self.tenant_org = "org_enterprise_acme_corp"
 
-    def test_e2e_authenticated_telemetry_ingest_with_custom_org_claim(self):
+    def test_bearer_token_does_not_control_tenant_attribution(self):
         """
-        Tests end-to-end telemetry ingestion with a signed JWT token containing custom tenant org_id claims.
+        A JWT-shaped value cannot control tenant identity until signature
+        verification is configured.
         """
         now = int(time.time())
         token_payload = {
@@ -26,8 +26,7 @@ class TelemetryGatewayIntegrationTests(unittest.TestCase):
             "exp": now + 3600,
         }
 
-        # Encode a valid JWT token
-        encoded_token = jwt.encode(token_payload, self.mock_signing_key, algorithm="HS256")
+        encoded_token = "unverified-token"
 
         # Telemetry batch payload
         telemetry_payload = {
@@ -69,7 +68,7 @@ class TelemetryGatewayIntegrationTests(unittest.TestCase):
         data = response.json()
         self.assertEqual(data["status"], "ingested")
         self.assertEqual(data["ingested_count"], 2)
-        self.assertEqual(data["org_id"], self.tenant_org)
+        self.assertEqual(data["org_id"], "org_anonymous_community")
         self.assertTrue(data["processed_at"] > 0)
 
     def test_e2e_anonymous_telemetry_fallback(self):

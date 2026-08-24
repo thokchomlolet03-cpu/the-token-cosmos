@@ -4,6 +4,7 @@ dist/
 build/
 cli/dist/
 backend/static/
+frontend/dist-scorm/
 .env
 .env.local
 *.log
@@ -22,4 +23,3 @@ models/*.gguf
 
 # Documentation compile directory
 site/
-
