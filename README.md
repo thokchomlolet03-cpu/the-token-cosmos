@@ -4,6 +4,9 @@
 
 **"The Token Cosmos"** is a full-stack, responsive web application and educational guide built to teach everyday AI users how LLM sampling parameters (Temperature, Top-K, Top-P, Min-P, Penalties, Logit Bias) and Retrieval-Augmented Generation (RAG) mathematically shape AI token generation.
 
+For repository ownership, deployment boundaries, and the status of supporting
+tools, read the [repository map](docs/repository_map.md).
+
 
 ---
 
@@ -91,6 +94,10 @@ docker run --rm -p 8080:8080 the-token-cosmos
 
 Open [http://localhost:8080](http://localhost:8080) and check
 `http://localhost:8080/api/health`.
+
+This root Dockerfile is the only supported production image. The component
+Dockerfiles and Nginx files are retained for experiments and are not deployment
+instructions.
 
 ### GitHub Actions deployment
 

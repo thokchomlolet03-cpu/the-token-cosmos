@@ -45,6 +45,7 @@ extra_javascript:
 
 nav:
   - Welcome: index.md
+  - Repository Map: repository_map.md
   - System Architecture: architecture.md
   - Infrastructure & Deployment: deployment.md
   - Component Ownership (RACI): ownership.md

@@ -16,10 +16,15 @@ app = FastAPI(
     version="2.0.0",
 )
 
-# Enable CORS for local Vite dev server
+def _allowed_origins() -> List[str]:
+    """Return explicit browser origins for the API."""
+    configured = os.getenv("PUBLIC_WEB_ORIGINS", "http://localhost:3000")
+    return [origin.strip() for origin in configured.split(",") if origin.strip()]
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins(),
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -254,23 +259,14 @@ class TelemetryResponse(BaseModel):
 @app.post("/api/telemetry", response_model=TelemetryResponse)
 async def ingest_telemetry(payload: TelemetryBatchRequest, request: Request):
     """
-    Ingests anonymized prompt friction telemetry from CLI and Studio.
-    Extracts tenant org_id from JWT or headers and relays to BigQuery.
+    Ingests anonymous telemetry from CLI and Studio.
+
+    Tenant attribution remains disabled until issuer, audience, and JWKS
+    signature verification are configured. Decoding a bearer token is not auth.
     """
-    auth_header = request.headers.get("Authorization", "")
     tenant_org_id = "org_anonymous_community"
 
-    if auth_header.startswith("Bearer "):
-        token = auth_header.replace("Bearer ", "").strip()
-        # Decode token payload (or extract from JWKS in production)
-        try:
-            import jwt
-            decoded = jwt.decode(token, options={"verify_signature": False})
-            tenant_org_id = decoded.get("https://the-token-cosmos.com/org_id") or decoded.get("org_id") or "org_default"
-        except Exception:
-            tenant_org_id = "org_authenticated_user"
-
-    # Tag all events in batch with the verified tenant org_id
+    # Tag all events with the anonymous community partition.
     for event in payload.events:
         event.org_id = tenant_org_id
 
