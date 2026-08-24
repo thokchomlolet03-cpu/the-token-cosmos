@@ -1,8 +1,8 @@
 {
   "dora": {
-    "deploymentFrequency": "10 / week",
+    "deploymentFrequency": "11 / week",
     "leadTimeForChanges": "45 mins",
-    "changeFailureRate": "66.7%",
+    "changeFailureRate": "63.3%",
     "timeToRestoreService": "12 mins"
   },
   "space": {
@@ -11,6 +11,13 @@
     "efficiency": 88
   },
   "deployments": [
+    {
+      "id": "32701152141",
+      "sha": "bbd245f",
+      "status": "success",
+      "timestamp": "2026-08-24T07:21:37Z",
+      "duration": "0m 56s"
+    },
     {
       "id": "32291182423",
       "sha": "203d2a0",
@@ -73,13 +80,6 @@
       "status": "success",
       "timestamp": "2026-08-18T05:25:02Z",
       "duration": "1m 2s"
-    },
-    {
-      "id": "32102298213",
-      "sha": "9af604a",
-      "status": "success",
-      "timestamp": "2026-08-18T05:17:15Z",
-      "duration": "0m 59s"
     }
   ],
   "adrs": [
@@ -96,5 +96,5 @@
       "date": "2026-08-18"
     }
   ],
-  "lastUpdated": "2026-08-24T06:57:21.428024+00:00"
+  "lastUpdated": "2026-08-24T08:00:34.145927+00:00"
 }
